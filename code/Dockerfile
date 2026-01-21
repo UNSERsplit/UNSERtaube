@@ -16,11 +16,12 @@ COPY ./deployment/start.sh ./deployment/renew_cert.sh ./
 # copy nginx configuration
 COPY ./deployment/nginx.conf /etc/nginx/nginx.conf
 
+# copy certificate key
+COPY ./deployment/cert.cnf ./deployment/cert.cnf
+
 # copy backend
 COPY ./backend ./backend
 
-# dns from dnsmasq
-#EXPOSE 53/udp
 # web
 EXPOSE 80/tcp
 EXPOSE 443/tcp
