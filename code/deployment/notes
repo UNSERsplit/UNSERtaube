@@ -1,0 +1,6 @@
+build:
+docker build . -t unserprojekt/taube:0.0.0-t0
+
+run:
+docker run -it -p "1153:53/udp" -p "8080:80/tcp" -p "8443:443/tcp" -e "EXTERNAL_IP=127.0.0.1" --dns=193.170.244.18 unserprojekt/taube:0.0.0-t0
+docker run -it -p "8080:80/tcp" -p "443:443/tcp" -v ${PWD}/deployment/ssh-key:/app/ssh-key unserprojekt/taube:0.0.0-t0
