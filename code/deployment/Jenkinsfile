@@ -1,6 +1,13 @@
 node {
     def app
 
+    agent {
+        docker {
+            image 'docker'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
 
