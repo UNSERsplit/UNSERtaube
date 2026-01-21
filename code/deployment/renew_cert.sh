@@ -3,7 +3,10 @@
 mkdir -p /app/cert
 cd /app/cert
 
-sftp -i /app/ssh-key/taube_rsa taube@unser.dns64.de:/etc/letsencrypt/live/taube.unser.dns64.de/privkey.pem privkey.pem
-sftp -i /app/ssh-key/taube_rsa taube@unser.dns64.de:/etc/letsencrypt/live/taube.unser.dns64.de/fullchain.pem fullchain.pem
+openssl req -x509 -nodes -days 365 \
+ -newkey rsa:2048 \
+ -keyout /app/cert/cert.key \
+ -out /app/cert/cert.crt \
+ -config /app/deployment/cert.cnf
 
 nginx -s reload
