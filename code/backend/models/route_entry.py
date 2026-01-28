@@ -18,7 +18,7 @@ class RouteEntry(Base):
     Roll = Column(Numeric(precision=4, scale=1))
 
     # Fremdschlüssel zur Route
-    id_Route = Column(UUID(as_uuid=True), ForeignKey("Route.id"), nullable=False)
+    route_id = Column(UUID(as_uuid=True), ForeignKey("Route.id"), nullable=False)
 
     # Beziehung zurück zur Route
     route = relationship("Route", back_populates="entries")

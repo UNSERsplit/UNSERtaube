@@ -1,11 +1,14 @@
 from fastapi import FastAPI, WebSocket
-from drone_scan import scan
-from websocket_mgr import WebsocketManager
-from route.drone import router as drone_router
+from .drone_scan import scan
+from .websocket_mgr import WebsocketManager
+from .routes.drone import drone_router
+from .routes.route import routes_router
+from .database import create_tables
 import os
 
 app = FastAPI()
 app.include_router(drone_router)
+app.include_router(routes_router)
 
 manager = WebsocketManager()
 
@@ -51,3 +54,6 @@ async def websocket(ws: WebSocket):
 @app.get("/ping/{id}")#nur zum testn
 def ping(id: int):
     return {"id": id}
+
+
+create_tables()
