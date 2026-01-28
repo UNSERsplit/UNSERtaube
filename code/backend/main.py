@@ -47,3 +47,7 @@ async def websocket(ws: WebSocket):
 
 
         await ws.send_json({"received": data})
+
+@app.get("/ping/{id}")#nur zum testn
+def ping(id: int):
+    return {"id": id}
