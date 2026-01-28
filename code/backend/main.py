@@ -1,9 +1,8 @@
 from fastapi import FastAPI, WebSocket
-from .drone_scan import scan
-from .websocket_mgr import WebsocketManager
-from .routes.drone import drone_router
-from .routes.route import routes_router
-from .database import create_tables
+from websocket_mgr import WebsocketManager
+from routes.drone import drone_router
+from routes.route import routes_router
+from database import create_tables
 import os
 
 app = FastAPI()
@@ -57,3 +56,12 @@ def ping(id: int):
 
 
 create_tables()
+
+from dronemaster.connection import ConnectionManager
+
+mngr = ConnectionManager()
+
+@app.get("/test")
+async def a():
+    connector = await mngr.connect("192.168.222.100")
+    print(connector)

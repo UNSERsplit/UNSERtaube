@@ -39,5 +39,7 @@ STOPSIGNAL SIGINT
 # web
 EXPOSE 80/tcp
 EXPOSE 443/tcp
+EXPOSE 8890/udp
+EXPOSE 11111/udp
 
 ENTRYPOINT ["/app/start.sh"]

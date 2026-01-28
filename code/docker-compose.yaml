@@ -27,6 +27,8 @@ services:
     ports:
       - "443:443"
       - "8085:80"
+      - "8890:8890/udp"
+      - "11111:11111/udp"
     volumes:
       - ./taube_rsa:/credentials/taube_rsa:ro
 

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from ..database import Base # Hier wird die Base aus deiner database.py importiert
+from database import Base # Hier wird die Base aus deiner database.py importiert
 import uuid
 from .route_entry import RouteEntry
 

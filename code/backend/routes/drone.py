@@ -2,9 +2,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import Sequence
-from ..models.drone import Drone
-from ..schemas.drone import Drone as DroneSchema, DroneCreate
-from ..database import get_db
+from models.drone import Drone
+from schemas.drone import Drone as DroneSchema, DroneCreate
+from database import get_db
 
 
 drone_router = APIRouter(prefix="/drone")

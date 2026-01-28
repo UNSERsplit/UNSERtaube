@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ..models.route import Route
-from ..models.drone import Drone
-from ..schemas.route import RouteCreate, Route as RouteSchema
-from ..database import get_db
+from models.route import Route
+from models.drone import Drone
+from schemas.route import RouteCreate, Route as RouteSchema
+from database import get_db
 
 from uuid import UUID
 
