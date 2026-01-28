@@ -34,6 +34,8 @@ COPY ./backend ./backend
 # copy frontend
 COPY --chown=www-data:www-data --from=frontend-build /build/dist/frontend/browser ./frontend
 
+STOPSIGNAL SIGINT
+
 # web
 EXPOSE 80/tcp
 EXPOSE 443/tcp
