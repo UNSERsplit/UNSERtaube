@@ -2,19 +2,20 @@ import socket
 import threading
 from typing import Dict, Optional
 from asyncio import Future, get_event_loop, AbstractEventLoop
+import ipaddress
+from pydantic import BaseModel
 
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
+        self.ip = target_ip
         self.dest = (target_ip, ConnectionManager.REMOTE_CMD_PORT)
         self.loop: AbstractEventLoop = loop
         self.socket = socket
-        self.read_event = threading.Event() # called when data is ready to be read
-        self.read_event.set()
         self.async_future: Optional[Future[str]] = None
         self.read_data: Optional[str] = None # data to read
     
     async def connect(self): # called by ConnectionManager.connect
-        await self.send_message("command")
+        await self.send_control_message("command")
 
     def on_data(self, raw_data: bytes): # called when new data for this ip is received
         data = raw_data.decode()
@@ -22,36 +23,15 @@ class Connection:
         if self._is_state_message(data):
             pass #TODO
         else:
-            self.read_data = data
-            self.read_event.set()
             if self.async_future is not None:
                 self.loop.call_soon_threadsafe(self.async_future.set_result, data)
+            else:
+                print(f"Unsolicited data received: {data}")
     
     def _is_state_message(self, data: str):
         return data.startswith("mid:")
     
-    def send_message_noanswer(self, message: str):
-        self.socket.sendto(message.encode(), self.dest)
-
-    def send_message_sync(self, message: str, timeout: float = 5) -> str:
-        if not self.read_event.wait(timeout): # the drone did not respond to the previous command
-            raise TimeoutError(f"The drone did not respond to the prevoius command withing {timeout}s")
-
-        self.read_event.clear()
-        self.socket.sendto(message.encode(), self.dest)
-
-        flag = self.read_event.wait(timeout) # wait until a response is available
-
-        if not flag:
-            raise TimeoutError(f"The drone did not respond withing {timeout}s")
-        
-        data = self.read_data
-        self.read_data = None
-        
-        assert data is not None
-        return data
-    
-    async def send_message(self, message: str, timeout: float = 5) -> str:
+    async def send_raw_message(self, message: str, timeout: float = 5) -> str:
         self.loop = get_event_loop()
         if self.async_future is not None:
             await self.async_future
@@ -59,13 +39,19 @@ class Connection:
         timer = threading.Timer(timeout, lambda : self.loop.call_soon_threadsafe(self.async_future.set_exception, TimeoutError(f"The drone did not respond withing {timeout}s")) if self.async_future is not None else None)
         self.async_future = self.loop.create_future()
         timer.start()
-        print(1)
         self.socket.sendto(message.encode(), self.dest)
-        print(2)
         result = await self.async_future
-        print(3 / 0)
         timer.cancel()
-        return result
+        return result.strip()
+
+    async def send_control_message(self, message: str, timeout: float = 5) -> bool:
+        response = await self.send_raw_message(message, timeout)
+        if response.strip().upper() == "OK":
+            return True
+        raise ConnectionError(f"drone responed to {message} with {response}")
+    
+    def send_message_noanswer(self, message: str):
+        self.socket.sendto(message.encode(), self.dest)
 
 
 class ConnectionManager:
@@ -78,10 +64,12 @@ class ConnectionManager:
     def __init__(self) -> None:
         self.event = threading.Event()
         self.loop = get_event_loop()
+        self.data_received_from_ip = set()
 
         self.connections: Dict[str, Connection] = {}
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.settimeout(2)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((
             ConnectionManager.LOCAL_IP, 
@@ -92,6 +80,9 @@ class ConnectionManager:
         self.thread.start()
     
     async def connect(self, target_ip: str) -> Connection:
+        if target_ip in self.connections:
+            return self.connections[target_ip]
+        
         conn = Connection(target_ip, self.socket, self.loop)
         self.connections[target_ip] = conn
         await conn.connect()
@@ -102,12 +93,62 @@ class ConnectionManager:
     
     def _run(self):
         while not self.event.is_set():
-            data, addr = self.socket.recvfrom(1024)
-            connection = self.connections.get(addr[1])
-            if connection is None:
-                print(f"Data from unknown client {addr}: {data}")
-                continue
+            try:
+                data, addr = self.socket.recvfrom(1024)
+                self.data_received_from_ip.add(addr[0])
+                connection = self.connections.get(addr[0])
+                if connection is None:
+                    print(f"Data from unknown client {addr}: {data}")
+                    continue
 
-            connection.on_data(data)
+                connection.on_data(data)
+            except TimeoutError:
+                pass
         
         self.socket.close()
+
+connection_manager: ConnectionManager
+
+class ScanResult(BaseModel):
+    ip: str
+    sn: str
+
+def start():
+    global connection_manager
+    connection_manager = ConnectionManager()
+
+def stop():
+    connection_manager.stop()
+
+async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
+    interface = ipaddress.IPv4Interface(myip)
+    connection_manager.data_received_from_ip = set()
+
+    old_timeout = connection_manager.socket.gettimeout()
+    connection_manager.socket.settimeout(None)
+
+    for addr in interface.network:
+        if str(addr).split(".")[-1] in ("255", "0"):
+            continue
+        connection_manager.socket.sendto(b"command", (str(addr), ConnectionManager.REMOTE_CMD_PORT))
+
+    connection_manager.socket.settimeout(old_timeout)
+    
+    loop = get_event_loop()
+    future = loop.create_future()
+    timer = threading.Timer(timeout, lambda : loop.call_soon_threadsafe(future.set_result, None))
+    timer.start()
+    await future
+
+    ips = list(connection_manager.data_received_from_ip)
+    connections = list()
+
+    for ip in ips:
+        conn = Connection(ip, connection_manager.socket, connection_manager.loop) # do not send second command
+        connection_manager.connections[ip] = conn
+
+        conn = await connection_manager.connect(ip)
+        sn = await conn.send_raw_message("sn?")
+        connections.append(ScanResult(ip=conn.ip, sn=sn))
+    
+    return connections

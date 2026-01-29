@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Literal, Union
+from pydantic import BaseModel, TypeAdapter, Field
+from typing import Literal, Union, Annotated
 
 class ServerBoundMessage(BaseModel):
     pass
@@ -18,14 +18,16 @@ class StartNetworkScan(ServerBoundMessage):
 
 ### CLIENTBOUND START ###
 class NewDroneFound(ClientBoundMessage):
-    type = "new_drone"
+    type: str = "new_drone"
     ip: str
 
 class NetworkScanFinished(ClientBoundMessage):
-    type = "scan_finished"
+    type:str  = "scan_finished"
 ### CLIENTBOUND END ###
 
-IncommingMessage = Union[
+messages = Annotated[Union[
     ConnectToDrone,
     StartNetworkScan
-]
+], Field(discriminator="type")]
+
+IncommingMessage: TypeAdapter[messages] = TypeAdapter(messages)

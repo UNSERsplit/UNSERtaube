@@ -2,10 +2,10 @@ build:
 docker build . -t unserprojekt/taube:0.0.0-t0
 
 run:
-docker run -it -p "8080:80/tcp" -p "443:443/tcp" -v "/home/noah/taube_rsa:/credentials/taube_rsa" -e "EXTERNAL_IP=$(ip -br a | grep "UP" | sed -r "s/.* *UP *(.*) /\1/g" | cut -d " " -f 1)" unserprojekt/taube:0.0.0-t0
+docker run -it -p "8080:80/tcp" -p "443:443/tcp" -v "/home/noah/taube_rsa:/credentials/taube_rsa" unserprojekt/taube:0.0.0-t0
 
 get ips:
-ip -br a | grep "UP" | sed -r "s/.* *UP *(.*) /\1/g" | cut -d " " -f 1
+ip -br a | grep "UP" | grep -vi "br-" | sed -r "s/.* *UP *(.*) /\1/g" | cut -d " " -f 1 | grep -v ":"
 
 get-cert:
 sftp -i /home/noah/taube_rsa taube@unser.dns64.de:/etc/letsencrypt/live/taube.unser.dns64.de/privkey.pem privkey.pem

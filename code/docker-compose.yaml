@@ -22,13 +22,8 @@ services:
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db
-      EXTERNAL_IP: ${EXTERNAL_IP}
-    ports:
-      - "443:443"
-      - "8085:80"
-      - "8890:8890/udp"
-      - "11111:11111/udp"
+      DB_HOST: localhost
+    network_mode: host
     volumes:
       - ./taube_rsa:/credentials/taube_rsa:ro
 

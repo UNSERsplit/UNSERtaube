@@ -11,13 +11,15 @@ def scan(ip_cidr: str, callback: Callable[[tuple[str, int]], Coroutine[Any, Any,
     sock.settimeout(20)
     sock.bind(('0.0.0.0', 8890))
 
-    start_receive_task(sock, callback, close_callback)
+    t = start_receive_task(sock, callback, close_callback)
     send_requests(sock, ip_cidr)
+    t.join()
     return
 
 def start_receive_task(sock: socket.socket, callback: Callable[[tuple[str, int]], Coroutine[Any, Any, None]], close_callback: Callable[[], Coroutine[Any, Any, None]]):
     t = Thread(target=_receive_task, args=(sock,callback, close_callback))
     t.start()
+    return t
 
 def _receive_task(sock: socket.socket, callback: Callable[[tuple[str, int]], Coroutine[Any, Any, None]], close_callback: Callable[[], Coroutine[Any, Any, None]]):
     t = time.time()
@@ -31,7 +33,7 @@ def _receive_task(sock: socket.socket, callback: Callable[[tuple[str, int]], Cor
             else:
                 if time.time() - t > 10:
                     break
-                print(f"unknown response: '{resp}' from {addr}")
+                #print(f"unknown response: '{resp}' from {addr}")
         except socket.timeout:
             print("Timeout")
             break

@@ -1,17 +1,29 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket
 from websocket_mgr import WebsocketManager
 from routes.drone import drone_router
 from routes.route import routes_router
 from database import create_tables
+from pydantic import ValidationError
 import os
+from websocket.ws_messages import IncommingMessage
 
-app = FastAPI()
+import dronemaster
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    dronemaster.start()
+    yield
+    dronemaster.stop()
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(drone_router)
 app.include_router(routes_router)
 
 manager = WebsocketManager()
 
 network_cidr = os.environ["EXTERNAL_IP"]
+print(network_cidr)
 
 @app.get("/")
 def test() -> str:
@@ -22,46 +34,38 @@ async def websocket(ws: WebSocket):
     await ws.accept()
     await manager.connnect(ws)
     
-    tl_drone = None
     while True:
-        data = await ws.receive_json()
-        message_type = data["type"]
-
-        if message_type == "select_drone":
-            drone_ip = data["ip"]
-
-            config.ROBOT_IP_STR = drone_ip
-
-            tl_drone = robot.Drone()
-            tl_drone.initialize()
+        data = await ws.receive_text()
+        try:
+            message = IncommingMessage.validate_json(data)
+        except ValidationError as e:
+            await ws.send_text(e.json())
+            continue
         
-        elif message_type == "scan_network":
-            async def onNewClientFound(addr: tuple[str, int]):
-                await ws.send_json({
-                    "type": "new_drone",
-                    "ip": addr[0]
-                })
-            async def onScanFinished():
-                await ws.send_json({
-                    "type": "scan_finished"
-                })
-            scan(network_cidr, onNewClientFound, onScanFinished)
+        await manager.on_message(ws, message)
 
-
-        await ws.send_json({"received": data})
-
-@app.get("/ping/{id}")#nur zum testn
-def ping(id: int):
-    return {"id": id}
+        await ws.send_json(message.model_dump())
 
 
 create_tables()
 
-from dronemaster.connection import ConnectionManager
+drone: dronemaster.Drone
 
-mngr = ConnectionManager()
+@app.get("/connect/{ip}")
+async def a(ip: str):
+    global drone
+    drone = dronemaster.Drone(ip)
+    await drone.connect()
+    await drone.takeoff()
 
-@app.get("/test")
-async def a():
-    connector = await mngr.connect("192.168.222.100")
-    print(connector)
+@app.get("/takeoff")
+async def b():
+    await drone.takeoff()
+
+@app.get("/land")
+async def c():
+    await drone.land()
+
+@app.get("/scan")
+async def scan() -> list[dronemaster.ScanResult]:
+    return await dronemaster.scan(os.environ["EXTERNAL_IP"])
