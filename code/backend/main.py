@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from websocket_mgr import WebsocketManager
 from routes.drone import drone_router
 from routes.route import routes_router
@@ -29,43 +29,27 @@ print(network_cidr)
 def test() -> str:
     return "it works"
 
+@app.get("/scan")
+async def scan() -> list[dronemaster.ScanResult]:
+    return await dronemaster.scan(os.environ["EXTERNAL_IP"])
+
 @app.websocket("/ws")
 async def websocket(ws: WebSocket):
     await ws.accept()
     await manager.connnect(ws)
     
-    while True:
-        data = await ws.receive_text()
-        try:
-            message = IncommingMessage.validate_json(data)
-        except ValidationError as e:
-            await ws.send_text(e.json())
-            continue
-        
-        await manager.on_message(ws, message)
-
-        await ws.send_json(message.model_dump())
+    try:
+        while True:
+            data = await ws.receive_text()
+            try:
+                message = IncommingMessage.validate_json(data)
+            except ValidationError as e:
+                await ws.send_json({"type":"error", "context": e.errors()})
+                continue
+            
+            await manager.on_message(ws, message)
+    except WebSocketDisconnect as e:
+        pass
 
 
 create_tables()
-
-drone: dronemaster.Drone
-
-@app.get("/connect/{ip}")
-async def a(ip: str):
-    global drone
-    drone = dronemaster.Drone(ip)
-    await drone.connect()
-    await drone.takeoff()
-
-@app.get("/takeoff")
-async def b():
-    await drone.takeoff()
-
-@app.get("/land")
-async def c():
-    await drone.land()
-
-@app.get("/scan")
-async def scan() -> list[dronemaster.ScanResult]:
-    return await dronemaster.scan(os.environ["EXTERNAL_IP"])
