@@ -5,8 +5,8 @@ from routes.drone import drone_router
 from routes.route import routes_router
 from database import create_tables
 from pydantic import ValidationError
-import os
 from websocket.ws_messages import IncommingMessage
+from websocket.openapi_messages import MsgServerDef, MsgClientDef
 
 import dronemaster
 
@@ -21,17 +21,6 @@ app.include_router(drone_router)
 app.include_router(routes_router)
 
 manager = WebsocketManager()
-
-network_cidr = os.environ["EXTERNAL_IP"]
-print(network_cidr)
-
-@app.get("/")
-def test() -> str:
-    return "it works"
-
-@app.get("/scan")
-async def scan() -> list[dronemaster.ScanResult]:
-    return await dronemaster.scan(os.environ["EXTERNAL_IP"])
 
 @app.websocket("/ws")
 async def websocket(ws: WebSocket):
@@ -51,5 +40,31 @@ async def websocket(ws: WebSocket):
     except WebSocketDisconnect as e:
         pass
 
+def append_ws_schemas():
+  from fastapi.openapi.utils import get_openapi
+  from fastapi.openapi.constants import REF_TEMPLATE
+
+  if app.openapi_schema:
+    return app.openapi_schema
+  
+  openapi_schema = get_openapi(
+    title=app.title,
+    version=app.version,
+    summary=app.summary,
+    description=app.description,
+    routes=app.routes,
+  )
+  
+  extras = {
+      "serverbound": {**MsgClientDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All serverbound websocket messages, look under $defs"},
+      "clientbound": {**MsgServerDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All clientbound websocket messages, look under $defs"}
+  }
+
+  openapi_schema["components"]["schemas"].update(extras)
+  app.openapi_schema = openapi_schema
+
+  return app.openapi_schema
+
+app.openapi = append_ws_schemas
 
 create_tables()

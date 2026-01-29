@@ -5,9 +5,16 @@ from typing import Sequence
 from models.drone import Drone
 from schemas.drone import Drone as DroneSchema, DroneCreate
 from database import get_db
+import os
+import dronemaster
+
 
 
 drone_router = APIRouter(prefix="/drone")
+
+@drone_router.post("/scan")
+async def scan() -> list[dronemaster.ScanResult]:
+    return await dronemaster.scan(os.environ["EXTERNAL_IP"])
 
 @drone_router.post("/")
 def create_drohne(drohne: DroneCreate, db: Session = Depends(get_db)) -> DroneSchema:

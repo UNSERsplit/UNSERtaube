@@ -42,10 +42,7 @@ class DroneDisconnected(ClientBoundMessage):
 ### CLIENTBOUND END ###
 
 messages = Annotated[Union[
-    ConnectToDrone,
-    TakeOff,
-    Land,
-    FunkiMessage
+    *ServerBoundMessage.__subclasses__()
 ], Field(discriminator="type")]
 
 IncommingMessage: TypeAdapter[messages] = TypeAdapter(messages)
