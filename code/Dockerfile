@@ -1,3 +1,15 @@
+FROM node:25-alpine AS frontend-build
+
+WORKDIR /build
+
+COPY ./frontend/package.json ./frontend/*package-lock.json* ./
+
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+COPY ./frontend .
+
+RUN npm run build 
+
 FROM python:3.8-slim
 
 
@@ -16,11 +28,15 @@ COPY ./deployment/start.sh ./deployment/renew_cert.sh ./
 # copy nginx configuration
 COPY ./deployment/nginx.conf /etc/nginx/nginx.conf
 
+# copy certificate key
+COPY ./deployment/cert.cnf ./deployment/cert.cnf
+
 # copy backend
 COPY ./backend ./backend
 
-# dns from dnsmasq
-#EXPOSE 53/udp
+# copy frontend
+COPY --chown=www-data:www-data --from=frontend-build /build/dist/frontend/browser ./frontend
+
 # web
 EXPOSE 80/tcp
 EXPOSE 443/tcp
