@@ -5,6 +5,8 @@ from asyncio import Future, get_event_loop, AbstractEventLoop
 import ipaddress
 from pydantic import BaseModel
 
+from .utils import find_mac
+
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
         self.ip = target_ip
@@ -112,6 +114,7 @@ connection_manager: ConnectionManager
 class ScanResult(BaseModel):
     ip: str
     sn: str
+    mac: Optional[str]
 
 def start():
     global connection_manager
@@ -149,6 +152,7 @@ async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
 
         conn = await connection_manager.connect(ip)
         sn = await conn.send_raw_message("sn?")
-        connections.append(ScanResult(ip=conn.ip, sn=sn))
+        mac = find_mac(ip)
+        connections.append(ScanResult(ip=conn.ip, sn=sn, mac=mac))
     
     return connections

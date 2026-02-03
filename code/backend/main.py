@@ -53,6 +53,7 @@ def append_ws_schemas():
     summary=app.summary,
     description=app.description,
     routes=app.routes,
+    servers=app.servers
   )
   
   extras = {
