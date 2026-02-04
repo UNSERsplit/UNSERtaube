@@ -7,5 +7,5 @@ or build it yourself from the `code` directory using `docker compose up --build`
 copy `.env.example` as `.env` and change what you'd like
 
 ## 3. Get your ssh key
-in order to get a valid certificate, you need a ssh certificate for noahs Hetzner server. \
+in order to get a valid certificate, you need a ssh certificate for noahs Hetzner server, you can find it in teams. \
 Copy the `taube_rsa` key into the `code` directory, it is automatically mounted inside the docker container
