@@ -26,6 +26,16 @@ services:
     network_mode: host
     volumes:
       - ./taube_rsa:/credentials/taube_rsa:ro
+  
+  forwarder:
+    image: unserprojekt/forwarder:latest
+    build:
+      context: ./winhacks
+      dockerfile: Dockerfile
+    
+    restart: always
+    ports:
+      - "8443:8443"
 
 volumes:
   postgres_data:
