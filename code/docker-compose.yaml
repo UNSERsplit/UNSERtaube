@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_taube_data:/var/lib/postgresql/data
   
   web:
     image: unserprojekt/taube:latest
@@ -36,6 +36,8 @@ services:
     restart: always
     ports:
       - "8443:8443"
+    extra_hosts: # mag windows das?
+      - "host.docker.internal:host-gateway"
 
 volumes:
-  postgres_data:
+  postgres_taube_data:
