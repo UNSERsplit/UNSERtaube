@@ -36,10 +36,6 @@ COPY --chown=www-data:www-data --from=frontend-build /build/dist/frontend/browse
 
 STOPSIGNAL SIGINT
 
-RUN mkdir /credentials && touch /credentials/taube_rsa
-RUN chmod 600 /credentials/taube_rsa
-VOLUME [ "/credentials/taube_rsa" ]
-
 # web
 EXPOSE 80/tcp
 EXPOSE 443/tcp

@@ -7,11 +7,13 @@ from database import create_tables
 from pydantic import ValidationError
 from websocket.ws_messages import IncommingMessage
 from websocket.openapi_messages import MsgServerDef, MsgClientDef
+import os
 
 import dronemaster
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print(f"using network {os.environ['EXTERNAL_IP']}")
     dronemaster.start()
     yield
     dronemaster.stop()
