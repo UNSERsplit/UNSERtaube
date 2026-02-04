@@ -1,6 +1,11 @@
 #!/bin/sh
 
 cd /app
+
+mkdir -p /credentials_linux
+cp /credentials/taube_rsa /credentials_linux/taube_rsa
+chmod 600 /credentials_linux/taube_rsa
+
 echo receiving certificate
 ./renew_cert.sh
 echo starting nginx
