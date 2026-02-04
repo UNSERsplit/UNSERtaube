@@ -10,7 +10,7 @@ COPY ./frontend .
 
 RUN npm run build 
 
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 
 # Install nginx and sftp
@@ -35,6 +35,10 @@ COPY ./backend ./backend
 COPY --chown=www-data:www-data --from=frontend-build /build/dist/frontend/browser ./frontend
 
 STOPSIGNAL SIGINT
+
+RUN mkdir /credentials && touch /credentials/taube_rsa
+RUN chmod 600 /credentials/taube_rsa
+VOLUME [ "/credentials/taube_rsa" ]
 
 # web
 EXPOSE 80/tcp
