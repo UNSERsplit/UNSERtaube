@@ -16,6 +16,12 @@ class Drone:
     
     async def emergency_stop(self):
         await self.connection.send_control_message("emergency")
+
+    async def startstream(self):
+        await self.connection.send_control_message("streamon")
+
+    async def stopstream(self):
+        await self.connection.send_control_message("streamoff")
     
     def rc(self, roll: float, pitch: float, throttle: float, yaw: float):
         """all args from -100 to 100"""
