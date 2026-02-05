@@ -36,8 +36,8 @@ services:
     restart: always
     ports:
       - "8443:8443"
-    extra_hosts: # mag windows das?
-      - "host.docker.internal:host-gateway"
+    extra_hosts:
+      web: ${FORWARDER_TARGET_IP}
 
 volumes:
   postgres_taube_data:
