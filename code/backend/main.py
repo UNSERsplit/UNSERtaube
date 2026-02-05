@@ -59,8 +59,8 @@ def append_ws_schemas():
   )
   
   extras = {
-      "serverbound": {**MsgClientDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All serverbound websocket messages, look under $defs"},
-      "clientbound": {**MsgServerDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All clientbound websocket messages, look under $defs"}
+      "serverbound": {**MsgServerDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All serverbound websocket messages, look under $defs"},
+      "clientbound": {**MsgClientDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All clientbound websocket messages, look under $defs"}
   }
 
   openapi_schema["components"]["schemas"].update(extras)
