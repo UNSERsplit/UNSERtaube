@@ -2,7 +2,7 @@ import threading
 from threading import Thread
 
 from starlette.websockets import WebSocket, WebSocketDisconnect
-from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected
+from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted
 from dronemaster import Drone
 from database import SessionLocal
 from websocket.ws_stream import listenToStream
@@ -14,6 +14,10 @@ class WebsocketManager:
     
     async def connnect(self, ws: WebSocket):
         self.connections[ws] = WsConnection(ws, self)
+    
+    async def disconnect(self, ws: WebSocket):
+        await self.connections[ws].disconnect()
+        del self.connections[ws]
     
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
@@ -29,14 +33,28 @@ class WsConnection:
         self.ws = ws
         self.mngr = mngr
         self.drone: Drone
-        thread_stream = threading.Thread(target=listenToStream, args=(self.ws, self.stop_stream_event))
         self.stop_stream_event = threading.Event()
+        self.thread_stream = threading.Thread(target=listenToStream, args=(self.ws, self.stop_stream_event))
     
     async def connect(self):
         pass
 
+    async def disconnect(self, reason: str):
+        await self.drone.stopstream()
+        self.stop_stream_event.set()
+        self.thread_stream.join()
+        await self.drone.disconnect()
+
+        await self.trysend(DroneDisconnected(reason=reason))
+
     async def send(self, data: ClientBoundMessage):
         await self.mngr.send(self.ws, data)
+    
+    async def trysend(self, data: ClientBoundMessage):
+        try:
+            await self.send(data)
+        except Exception:
+            pass
 
     async def on_message(self, data: messages):
         session = SessionLocal()
@@ -48,18 +66,21 @@ class WsConnection:
                     await self.drone.connect()
                     self.stop_stream_event.clear()
                     await self.drone.startstream()
-                    thread_stream.start()
+                    self.thread_stream.start()
                     await self.send(DroneConnected())
                 case TakeOff():
                     await self.drone.takeoff()
+                    await self.send(Accepted())
                 case Land():
                     await self.drone.land()
+                    await self.send(Accepted())
                 case FunkiMessage():
                     self.drone.rc(data.roll, data.pitch, data.throttle, data.yaw)
-                case DroneDisconnected():
-                    await self.stop_stream_event.set()
-                    tread_stream.join()
-        except TimeoutError:
-            await self.send(DroneDisconnected())
+                case DisconnectFromDrone():
+                    await self.disconnect(reason="User")
+        except TimeoutError as e:
+            await self.disconnect(reason=" ".join(e.args))
+        except BaseException as e:
+            await self.send(Error(context=e.args))
         finally:
             session.close()

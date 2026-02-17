@@ -1,5 +1,5 @@
 from pydantic import BaseModel, TypeAdapter, Field
-from typing import Literal, Union, Annotated
+from typing import Literal, Union, Annotated, Any
 
 class ServerBoundMessage(BaseModel):
     pass
@@ -11,6 +11,9 @@ class ClientBoundMessage(BaseModel):
 class ConnectToDrone(ServerBoundMessage):
     type: Literal["select_drone"]
     ip: str # TODO replace with drone id
+
+class DisconnectFromDrone(ServerBoundMessage):
+    type: Literal["disconnect"]
 
 class TakeOff(ServerBoundMessage):
     type: Literal["takeoff"]
@@ -39,6 +42,14 @@ class DroneConnected(ClientBoundMessage):
 
 class DroneDisconnected(ClientBoundMessage):
     type: str = "drone_disconnected"
+    reason: str
+
+class Accepted(ClientBoundMessage):
+    type: str = "accepted"
+
+class Error(ClientBoundMessage):
+    type: str = "error"
+    context: tuple[Any]
 ### CLIENTBOUND END ###
 
 messages = Annotated[Union[

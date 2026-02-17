@@ -5,7 +5,7 @@ from asyncio import Future, get_event_loop, AbstractEventLoop
 import ipaddress
 from pydantic import BaseModel
 
-from .utils import find_mac
+from .utils import find_mac, log
 
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
@@ -16,24 +16,33 @@ class Connection:
         self.async_future: Optional[Future[str]] = None
         self.read_data: Optional[str] = None # data to read
     
-    async def connect(self): # called by ConnectionManager.connect
+    async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
+    
+    async def _disconnect(self): # called by ConnectionManager.disconnect
+        self.send_message_noanswer("emergency")
+        self.send_message_noanswer("quit")
+
+    async def disconnect(self):
+        await connection_manager.disconnect(self.ip)
 
     def on_data(self, raw_data: bytes): # called when new data for this ip is received
         data = raw_data.decode()
+        log("MSG", "D->S", data)
 
         if self._is_state_message(data):
             pass #TODO
         else:
-            if self.async_future is not None:
+            if self.async_future is not None and not self.async_future.done():
                 self.loop.call_soon_threadsafe(self.async_future.set_result, data)
             else:
-                print(f"Unsolicited data received: {data}")
+                log("DEBUG", f"Unsolicited data received: {data}")
     
     def _is_state_message(self, data: str):
         return data.startswith("mid:")
     
     async def send_raw_message(self, message: str, timeout: float = 5) -> str:
+        log("MSG", "S->D", message)
         self.loop = get_event_loop()
         if self.async_future is not None:
             await self.async_future
@@ -53,6 +62,7 @@ class Connection:
         raise ConnectionError(f"drone responed to {message} with {response}")
     
     def send_message_noanswer(self, message: str):
+        log("MSG", "S->D (noanswer)", message)
         self.socket.sendto(message.encode(), self.dest)
 
 
@@ -87,8 +97,16 @@ class ConnectionManager:
         
         conn = Connection(target_ip, self.socket, self.loop)
         self.connections[target_ip] = conn
-        await conn.connect()
+        await conn._connect()
         return conn
+    
+    async def disconnect(self, ip: str):
+        if ip not in self.connections:
+            return
+        await self.connections[ip]._disconnect()
+
+        del self.connections[ip]
+
     
     def stop(self):
         self.event.set()
