@@ -8,6 +8,6 @@ def find_mac(ip: str) -> Optional[str]:
                 return line[41:41+17]
     return None
 
-def log(*args):
-    print(*args, file=stderr)
+def log(level, *args):
+    print(level, *args, file=stderr)
     stderr.flush()

@@ -1,11 +1,42 @@
 import socket
 import threading
-from typing import Dict, Optional
+import random
+import time
+from typing import Dict, Optional, Coroutine, Callable, Any
 from asyncio import Future, get_event_loop, AbstractEventLoop
 import ipaddress
 from pydantic import BaseModel
 
 from .utils import find_mac, log
+
+class VideoReceiver(threading.Thread):
+    def __init__(self, listenport: int, loop: AbstractEventLoop) -> None:
+        super().__init__()
+        self.port = listenport
+        self.loop = loop
+        self.callback: Optional[Callable[[bytes], Coroutine[Any, Any, None]]]
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.settimeout(1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((ConnectionManager.LOCAL_IP, listenport))
+        self.signal = threading.Event()
+    
+    def run(self) -> None:
+        while not self.signal.is_set():
+            try:
+                data, addr = self.socket.recvfrom(65535)
+                if self.callback:
+                    self.loop.call_soon_threadsafe(self.callback, data)
+            except TimeoutError:
+                pass
+        
+        self.socket.close()
+
+    def setCallback(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
+        self.callback = cb
+    
+    def stop(self):
+        self.signal.set()
 
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
@@ -13,13 +44,24 @@ class Connection:
         self.dest = (target_ip, ConnectionManager.REMOTE_CMD_PORT)
         self.loop: AbstractEventLoop = loop
         self.socket = socket
+        self.last_sent_timestamp = 0
         self.async_future: Optional[Future[str]] = None
         self.read_data: Optional[str] = None # data to read
+
+        videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
+        
+        self.video = VideoReceiver(videoport, loop)
+    
+    async def setupVideoStream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
+        await self.send_control_message(f"port {ConnectionManager.REMOTE_CMD_PORT} {self.video.port}")
+        self.video.setCallback(cb)
     
     async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
     
     async def _disconnect(self): # called by ConnectionManager.disconnect
+        self.video.stop()
+
         self.send_message_noanswer("emergency")
         self.send_message_noanswer("quit")
 
@@ -42,6 +84,7 @@ class Connection:
         return data.startswith("mid:")
     
     async def send_raw_message(self, message: str, timeout: float = 5) -> str:
+        self._delay()
         log("MSG", "S->D", message)
         self.loop = get_event_loop()
         if self.async_future is not None:
@@ -62,16 +105,26 @@ class Connection:
         raise ConnectionError(f"drone responed to {message} with {response}")
     
     def send_message_noanswer(self, message: str):
+        self._delay()
         log("MSG", "S->D (noanswer)", message)
         self.socket.sendto(message.encode(), self.dest)
+    
+    def _delay(self):
+        diff = time.time() - self.last_sent_timestamp
+        if diff < ConnectionManager.TIME_BETWEEN_COMMANDS:
+            time.sleep(diff)
+        self.last_sent_timestamp = time.time()
 
 
 class ConnectionManager:
     LOCAL_IP = "0.0.0.0"
 
     LOCAL_STATE_PORT = 8890
-    LOCAL_VIDEO_PORT = 11111
+    LOCAL_VIDEO_PORT_MIN = 11111
+    LOCAL_VIDEO_PORT_MAX = 66666
     REMOTE_CMD_PORT = 8889
+
+    TIME_BETWEEN_COMMANDS = 0.5
 
     def __init__(self) -> None:
         self.event = threading.Event()

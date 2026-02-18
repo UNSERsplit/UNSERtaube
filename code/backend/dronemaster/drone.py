@@ -1,3 +1,4 @@
+from typing import Any, Callable, Coroutine
 from . import connection
 
 class Drone:
@@ -16,12 +17,13 @@ class Drone:
         await self.connection.send_control_message("takeoff", timeout=20)
     
     async def land(self):
-        self.connection.send_message_noanswer("land")
+        await self.connection.send_control_message("land")
     
     async def emergency_stop(self):
         self.connection.send_message_noanswer("emergency")
 
-    async def startstream(self):
+    async def startstream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
+        await self.connection.setupVideoStream(cb)
         await self.connection.send_control_message("streamon")
 
     async def stopstream(self):
