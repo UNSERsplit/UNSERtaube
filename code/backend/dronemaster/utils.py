@@ -9,5 +9,5 @@ def find_mac(ip: str) -> Optional[str]:
     return None
 
 def log(level, *args):
-    print(level, *args, file=stderr)
+    print(level, *map(lambda a: a.strip(), args), file=stderr)
     stderr.flush()

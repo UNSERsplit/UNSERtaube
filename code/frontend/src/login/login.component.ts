@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 import {FormsModule} from '@angular/forms';
 import { ControllerApiService } from '../app/controller-api.service';
@@ -14,21 +14,22 @@ import { ControllerApiService } from '../app/controller-api.service';
 })
 export class LoginComponent {
   public controllerApi = inject(ControllerApiService);
+  @ViewChild("video") video: ElementRef<HTMLVideoElement> | undefined;
+  ipaddress = "";
+  dronename = "";
+  onButtonClick() {
+      console.log(this.dronename);
+      console.log(this.ipaddress);
 
-    ipaddress = "";
-    dronename = "";
-    onButtonClick() {
-        console.log(this.dronename);
-        console.log(this.ipaddress);
+      this.controllerApi.video = this.video!.nativeElement;
+      this.controllerApi.connect(this.ipaddress)
+  }
 
-        this.controllerApi.connect(this.ipaddress)
-    }
+  land() {
+    this.controllerApi.land()
+  }
 
-    land() {
-      this.controllerApi.land()
-    }
-
-    takeoff() {
-      this.controllerApi.takeoff()
-    }
+  takeoff() {
+    this.controllerApi.takeoff()
+  }
 }

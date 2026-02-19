@@ -1,5 +1,5 @@
 from typing import Any, Callable, Coroutine
-from . import connection
+from . import connection, State
 
 class Drone:
     def __init__(self, ip: str) -> None:
@@ -19,6 +19,9 @@ class Drone:
     async def land(self):
         await self.connection.send_control_message("land")
     
+    def set_state_callback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
+        self.connection.setupStateCallback(cb)
+
     async def emergency_stop(self):
         self.connection.send_message_noanswer("emergency")
 

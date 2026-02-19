@@ -9,6 +9,21 @@ from pydantic import BaseModel
 
 from .utils import find_mac, log
 
+class State(BaseModel):
+    pitch: int # pitch in degrees
+    roll: int # roll in degrees
+    yaw: int # yaw in degrees
+    vgx: int # speed x in dm/s
+    vgy: int # speed y in dm/s
+    vgz: int # speed z in dm/s
+    bat: int # battery in percent
+    templ: int # temperature range low in °C
+    temph: int # temperature range high in °C
+
+    agx: float # acceleration x in cm/s²
+    agy: float # acceleration y in cm/s²
+    agz: float # acceleration z in cm/s²
+
 class VideoReceiver(threading.Thread):
     def __init__(self, listenport: int, loop: AbstractEventLoop) -> None:
         super().__init__()
@@ -20,13 +35,16 @@ class VideoReceiver(threading.Thread):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((ConnectionManager.LOCAL_IP, listenport))
         self.signal = threading.Event()
+
+    def _run_task(self, task, *args):
+        self.loop.create_task(task(*args))
     
     def run(self) -> None:
         while not self.signal.is_set():
             try:
                 data, addr = self.socket.recvfrom(65535)
                 if self.callback:
-                    self.loop.call_soon_threadsafe(self.callback, data)
+                    self.loop.call_soon_threadsafe(self._run_task, self.callback, data)
             except TimeoutError:
                 pass
         
@@ -47,14 +65,19 @@ class Connection:
         self.last_sent_timestamp = 0
         self.async_future: Optional[Future[str]] = None
         self.read_data: Optional[str] = None # data to read
+        self.state_callback: Optional[Callable[[State], Coroutine[Any, Any, None]]] = None
 
         videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
         
         self.video = VideoReceiver(videoport, loop)
+
+    def setupStateCallback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
+        self.state_callback = cb
     
     async def setupVideoStream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
-        await self.send_control_message(f"port {ConnectionManager.REMOTE_CMD_PORT} {self.video.port}")
+        await self.send_control_message(f"port {ConnectionManager.LOCAL_STATE_PORT} {self.video.port}")
         self.video.setCallback(cb)
+        self.video.start()
     
     async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
@@ -63,23 +86,45 @@ class Connection:
         self.video.stop()
 
         self.send_message_noanswer("emergency")
-        self.send_message_noanswer("quit")
 
     async def disconnect(self):
         await connection_manager.disconnect(self.ip)
+    
+    def _run_task(self, task, *args):
+        self.loop.create_task(task(*args))
 
     def on_data(self, raw_data: bytes): # called when new data for this ip is received
         data = raw_data.decode()
         log("MSG", "D->S", data)
 
         if self._is_state_message(data):
-            pass #TODO
+            state = self.parse_state(data)
+            if self.state_callback:
+                self.loop.call_soon_threadsafe(self._run_task, self.state_callback, state)
         else:
             if self.async_future is not None and not self.async_future.done():
                 self.loop.call_soon_threadsafe(self.async_future.set_result, data)
             else:
                 log("DEBUG", f"Unsolicited data received: {data}")
     
+    def parse_state(self, raw_data: str) -> State:
+        INT_FIELDS = ("pitch", "roll", "yaw", "vgx", "vgy", "vgz", "bat", "templ", "temph")
+        FLOAT_FIELDS = ("agx", "agy", "agz")
+
+        state = State.model_construct()
+        for entry in raw_data.strip().split(";"):
+            if not entry:
+                continue
+            name, value = entry.split(":")
+
+            if name in INT_FIELDS:
+                setattr(state, name, int(value))
+            if name in FLOAT_FIELDS:
+                setattr(state, name, float(value))
+        
+        return state
+
+
     def _is_state_message(self, data: str):
         return data.startswith("mid:")
     
@@ -121,7 +166,7 @@ class ConnectionManager:
 
     LOCAL_STATE_PORT = 8890
     LOCAL_VIDEO_PORT_MIN = 11111
-    LOCAL_VIDEO_PORT_MAX = 66666
+    LOCAL_VIDEO_PORT_MAX = 55555
     REMOTE_CMD_PORT = 8889
 
     TIME_BETWEEN_COMMANDS = 0.5

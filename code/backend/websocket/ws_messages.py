@@ -1,5 +1,6 @@
 from pydantic import BaseModel, TypeAdapter, Field
 from typing import Literal, Union, Annotated, Any
+from dronemaster import State
 
 class ServerBoundMessage(BaseModel):
     pass
@@ -30,9 +31,9 @@ class FunkiMessage(ServerBoundMessage):
 ### SERVERBOUND END ###
 
 ### CLIENTBOUND START ###
-class NewDroneFound(ClientBoundMessage):
-    type: str = "new_drone"
-    ip: str
+class StateMessage(ClientBoundMessage):
+    type: str = "state"
+    state: State
 
 class NetworkScanFinished(ClientBoundMessage):
     type: str  = "scan_finished"
