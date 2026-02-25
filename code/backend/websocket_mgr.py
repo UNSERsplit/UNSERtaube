@@ -1,10 +1,11 @@
-import threading
+import traceback
 from threading import Thread
 
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import *
+from websocket.webrtc import offer
 from dronemaster import Drone, State
 from database import SessionLocal
 
@@ -97,9 +98,10 @@ class WsConnection:
                 case ConnectToDrone():
                     self.drone = Drone(data.ip)
                     await self.drone.connect()
-                    await self.drone.startstream(self.on_frame)
+                    await self.drone.startstream()
+                    rtc_server = await offer(data.rtc_sdp, data.rtc_type, self.drone.get_video_port())
                     self.drone.set_state_callback(self.on_state)
-                    await self.send(DroneConnected())
+                    await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
                     await self.drone.takeoff()
                     await self.send(Accepted())
@@ -113,6 +115,8 @@ class WsConnection:
         except TimeoutError as e:
             await self.disconnect(reason=" ".join(e.args))
         except BaseException as e:
-            await self.send(Error(context=e.args))
+            tr = traceback.format_exc()
+            print(tr)
+            await self.send(Error(context=e.args, traceback=tr))
         finally:
             session.close()

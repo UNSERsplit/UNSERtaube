@@ -67,7 +67,7 @@ export class ControllerApiService {
     this.ws.addEventListener("message", ev => {
       if(ev.data instanceof Blob) {
         // video frame
-        this.videoApi.feed(ev.data);
+        
       } else {
 
         const data = JSON.parse(ev.data);
@@ -81,6 +81,14 @@ export class ControllerApiService {
             const newState:State = data.state
             this.state.set(newState);
             break;
+          }
+
+          case "drone_connected": {
+
+            this.videoApi.set_rtc({
+              type: data.rtc_type,
+              sdp: data.rtc_sdp
+            }).catch(e => console.error(e))
           }
         }
 
@@ -98,7 +106,8 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"land"}))
   }
 
-  connect(ip: string) {
-    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip}))
+  async connect(ip: string) {
+    const conn = await this.videoApi.connect();
+    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "rtc_sdp": conn.sdp, "rtc_type": conn.type}))
   }
 }

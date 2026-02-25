@@ -6,6 +6,9 @@ class Drone:
         self.ip = ip
         self.connection: connection.Connection = None # type: ignore
     
+    def get_video_port(self) -> int:
+        return self.connection.future_video_port
+    
     async def connect(self):
         self.connection = await connection.connection_manager.connect(self.ip)
     
@@ -25,13 +28,11 @@ class Drone:
     async def emergency_stop(self):
         self.connection.send_message_noanswer("emergency")
 
-    async def startstream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
-        await self.connection.setupVideoStream(cb)
-        for _ in range(5):
-            await self.connection.send_control_message("streamon")
+    async def startstream(self):
+        await self.connection.setupVideoStream()
+        await self.connection.send_control_message("streamon")
 
     async def stopstream(self):
-        self.connection.video.stop()
         await self.connection.send_control_message("streamoff")
     
     def rc(self, roll: float, pitch: float, throttle: float, yaw: float):

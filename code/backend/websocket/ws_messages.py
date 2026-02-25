@@ -12,6 +12,8 @@ class ClientBoundMessage(BaseModel):
 class ConnectToDrone(ServerBoundMessage):
     type: Literal["select_drone"]
     ip: str # TODO replace with drone id
+    rtc_sdp: str
+    rtc_type: str
 
 class DisconnectFromDrone(ServerBoundMessage):
     type: Literal["disconnect"]
@@ -35,11 +37,10 @@ class StateMessage(ClientBoundMessage):
     type: str = "state"
     state: State
 
-class NetworkScanFinished(ClientBoundMessage):
-    type: str  = "scan_finished"
-
 class DroneConnected(ClientBoundMessage):
     type: str = "drone_connected"
+    rtc_sdp: str
+    rtc_type: str
 
 class DroneDisconnected(ClientBoundMessage):
     type: str = "drone_disconnected"
@@ -55,6 +56,7 @@ class SendWaypoints(ClientBoundMessage):
 class Error(ClientBoundMessage):
     type: str = "error"
     context: tuple[Any]
+    traceback: str
 ### CLIENTBOUND END ###
 
 messages = Annotated[Union[
