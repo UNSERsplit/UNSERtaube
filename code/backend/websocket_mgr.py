@@ -1,7 +1,7 @@
 import threading
 from threading import Thread
-
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from code.backend.dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage
 from dronemaster import Drone, State
 from database import SessionLocal
@@ -38,6 +38,7 @@ class WsConnection:
         self.ws = ws
         self.mngr = mngr
         self.drone: Drone = None # type: ignore
+        self.pathcalculation = PathCalculation
     
     async def connect(self):
         pass
@@ -58,11 +59,19 @@ class WsConnection:
             await self.send(data)
         except Exception:
             pass
-    
+
+    async def sendpathpoints(self):
+        try:
+            await self.send(self.pathcalculation.canvas_waypoints.getwaypoints())
+        except Exception:
+            pass
+
+
     async def on_frame(self, data: bytes):
         await self.mngr.send_bytes(self.ws, data)
     
     async def on_state(self, state: State):
+        await self.pathcalculation.incoming_callback(state=state)
         await self.send(StateMessage(state=state))
 
     async def on_message(self, data: messages):
