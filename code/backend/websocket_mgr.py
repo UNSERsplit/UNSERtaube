@@ -1,7 +1,7 @@
 import threading
 from threading import Thread
 from starlette.websockets import WebSocket, WebSocketDisconnect
-from code.backend.dronemaster.connection import PathCalculation, CanvasWaypoints
+from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage
 from dronemaster import Drone, State
 from database import SessionLocal
