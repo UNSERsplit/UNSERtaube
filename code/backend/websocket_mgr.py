@@ -84,6 +84,7 @@ class WsConnection:
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
         await self.send(StateMessage(state=state))
+        await self.sendpathpoints()
 
     async def on_message(self, data: messages):
         session = SessionLocal()
