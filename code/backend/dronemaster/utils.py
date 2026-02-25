@@ -9,5 +9,7 @@ def find_mac(ip: str) -> Optional[str]:
     return None
 
 def log(level, *args):
+    if level == "MSG":
+        return
     print(level, *map(lambda a: a.strip(), args), file=stderr)
     stderr.flush()

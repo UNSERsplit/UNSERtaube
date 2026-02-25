@@ -45,7 +45,6 @@ export interface State {
 })
 export class ControllerApiService {
   public status = signal("offline");
-  video: any;
   public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN})
   private videoApi = inject(VideoApiService);
 
@@ -68,7 +67,7 @@ export class ControllerApiService {
     this.ws.addEventListener("message", ev => {
       if(ev.data instanceof Blob) {
         // video frame
-        this.videoApi.setFrame(ev.data);
+        this.videoApi.feed(ev.data);
       } else {
 
         const data = JSON.parse(ev.data);
@@ -100,8 +99,6 @@ export class ControllerApiService {
   }
 
   connect(ip: string) {
-    this.videoApi.setElement(this.video);
-    this.videoApi.initVideo();
     this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip}))
   }
 }

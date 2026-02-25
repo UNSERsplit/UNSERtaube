@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import {buildApplication} from '@angular-devkit/build-angular';
 import {StatusComponent} from '../status/status.component';
 import {LoginComponent} from '../login/login.component';
+import { VideoStreamComponent } from '../video-stream/video-stream.component';
 
 
 @Component({
     selector: 'app-root',
-    imports: [RouterOutlet, FormsModule, StatusComponent, LoginComponent],
+    imports: [RouterOutlet, FormsModule, StatusComponent, LoginComponent, VideoStreamComponent],
     styleUrl: './app.component.css',
     templateUrl: './app.component.html',
 })

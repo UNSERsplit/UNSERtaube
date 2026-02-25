@@ -15,4 +15,7 @@ export class StatusComponent {
   public pitch = computed(() => this.controllerApi.state().pitch);
   public yaw = computed(() => this.controllerApi.state().yaw);
   
+  public speed = computed(() => {
+    return `x:${this.controllerApi.state().vgx} y:${this.controllerApi.state().vgy} z:${this.controllerApi.state().vgz}`
+  })
 }

@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 127.0.0.1",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "build": "ng build --external-dependencies jmuxer.js",
+    "watch": "ng build --watch --configuration development --external-dependencies jmuxer.js",
     "test": "ng test"
   },
   "private": true,

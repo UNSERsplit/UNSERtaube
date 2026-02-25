@@ -14,8 +14,7 @@ FROM python:3.14-slim
 
 
 # Install nginx and sftp
-RUN mkdir -p /app && apt update && apt install -y --no-install-recommends --no-install-suggests nginx openssh-client curl
-
+RUN mkdir -p /app && apt update && apt install -y --no-install-recommends --no-install-suggests nginx openssh-client curl ffmpeg libglib2.0-0 libgl1
 WORKDIR /app
 
 # install backend requirements

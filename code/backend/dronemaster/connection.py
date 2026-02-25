@@ -6,6 +6,8 @@ from typing import Dict, Optional, Coroutine, Callable, Any
 from asyncio import Future, get_event_loop, AbstractEventLoop
 import ipaddress
 from pydantic import BaseModel
+import av
+import io
 
 from .utils import find_mac, log
 
@@ -33,22 +35,37 @@ class VideoReceiver(threading.Thread):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(1)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((ConnectionManager.LOCAL_IP, listenport))
+        #self.socket.bind((ConnectionManager.LOCAL_IP, listenport))
         self.signal = threading.Event()
+        self.signal.clear()
 
     def _run_task(self, task, *args):
         self.loop.create_task(task(*args))
     
     def run(self) -> None:
-        while not self.signal.is_set():
-            try:
-                data, addr = self.socket.recvfrom(65535)
-                if self.callback:
-                    self.loop.call_soon_threadsafe(self._run_task, self.callback, data)
-            except TimeoutError:
-                pass
-        
-        self.socket.close()
+        input_container = av.open(f"udp://0.0.0.0:{self.port}", "r")
+        input_stream = input_container.streams.video[0]
+
+        output_buffer = io.BytesIO() # 
+        output_container = av.open(output_buffer, 'w', format="mp4", options={"strict":"-1", "movflags":"empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof"})
+        output_stream = output_container.add_stream_from_template(input_stream)
+
+        first_packet = True
+        for packet in input_container.demux(input_stream):
+            log("VIDEO", "packet")
+            if first_packet:
+                packet.dts = 0
+                packet.pts = 0
+                first_packet = False
+            packet.stream = output_stream
+            output_container.mux_one(packet)
+            result = output_buffer.getvalue()
+            if result:
+                print("YES", packet.is_keyframe)
+                output_buffer.truncate(0)
+                output_buffer.seek(0)
+            else:
+                print("NO", packet.is_keyframe)
 
     def setCallback(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
         self.callback = cb
@@ -67,14 +84,16 @@ class Connection:
         self.read_data: Optional[str] = None # data to read
         self.state_callback: Optional[Callable[[State], Coroutine[Any, Any, None]]] = None
 
-        videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
-        
-        self.video = VideoReceiver(videoport, loop)
-
     def setupStateCallback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
         self.state_callback = cb
     
     async def setupVideoStream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
+        videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
+        self.video = VideoReceiver(videoport, self.loop)
+
+        await self.send_control_message("setfps high")
+        await self.send_control_message("setbitrate 5")
+        await self.send_control_message("setresolution high")
         await self.send_control_message(f"port {ConnectionManager.LOCAL_STATE_PORT} {self.video.port}")
         self.video.setCallback(cb)
         self.video.start()
@@ -83,7 +102,8 @@ class Connection:
         await self.send_control_message("command")
     
     async def _disconnect(self): # called by ConnectionManager.disconnect
-        self.video.stop()
+        if hasattr(self, "video"):
+            self.video.stop()
 
         self.send_message_noanswer("emergency")
 
@@ -105,7 +125,7 @@ class Connection:
             if self.async_future is not None and not self.async_future.done():
                 self.loop.call_soon_threadsafe(self.async_future.set_result, data)
             else:
-                log("DEBUG", f"Unsolicited data received: {data}")
+                log("DEBUG", f"Unsolicited data received {self.ip}: {data}")
     
     def parse_state(self, raw_data: str) -> State:
         INT_FIELDS = ("pitch", "roll", "yaw", "vgx", "vgy", "vgz", "bat", "templ", "temph")
@@ -263,12 +283,15 @@ async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
     connections = list()
 
     for ip in ips:
-        conn = Connection(ip, connection_manager.socket, connection_manager.loop) # do not send second command
-        connection_manager.connections[ip] = conn
+        try:
+            conn = Connection(ip, connection_manager.socket, connection_manager.loop) # do not send second command
+            connection_manager.connections[ip] = conn
 
-        conn = await connection_manager.connect(ip)
-        sn = await conn.send_raw_message("sn?")
-        mac = find_mac(ip)
-        connections.append(ScanResult(ip=conn.ip, sn=sn, mac=mac))
+            conn = await connection_manager.connect(ip)
+            sn = await conn.send_raw_message("sn?")
+            mac = find_mac(ip)
+            connections.append(ScanResult(ip=conn.ip, sn=sn, mac=mac))
+        except:
+            print(f"drone {ip} responded to initial scan but now does not work")
     
     return connections

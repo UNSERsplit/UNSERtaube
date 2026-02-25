@@ -14,14 +14,12 @@ import { ControllerApiService } from '../app/controller-api.service';
 })
 export class LoginComponent {
   public controllerApi = inject(ControllerApiService);
-  @ViewChild("video") video: ElementRef<HTMLVideoElement> | undefined;
   ipaddress = "";
   dronename = "";
   onButtonClick() {
       console.log(this.dronename);
       console.log(this.ipaddress);
 
-      this.controllerApi.video = this.video!.nativeElement;
       this.controllerApi.connect(this.ipaddress)
   }
 

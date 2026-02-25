@@ -1,7 +1,7 @@
 import threading
 from threading import Thread
 
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage
 from dronemaster import Drone, State
 from database import SessionLocal
@@ -20,12 +20,16 @@ class WebsocketManager:
     
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
+            if ws.client_state != WebSocketState.CONNECTED:
+                raise WebSocketDisconnect()
             await ws.send_json(data.model_dump())
         except WebSocketDisconnect:
             del self.connections[ws]
     
     async def send_bytes(self, ws: WebSocket, data: bytes):
         try:
+            if ws.client_state != WebSocketState.CONNECTED:
+                raise WebSocketDisconnect()
             await ws.send_bytes(data)
         except WebSocketDisconnect:
             del self.connections[ws]
@@ -44,9 +48,14 @@ class WsConnection:
 
     async def disconnect(self, reason: str):
         if self.drone:
-            await self.drone.stopstream()
-        if self.drone:
-            await self.drone.disconnect()
+            try:
+                await self.drone.stopstream()
+            except Exception:
+                pass
+            try:
+                await self.drone.disconnect()
+            except Exception:
+                pass
 
         await self.trysend(DroneDisconnected(reason=reason))
 
