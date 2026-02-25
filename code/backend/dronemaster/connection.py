@@ -1,3 +1,4 @@
+from fractions import Fraction
 import socket
 import threading
 import random
@@ -7,6 +8,8 @@ from asyncio import Future, get_event_loop, AbstractEventLoop
 import ipaddress
 from pydantic import BaseModel
 import av
+import hashlib
+from av.container import InputContainer
 import io
 
 from .utils import find_mac, log
@@ -36,6 +39,7 @@ class VideoReceiver(threading.Thread):
         self.socket.settimeout(1)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         #self.socket.bind((ConnectionManager.LOCAL_IP, listenport))
+        self.input_container: InputContainer
         self.signal = threading.Event()
         self.signal.clear()
 
@@ -43,35 +47,62 @@ class VideoReceiver(threading.Thread):
         self.loop.create_task(task(*args))
 
     def run(self) -> None:
-        input_container = av.open(f"udp://0.0.0.0:{self.port}", "r")
-        input_stream = input_container.streams.video[0]
+        self.input_container = av.open(f"udp://0.0.0.0:{self.port}", "r")
+        input_stream = self.input_container.streams.video[0]
 
         output_buffer = io.BytesIO() # 
-        output_container = av.open(output_buffer, 'w', format="mp4", options={"strict":"-1", "movflags":"empty_moov+omit_tfhd_offset+frag_keyframe+default_base_moof"})
+        output_container = av.open(output_buffer, 'w', format="mp4", options={"strict":"-1", "movflags":"empty_moov+omit_tfhd_offset+default_base_moof", "frag_duration":"100000", "flush_packets":"1"})
         output_stream = output_container.add_stream_from_template(input_stream)
 
-        first_packet = True
-        for packet in input_container.demux(input_stream):
-            log("VIDEO", "packet")
-            if first_packet:
-                packet.dts = 0
-                packet.pts = 0
-                first_packet = False
+        output_stream.time_base = input_stream.time_base
+        output_stream.codec_context.extradata = input_stream.codec_context.extradata
+
+        started = False
+        #log("VIDEO", input_stream.codec_context.name)
+
+        fps = 25
+        time_base = Fraction(1, fps)
+        output_stream.time_base = time_base
+
+        frame_index = 0
+        t = time.time()
+
+        for packet in self.input_container.demux(input_stream):
+            #log("VIDEO", "PACKET", started, packet.dts, packet.is_keyframe, packet.is_corrupt) 
+            if not packet.is_keyframe and not started:
+                continue
+
+            started = True
+
             packet.stream = output_stream
-            output_container.mux_one(packet)
+            packet.pts = frame_index
+            packet.dts = frame_index
+            packet.duration = 1
+            packet.time_base = time_base
+
+            frame_index += 1
+
+            output_container.mux(packet)
+
+
             result = output_buffer.getvalue()
             if result:
-                print("YES", packet.is_keyframe)
+                if self.callback:
+                    log("TIME", time.time() - t)
+                    t = time.time()
+                    self.loop.call_soon_threadsafe(self._run_task, self.callback, result)
                 output_buffer.truncate(0)
                 output_buffer.seek(0)
             else:
-                print("NO", packet.is_keyframe)
+                pass
 
     def setCallback(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
         self.callback = cb
 
     def stop(self):
         self.signal.set()
+        if hasattr(self, "input_container"):
+            self.input_container.close()
 
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
@@ -88,7 +119,8 @@ class Connection:
         self.state_callback = cb
 
     async def setupVideoStream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
-        videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
+        #videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
+        videoport = int(hashlib.sha256(self.ip.encode('utf-8')).hexdigest(), 16) % (ConnectionManager.LOCAL_VIDEO_PORT_MAX - ConnectionManager.LOCAL_VIDEO_PORT_MIN) + ConnectionManager.LOCAL_VIDEO_PORT_MIN
         self.video = VideoReceiver(videoport, self.loop)
 
         await self.send_control_message("setfps high")
@@ -101,9 +133,11 @@ class Connection:
     async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
 
-    async def _disconnect(self): # called by ConnectionManager.disconnect
+    def _disconnect(self): # called by ConnectionManager.disconnect
         if hasattr(self, "video"):
             self.video.stop()
+        
+        self.send_message_noanswer("streamoff")
 
         self.send_message_noanswer("emergency")
 
@@ -208,6 +242,9 @@ class ConnectionManager:
 
         self.thread = threading.Thread(target=self._run)
         self.thread.start()
+    
+    def _run_task(self, task, *args):
+        self.loop.create_task(task(*args))
 
     async def connect(self, target_ip: str) -> Connection:
         if target_ip in self.connections:
@@ -221,13 +258,19 @@ class ConnectionManager:
     async def disconnect(self, ip: str):
         if ip not in self.connections:
             return
-        await self.connections[ip]._disconnect()
+        self.connections[ip]._disconnect()
 
         del self.connections[ip]
 
 
     def stop(self):
         self.event.set()
+
+        for ip, connection in self.connections.items():
+            try:
+                connection._disconnect()
+            except Exception as e:
+                log("ERROR", "drone disconnect failed", e)
 
     def _run(self):
         while not self.event.is_set():

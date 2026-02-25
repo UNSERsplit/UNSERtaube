@@ -4,7 +4,7 @@ from threading import Thread
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from dronemaster.connection import PathCalculation, CanvasWaypoints
-from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage, SendWaypoints
+from websocket.ws_messages import *
 from dronemaster import Drone, State
 from database import SessionLocal
 
@@ -18,7 +18,8 @@ class WebsocketManager:
     
     async def disconnect(self, ws: WebSocket):
         await self.connections[ws].disconnect("WS disconnect")
-        del self.connections[ws]
+        if ws in self.connections:
+            del self.connections[ws]
 
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
@@ -26,7 +27,8 @@ class WebsocketManager:
                 raise WebSocketDisconnect()
             await ws.send_json(data.model_dump())
         except WebSocketDisconnect:
-            del self.connections[ws]
+            if ws in self.connections:
+                del self.connections[ws]
 
     async def send_bytes(self, ws: WebSocket, data: bytes):
         try:
@@ -34,7 +36,8 @@ class WebsocketManager:
                 raise WebSocketDisconnect()
             await ws.send_bytes(data)
         except WebSocketDisconnect:
-            del self.connections[ws]
+            if ws in self.connections:
+                del self.connections[ws]
 
     async def on_message(self, ws: WebSocket, data: messages):
         await self.connections[ws].on_message(data)

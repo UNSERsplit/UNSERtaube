@@ -4,38 +4,56 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root'
 })
 export class VideoApiService {
-  private element: HTMLCanvasElement | undefined;
-  private context: CanvasRenderingContext2D | undefined;
-  private jmuxer: any;
+  private element: HTMLVideoElement | undefined;
+  private mediaSource: MediaSource | undefined;
+  private sourceBuffer: SourceBuffer | undefined;
+
 
   initVideo(playbackId: string) {
-    this.jmuxer = eval(`new JMuxer({
-			node: "${playbackId}",
-			mode: 'video',
-			flushingTime: 0,
-			fps: 30,
-			debug: true
-		 });`);
-    //this.element = document.getElementById(playbackId) as HTMLCanvasElement;
+    this.element = document.getElementById(playbackId) as HTMLVideoElement;
 
-    //this.context = this.element.getContext("2d") as CanvasRenderingContext2D;
+    this.mediaSource = new MediaSource();
+
+    this.mediaSource.addEventListener("sourceopen", () => {
+      console.log("Source opened")
+
+      this.sourceBuffer = this.mediaSource?.addSourceBuffer("video/mp4")
+    });
+
+    this.mediaSource.addEventListener("sourceclose", () => {
+      console.error("Source closed")
+    });
+
+    this.element.src = URL.createObjectURL(this.mediaSource);
   }
 
   feed(b: Blob) {
-    b.bytes().then(d => {
-      this.jmuxer.feed({
-        video: d
-      });
-    });
+    this.element?.play()
 
-    /*var blob = new Blob([b], {type: 'image/bmp'});
-    var url = URL.createObjectURL(blob);
-    var img = new Image;
+    const updateFunction = () => {
+      this.sourceBuffer?.removeEventListener("updateend", updateFunction)
 
-    img.onload = () => {
-        this.context!.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
+      b.arrayBuffer().then(buffer => {
+
+        this.sourceBuffer?.appendBuffer(buffer)
+        console.log(this.element?.buffered, this.element?.duration, this.element?.currentTime)
+        let max = 0;
+        for (let index = 0; index < this.element!.buffered.length; index++) {
+          let a = this.element!.buffered.end(index);
+          if (a > max) {
+            max = a;
+          }
+        }
+        if (!(max == 0 || max === Infinity)) {
+          this.element!.currentTime = max - 0.1;
+        }
+      })
     }
-    img.src = url;*/
+
+    if(this.sourceBuffer?.updating) {
+      this.sourceBuffer.addEventListener("updateend", updateFunction)
+    } else {
+      updateFunction()
+    }
   }
 }
