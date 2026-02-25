@@ -2,9 +2,8 @@ import threading
 from threading import Thread
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from code.backend.dronemaster.connection import PathCalculation, CanvasWaypoints
-from dronemaster import Drone, State
 from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage
-from dronemaster import Drone
+from dronemaster import Drone, State
 from database import SessionLocal
 
 
@@ -18,7 +17,7 @@ class WebsocketManager:
     async def disconnect(self, ws: WebSocket):
         await self.connections[ws].disconnect("WS disconnect")
         del self.connections[ws]
-    
+
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
             await ws.send_json(data.model_dump())
@@ -30,7 +29,7 @@ class WebsocketManager:
             await ws.send_bytes(data)
         except WebSocketDisconnect:
             del self.connections[ws]
-    
+
     async def on_message(self, ws: WebSocket, data: messages):
         await self.connections[ws].on_message(data)
 
@@ -54,7 +53,7 @@ class WsConnection:
 
     async def send(self, data: ClientBoundMessage):
         await self.mngr.send(self.ws, data)
-    
+
     async def trysend(self, data: ClientBoundMessage):
         try:
             await self.send(data)
@@ -67,9 +66,10 @@ class WsConnection:
         except Exception:
             pass
 
+
     async def on_frame(self, data: bytes):
         await self.mngr.send_bytes(self.ws, data)
-    
+
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
         await self.send(StateMessage(state=state))
