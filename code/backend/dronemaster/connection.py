@@ -12,19 +12,19 @@ import io
 from .utils import find_mac, log
 
 class State(BaseModel):
-    pitch: int # pitch in degrees
-    roll: int # roll in degrees
-    yaw: int # yaw in degrees
-    vgx: int # speed x in dm/s
-    vgy: int # speed y in dm/s
-    vgz: int # speed z in dm/s
-    bat: int # battery in percent
-    templ: int # temperature range low in °C
-    temph: int # temperature range high in °C
+     pitch: int # pitch in degrees
+     roll: int # roll in degrees
+     yaw: int # yaw in degrees
+     vgx: int # speed x in dm/s
+     vgy: int # speed y in dm/s
+     vgz: int # speed z in dm/s
+     bat: int # battery in percent
+     templ: int # temperature range low in °C
+     temph: int # temperature range high in °C
 
-    agx: float # acceleration x in cm/s²
-    agy: float # acceleration y in cm/s²
-    agz: float # acceleration z in cm/s²
+     agx: float # acceleration x in cm/s²
+     agy: float # acceleration y in cm/s²
+     agz: float # acceleration z in cm/s²
 
 class VideoReceiver(threading.Thread):
     def __init__(self, listenport: int, loop: AbstractEventLoop) -> None:
@@ -41,7 +41,7 @@ class VideoReceiver(threading.Thread):
 
     def _run_task(self, task, *args):
         self.loop.create_task(task(*args))
-    
+
     def run(self) -> None:
         input_container = av.open(f"udp://0.0.0.0:{self.port}", "r")
         input_stream = input_container.streams.video[0]
@@ -69,7 +69,7 @@ class VideoReceiver(threading.Thread):
 
     def setCallback(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
         self.callback = cb
-    
+
     def stop(self):
         self.signal.set()
 
@@ -86,7 +86,7 @@ class Connection:
 
     def setupStateCallback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
         self.state_callback = cb
-    
+
     async def setupVideoStream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
         videoport = random.randint(ConnectionManager.LOCAL_VIDEO_PORT_MIN, ConnectionManager.LOCAL_VIDEO_PORT_MAX)
         self.video = VideoReceiver(videoport, self.loop)
@@ -97,10 +97,10 @@ class Connection:
         await self.send_control_message(f"port {ConnectionManager.LOCAL_STATE_PORT} {self.video.port}")
         self.video.setCallback(cb)
         self.video.start()
-    
+
     async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
-    
+
     async def _disconnect(self): # called by ConnectionManager.disconnect
         if hasattr(self, "video"):
             self.video.stop()
@@ -109,7 +109,7 @@ class Connection:
 
     async def disconnect(self):
         await connection_manager.disconnect(self.ip)
-    
+
     def _run_task(self, task, *args):
         self.loop.create_task(task(*args))
 
@@ -141,20 +141,20 @@ class Connection:
                 setattr(state, name, int(value))
             if name in FLOAT_FIELDS:
                 setattr(state, name, float(value))
-        
+
         return state
 
 
     def _is_state_message(self, data: str):
         return data.startswith("mid:")
-    
+
     async def send_raw_message(self, message: str, timeout: float = 5) -> str:
         self._delay()
         log("MSG", "S->D", message)
         self.loop = get_event_loop()
         if self.async_future is not None:
             await self.async_future
-        
+
         timer = threading.Timer(timeout, lambda : self.loop.call_soon_threadsafe(self.async_future.set_exception, TimeoutError(f"The drone did not respond withing {timeout}s")) if self.async_future is not None else None)
         self.async_future = self.loop.create_future()
         timer.start()
@@ -168,12 +168,12 @@ class Connection:
         if response.strip().upper() == "OK":
             return True
         raise ConnectionError(f"drone responed to {message} with {response}")
-    
+
     def send_message_noanswer(self, message: str):
         self._delay()
         log("MSG", "S->D (noanswer)", message)
         self.socket.sendto(message.encode(), self.dest)
-    
+
     def _delay(self):
         diff = time.time() - self.last_sent_timestamp
         if diff < ConnectionManager.TIME_BETWEEN_COMMANDS:
@@ -202,22 +202,22 @@ class ConnectionManager:
         self.socket.settimeout(2)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((
-            ConnectionManager.LOCAL_IP, 
+            ConnectionManager.LOCAL_IP,
             ConnectionManager.LOCAL_STATE_PORT
         ))
 
         self.thread = threading.Thread(target=self._run)
         self.thread.start()
-    
+
     async def connect(self, target_ip: str) -> Connection:
         if target_ip in self.connections:
             return self.connections[target_ip]
-        
+
         conn = Connection(target_ip, self.socket, self.loop)
         self.connections[target_ip] = conn
         await conn._connect()
         return conn
-    
+
     async def disconnect(self, ip: str):
         if ip not in self.connections:
             return
@@ -225,10 +225,10 @@ class ConnectionManager:
 
         del self.connections[ip]
 
-    
+
     def stop(self):
         self.event.set()
-    
+
     def _run(self):
         while not self.event.is_set():
             try:
@@ -242,7 +242,7 @@ class ConnectionManager:
                 connection.on_data(data)
             except TimeoutError:
                 pass
-        
+
         self.socket.close()
 
 connection_manager: ConnectionManager
@@ -272,7 +272,7 @@ async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
         connection_manager.socket.sendto(b"command", (str(addr), ConnectionManager.REMOTE_CMD_PORT))
 
     connection_manager.socket.settimeout(old_timeout)
-    
+
     loop = get_event_loop()
     future = loop.create_future()
     timer = threading.Timer(timeout, lambda : loop.call_soon_threadsafe(future.set_result, None))
@@ -295,3 +295,35 @@ async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
             print(f"drone {ip} responded to initial scan but now does not work")
     
     return connections
+
+class CanvasWaypoints:
+    def __init__(self):
+        self.waypoints = [(0,0,0)]
+
+    def addwaypoint(self, x: int, y: int, z: int) -> None:
+        self.waypoints.append((x, y, z))
+
+    def getwaypoints(self):
+        return self.waypoints
+
+class PathCalculation:
+    def __init__(self) -> None:
+        self.xpos = 0.0 # in m  - Aktuelle Position der Drohne relativ zum Start
+        self.ypos = 0.0 # in m  ^
+        self.zpos = 0.0 # in m  ^
+        self.time_last_callback = None
+        self.canvas_waypoints = CanvasWaypoints()
+
+    async def incoming_callback(self, state: State):
+        if self.time_last_callback is None:
+            self.time_last_callback = time.time()
+            return
+        curr_time = time.time()
+        last_callback = self.time_last_callback - curr_time
+        self.time_last_callback = curr_time
+
+        self.xpos += (state.vgx/10) / last_callback
+        self.ypos += (state.vgy/10) / last_callback
+        self.zpos += (state.vgz/10) / last_callback
+
+        self.canvas_waypoints.addwaypoint(int(self.xpos), int(self.ypos), int(self.zpos))
