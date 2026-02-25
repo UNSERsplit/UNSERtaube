@@ -48,6 +48,10 @@ class DroneDisconnected(ClientBoundMessage):
 class Accepted(ClientBoundMessage):
     type: str = "accepted"
 
+class SendWaypoints(ClientBoundMessage):
+    type: str = "waypoints"
+    context: list[tuple[int,int,int]]
+
 class Error(ClientBoundMessage):
     type: str = "error"
     context: tuple[Any]
