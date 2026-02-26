@@ -55,7 +55,7 @@ class SendWaypoints(ClientBoundMessage):
 
 class Error(ClientBoundMessage):
     type: str = "error"
-    context: tuple[Any]
+    context: list
     traceback: str
 ### CLIENTBOUND END ###
 

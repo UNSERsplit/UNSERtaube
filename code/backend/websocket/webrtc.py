@@ -1,4 +1,5 @@
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
+from aiortc.contrib.media import MediaPlayer
 from aiortc.rtcrtpsender import RTCRtpSender
 import av
 from av import VideoFrame
@@ -17,9 +18,11 @@ class UDPVideoTrack(VideoStreamTrack):
     def _frame_generator(self):
         for packet in self.container.demux(self.stream):
             for frame in packet.decode():
+                log("FRAME")
                 yield frame
 
     async def recv(self):
+        log("RECV")
         pts, time_base = await self.next_timestamp()
         try:
             frame: VideoFrame = next(self.frame_iter) # type: ignore
@@ -31,7 +34,13 @@ class UDPVideoTrack(VideoStreamTrack):
         frame.time_base = time_base
         return frame
 
-
+def force_codec(pc: RTCPeerConnection, sender: RTCRtpSender, forced_codec: str) -> None:
+    kind = forced_codec.split("/")[0]
+    codecs = RTCRtpSender.getCapabilities(kind).codecs
+    transceiver = next(t for t in pc.getTransceivers() if t.sender == sender)
+    transceiver.setCodecPreferences(
+        [codec for codec in codecs if codec.mimeType == forced_codec]
+    )
 
 # ---- WebRTC  ----
 async def offer(sdp, type, port):
@@ -47,25 +56,21 @@ async def offer(sdp, type, port):
 
     log(3)
 
-    # --- Step 1: create a video transceiver ---
-    transceiver = pc.addTransceiver("video", direction="sendonly")
-
-    # --- Step 2: force H264 codec ---
-    log(4)
-    capabilities = RTCRtpSender.getCapabilities("video")
-    h264_codecs = [c for c in capabilities.codecs if c.mimeType == "video/H264"]
-    transceiver.setCodecPreferences(h264_codecs)
-    log(5, h264_codecs)
-
     # --- Step 3: attach the track ---
-    track = UDPVideoTrack(port=port)
-    transceiver.sender.replaceTrack(track)
+    #track = UDPVideoTrack(port=port)
+    track = VideoStreamTrack()
+    video_sender = pc.addTrack(track)
 
-    log(6)
+    log(4)
+
+    force_codec(pc, video_sender,"video/H264")
     # --- Standard negotiation ---
+    log(5)
     await pc.setRemoteDescription(offer)
+    log(6)
     answer = await pc.createAnswer()
-    log(7, answer)
+    pc.getTransceivers()[0]._offerDirection = "recvonly"
+    log(7, answer, pc.getTransceivers()[0].direction, pc.getTransceivers()[0]._offerDirection)
     await pc.setLocalDescription(answer)
 
     log(8)

@@ -117,6 +117,6 @@ class WsConnection:
         except BaseException as e:
             tr = traceback.format_exc()
             print(tr)
-            await self.send(Error(context=e.args, traceback=tr))
+            await self.send(Error(context=list(e.args), traceback=tr))
         finally:
             session.close()
