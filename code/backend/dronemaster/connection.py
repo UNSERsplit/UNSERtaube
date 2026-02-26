@@ -10,6 +10,7 @@ import av
 import hashlib
 from av.container import InputContainer
 import io
+import math
 
 from .utils import find_mac, log
 
