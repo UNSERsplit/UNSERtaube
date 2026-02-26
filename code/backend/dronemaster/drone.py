@@ -27,9 +27,11 @@ class Drone:
 
     async def startstream(self, cb: Callable[[bytes], Coroutine[Any, Any, None]]):
         await self.connection.setupVideoStream(cb)
-        await self.connection.send_control_message("streamon")
+        for _ in range(5):
+            await self.connection.send_control_message("streamon")
 
     async def stopstream(self):
+        self.connection.video.stop()
         await self.connection.send_control_message("streamoff")
     
     def rc(self, roll: float, pitch: float, throttle: float, yaw: float):

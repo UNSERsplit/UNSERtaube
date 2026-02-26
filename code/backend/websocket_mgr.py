@@ -1,8 +1,10 @@
 import threading
 from threading import Thread
+
+from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from dronemaster.connection import PathCalculation, CanvasWaypoints
-from websocket.ws_messages import messages, ConnectToDrone, Land, TakeOff, FunkiMessage, ClientBoundMessage, DroneConnected, DroneDisconnected, DisconnectFromDrone, Error, Accepted, StateMessage
+from websocket.ws_messages import *
 from dronemaster import Drone, State
 from database import SessionLocal
 
@@ -16,19 +18,26 @@ class WebsocketManager:
     
     async def disconnect(self, ws: WebSocket):
         await self.connections[ws].disconnect("WS disconnect")
-        del self.connections[ws]
+        if ws in self.connections:
+            del self.connections[ws]
 
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
+            if ws.client_state != WebSocketState.CONNECTED:
+                raise WebSocketDisconnect()
             await ws.send_json(data.model_dump())
         except WebSocketDisconnect:
-            del self.connections[ws]
+            if ws in self.connections:
+                del self.connections[ws]
 
     async def send_bytes(self, ws: WebSocket, data: bytes):
         try:
+            if ws.client_state != WebSocketState.CONNECTED:
+                raise WebSocketDisconnect()
             await ws.send_bytes(data)
         except WebSocketDisconnect:
-            del self.connections[ws]
+            if ws in self.connections:
+                del self.connections[ws]
 
     async def on_message(self, ws: WebSocket, data: messages):
         await self.connections[ws].on_message(data)
@@ -38,16 +47,21 @@ class WsConnection:
         self.ws = ws
         self.mngr = mngr
         self.drone: Drone = None # type: ignore
-        self.pathcalculation = PathCalculation
+        self.pathcalculation = PathCalculation()
 
     async def connect(self):
         pass
 
     async def disconnect(self, reason: str):
         if self.drone:
-            await self.drone.stopstream()
-        if self.drone:
-            await self.drone.disconnect()
+            try:
+                await self.drone.stopstream()
+            except Exception:
+                pass
+            try:
+                await self.drone.disconnect()
+            except Exception:
+                pass
 
         await self.trysend(DroneDisconnected(reason=reason))
 
@@ -62,7 +76,7 @@ class WsConnection:
 
     async def sendpathpoints(self):
         try:
-            await self.send(self.pathcalculation.canvas_waypoints.getwaypoints())
+            await self.send(SendWaypoints(context=self.pathcalculation.canvas_waypoints.getwaypoints()))
         except Exception:
             pass
 
@@ -73,6 +87,7 @@ class WsConnection:
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
         await self.send(StateMessage(state=state))
+        await self.sendpathpoints()
 
     async def on_message(self, data: messages):
         session = SessionLocal()
