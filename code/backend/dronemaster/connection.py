@@ -1,3 +1,4 @@
+import math
 import socket
 import threading
 import random
@@ -285,9 +286,9 @@ class CanvasWaypoints:
 
 class PathCalculation:
     def __init__(self) -> None:
-        self.xpos = 0.0 # in m  - Aktuelle Position der Drohne relativ zum Start
-        self.ypos = 0.0 # in m  ^
-        self.zpos = 0.0 # in m  ^
+        self.xpos = 0.0 # in dm  - Aktuelle Position der Drohne relativ zum Start
+        self.ypos = 0.0 # in dm  ^
+        self.zpos = 0.0 # in dm  ^
         self.time_last_callback = None
         self.canvas_waypoints = CanvasWaypoints()
 
@@ -296,11 +297,17 @@ class PathCalculation:
             self.time_last_callback = time.time()
             return
         curr_time = time.time()
-        last_callback = self.time_last_callback - curr_time
+        last_callback = curr_time - self.time_last_callback
         self.time_last_callback = curr_time
 
-        self.xpos += (state.vgx/10) / last_callback
-        self.ypos += (state.vgy/10) / last_callback
-        self.zpos += (state.vgz/10) / last_callback
+        yaw = math.radians(state.yaw)
+
+        # 2. Lokale Geschwindigkeiten auf die globalen Achsen projizieren
+        x_yaw_corrected = (state.vgx * math.cos(yaw)) - (state.vgy * math.sin(yaw))
+        y_yaw_corrected = (state.vgx * math.sin(yaw)) + (state.vgy * math.cos(yaw))
+
+        self.xpos += x_yaw_corrected * last_callback
+        self.ypos += y_yaw_corrected * last_callback
+        self.zpos += state.vgz * last_callback
 
         self.canvas_waypoints.addwaypoint(int(self.xpos), int(self.ypos), int(self.zpos))
