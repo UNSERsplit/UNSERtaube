@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 
 @Component({
-  selector: 'status',
+    selector: 'status',
     imports: [
         RouterOutlet
     ],
-  templateUrl: './status.component.html',
-  styleUrl: './status.component.css'
+    templateUrl: './status.component.html',
+    standalone: true,
+    styleUrl: './status.component.css'
 })
 export class StatusComponent {
 

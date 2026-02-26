@@ -1,1 +1,17 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --bg-color: #121923;
+    --card-bg: #161e2c;
+    --border-color: #1f2937;
+    --button-color: #0d59f2;
+    --label-color: #0F172A;
+    --label-border-color: #334155;
+    --text-muted: #6b7280;
+    --accent-blue: #0062ff;
+    --accent-glow: rgba(0, 98, 255, 0.4);
+}
+
+body {
+    background: var(--bg-color);
+    background-attachment: fixed;
+    margin: 0;
+}
