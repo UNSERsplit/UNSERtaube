@@ -1,0 +1,8 @@
+<div class="status-container" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+    <span class="status-dot"></span>
+    <span class="status-text">
+    {{ isConnected  ? 'Verbunden' : 'Nicht Verbunden' }}
+  </span>
+</div>
+
+

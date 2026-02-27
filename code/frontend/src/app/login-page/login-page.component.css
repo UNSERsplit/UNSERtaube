@@ -1,11 +1,10 @@
 .card {
     background-color: var( --card-bg);
-    padding: 30px;
+    padding: 25px;
     border-radius: 8px;
     width: 100%;
     max-width: 750px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    margin: 15px;
 }
 
 .title {
@@ -26,9 +25,24 @@ h2{
 .header{
     top: 0;
     margin: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .carousel-container{
     display: flex;
     justify-content: center;
+}
+
+.topbar{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+}
+
+app-status{
+    display: flex;
+    justify-content: start;
+    align-items: start;
 }
