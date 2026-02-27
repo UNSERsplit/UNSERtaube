@@ -1,0 +1,30 @@
+.card {
+    background-color: var( --card-bg);
+    padding: 40px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 750px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    margin: 30px;
+}
+
+.title {
+    color: white;
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+    border-left: 4px solid var(--accent-blue);
+    padding-left: 15px;
+    font-weight: 600;
+}
+
+h2{
+    color: white;
+    font-size: 1.2rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.header{
+    top: 0;
+    margin: 15px;
+}
+

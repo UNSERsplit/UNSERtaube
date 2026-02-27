@@ -1,0 +1,13 @@
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
+}

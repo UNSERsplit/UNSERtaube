@@ -1,0 +1,37 @@
+button{
+    width: 100%;
+    background-color: var(--button-color);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.blue {
+    --background-color: var(--button-color);
+    --accent-glow: #0e5159;
+}
+
+.red {
+    --button-color: #3b5ab1;
+    --accent-glow: #3cd8c6;
+}
+
+#nuaZumKlickn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+#nuaZumKlickn:active {
+    transform: translateY(0);
+}
