@@ -18,8 +18,8 @@ class WebsocketManager:
         self.connections[ws] = WsConnection(ws, self)
     
     async def disconnect(self, ws: WebSocket):
-        await self.connections[ws].disconnect("WS disconnect")
         if ws in self.connections:
+            await self.connections[ws].disconnect("WS disconnect")
             del self.connections[ws]
 
     async def send(self, ws: WebSocket, data: ClientBoundMessage):

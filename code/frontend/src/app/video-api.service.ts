@@ -12,6 +12,7 @@ export class VideoApiService {
 
   constructor() {
     this.peer = new RTCPeerConnection();
+    this.peer.addTransceiver('video', { direction: 'recvonly' });
   }
 
 

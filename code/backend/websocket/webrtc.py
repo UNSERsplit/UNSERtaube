@@ -11,18 +11,21 @@ pcs = set()
 class UDPVideoTrack(VideoStreamTrack):
     def __init__(self, port):
         super().__init__()
-        self.container = av.open(f"udp://0.0.0.0:{port}", format="h264", timeout=5)
+        self.container = av.open(f"udp://0.0.0.0:{port}", format="h264", timeout=5, options={
+        "fflags": "nobuffer",
+        "flags": "low_delay",
+        "probesize": "32",
+        "analyzeduration": "0",
+    })
         self.stream = self.container.streams.video[0]
         self.frame_iter = self._frame_generator() # we block when the drone does not send data, maybe fix?
 
     def _frame_generator(self):
         for packet in self.container.demux(self.stream):
             for frame in packet.decode():
-                log("FRAME")
                 yield frame
 
     async def recv(self):
-        log("RECV")
         pts, time_base = await self.next_timestamp()
         try:
             frame: VideoFrame = next(self.frame_iter) # type: ignore
@@ -44,36 +47,27 @@ def force_codec(pc: RTCPeerConnection, sender: RTCRtpSender, forced_codec: str) 
 
 # ---- WebRTC  ----
 async def offer(sdp, type, port):
-    log(1)
     offer = RTCSessionDescription(
         sdp=sdp,
         type=type
     )
-    log(2, offer)
 
     pc = RTCPeerConnection()
     pcs.add(pc)
 
-    log(3)
 
     # --- Step 3: attach the track ---
-    #track = UDPVideoTrack(port=port)
-    track = VideoStreamTrack()
+    track = UDPVideoTrack(port=port)
+    #track = VideoStreamTrack()
     video_sender = pc.addTrack(track)
 
-    log(4)
 
     force_codec(pc, video_sender,"video/H264")
     # --- Standard negotiation ---
-    log(5)
     await pc.setRemoteDescription(offer)
-    log(6)
     answer = await pc.createAnswer()
-    pc.getTransceivers()[0]._offerDirection = "recvonly"
-    log(7, answer, pc.getTransceivers()[0].direction, pc.getTransceivers()[0]._offerDirection)
     await pc.setLocalDescription(answer)
 
-    log(8)
     return {
         "sdp": pc.localDescription.sdp,
         "type": pc.localDescription.type
