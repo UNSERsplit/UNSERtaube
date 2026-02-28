@@ -24,6 +24,9 @@ class TakeOff(ServerBoundMessage):
 class Land(ServerBoundMessage):
     type: Literal["land"]
 
+class ServerBoundKeepAlive(ServerBoundMessage):
+    type: Literal["keepalive"]
+
 class FunkiMessage(ServerBoundMessage):
     type: Literal["rc"]
     yaw: float
@@ -33,6 +36,9 @@ class FunkiMessage(ServerBoundMessage):
 ### SERVERBOUND END ###
 
 ### CLIENTBOUND START ###
+class ClientBoundKeepAlive(ClientBoundMessage):
+    type: str = "keepalive"
+
 class StateMessage(ClientBoundMessage):
     type: str = "state"
     state: State
@@ -60,7 +66,7 @@ class Error(ClientBoundMessage):
 ### CLIENTBOUND END ###
 
 messages = Annotated[Union[
-    *ServerBoundMessage.__subclasses__()
+    *ServerBoundMessage.__subclasses__() #type: ignore
 ], Field(discriminator="type")]
 
-IncommingMessage: TypeAdapter[messages] = TypeAdapter(messages)
+IncommingMessage: TypeAdapter[messages] = TypeAdapter(messages) #type: ignore

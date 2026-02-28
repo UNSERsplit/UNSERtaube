@@ -1,4 +1,5 @@
 from typing import Any, Callable, Coroutine
+from websocket.webrtc import UDPVideoTrack
 from . import connection, State
 
 class Drone:
@@ -8,6 +9,9 @@ class Drone:
     
     def get_video_port(self) -> int:
         return self.connection.future_video_port
+    
+    def set_video_stream(self, track: UDPVideoTrack):
+        self.connection.setVideoTrack(track)
     
     async def connect(self):
         self.connection = await connection.connection_manager.connect(self.ip)

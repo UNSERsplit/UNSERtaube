@@ -12,6 +12,8 @@ import hashlib
 from av.container import InputContainer
 import io
 
+from websocket.webrtc import UDPVideoTrack
+
 from .utils import find_mac, log
 
 class State(BaseModel):
@@ -40,9 +42,13 @@ class Connection:
         self.read_data: Optional[str] = None # data to read
         self.state_callback: Optional[Callable[[State], Coroutine[Any, Any, None]]] = None
         self.future_video_port = int(hashlib.sha256(self.ip.encode('utf-8')).hexdigest(), 16) % (ConnectionManager.LOCAL_VIDEO_PORT_MAX - ConnectionManager.LOCAL_VIDEO_PORT_MIN) + ConnectionManager.LOCAL_VIDEO_PORT_MIN
+        self.videoTrack: Optional[UDPVideoTrack] = None
 
     def setupStateCallback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
         self.state_callback = cb
+    
+    def setVideoTrack(self, track: UDPVideoTrack):
+        self.videoTrack = track
 
     async def setupVideoStream(self):
         await self.send_control_message("setfps high")
@@ -54,6 +60,11 @@ class Connection:
         await self.send_control_message("command")
 
     def _disconnect(self): # called by ConnectionManager.disconnect
+        try:
+            if self.videoTrack:
+                self.videoTrack.stop()
+        except Exception as e:
+            log("ERROR", "stopping video stream")
         self.send_message_noanswer("streamoff")
         self.send_message_noanswer("emergency")
 

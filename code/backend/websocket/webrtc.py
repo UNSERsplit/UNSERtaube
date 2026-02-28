@@ -18,7 +18,7 @@ class UDPVideoTrack(VideoStreamTrack):
         "analyzeduration": "0",
     })
         self.stream = self.container.streams.video[0]
-        self.frame_iter = self._frame_generator() # we block when the drone does not send data, maybe fix?
+        self.frame_iter = self._frame_generator()
 
     def _frame_generator(self):
         for packet in self.container.demux(self.stream):
@@ -32,10 +32,17 @@ class UDPVideoTrack(VideoStreamTrack):
         except StopIteration:
             await asyncio.sleep(0.01)
             return await self.recv()
+        except TimeoutError as e:
+            log("ERROR", "Video Timeout")
+            raise e
 
         frame.pts = pts
         frame.time_base = time_base
         return frame
+    
+    def stop(self) -> None: # TODO fix with no image after reconnect to same drone, requires restart of drone...
+        super().stop()
+        self.container.close()
 
 def force_codec(pc: RTCPeerConnection, sender: RTCRtpSender, forced_codec: str) -> None:
     kind = forced_codec.split("/")[0]
@@ -70,5 +77,6 @@ async def offer(sdp, type, port):
 
     return {
         "sdp": pc.localDescription.sdp,
-        "type": pc.localDescription.type
+        "type": pc.localDescription.type,
+        "track": track
     }

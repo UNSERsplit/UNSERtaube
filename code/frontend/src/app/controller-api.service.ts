@@ -79,6 +79,7 @@ export class ControllerApiService {
         switch(data.type) {
           case "state": {
             const newState:State = data.state
+            console.log(data.state.vgx, data.state.vgy, data.state.vgz)
             this.state.set(newState);
             break;
           }

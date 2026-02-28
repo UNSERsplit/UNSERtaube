@@ -20,7 +20,8 @@ class WebsocketManager:
     async def disconnect(self, ws: WebSocket):
         if ws in self.connections:
             await self.connections[ws].disconnect("WS disconnect")
-            del self.connections[ws]
+            if ws in self.connections:
+                del self.connections[ws]
 
     async def send(self, ws: WebSocket, data: ClientBoundMessage):
         try:
@@ -28,8 +29,7 @@ class WebsocketManager:
                 raise WebSocketDisconnect()
             await ws.send_json(data.model_dump())
         except WebSocketDisconnect:
-            if ws in self.connections:
-                del self.connections[ws]
+            await self.disconnect(ws)
 
     async def send_bytes(self, ws: WebSocket, data: bytes):
         try:
@@ -37,8 +37,8 @@ class WebsocketManager:
                 raise WebSocketDisconnect()
             await ws.send_bytes(data)
         except WebSocketDisconnect:
-            if ws in self.connections:
-                del self.connections[ws]
+            await self.disconnect(ws)
+
 
     async def on_message(self, ws: WebSocket, data: messages):
         await self.connections[ws].on_message(data)
@@ -100,6 +100,7 @@ class WsConnection:
                     await self.drone.connect()
                     await self.drone.startstream()
                     rtc_server = await offer(data.rtc_sdp, data.rtc_type, self.drone.get_video_port())
+                    self.drone.set_video_stream(rtc_server["track"])
                     self.drone.set_state_callback(self.on_state)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
