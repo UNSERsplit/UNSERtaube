@@ -51,6 +51,8 @@ class Connection:
         self.videoTrack = track
 
     async def setupVideoStream(self):
+        await self.send_control_message("moff") # mission pad off
+        await self.send_control_message("downvision 0")
         await self.send_control_message("setfps high")
         await self.send_control_message("setbitrate 5")
         await self.send_control_message("setresolution high")

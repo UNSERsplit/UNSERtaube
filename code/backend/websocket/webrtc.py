@@ -12,13 +12,14 @@ class UDPVideoTrack(VideoStreamTrack):
     def __init__(self, port):
         super().__init__()
         self.container = av.open(f"udp://0.0.0.0:{port}", format="h264", timeout=5, options={
-        "fflags": "nobuffer",
-        "flags": "low_delay",
-        "probesize": "32",
-        "analyzeduration": "0",
-    })
+            "fflags": "nobuffer",
+            "flags": "low_delay",
+            "probesize": "32",
+            "analyzeduration": "0",
+        })
         self.stream = self.container.streams.video[0]
         self.frame_iter = self._frame_generator()
+        self.frame_callback = None
 
     def _frame_generator(self):
         for packet in self.container.demux(self.stream):
@@ -38,6 +39,10 @@ class UDPVideoTrack(VideoStreamTrack):
 
         frame.pts = pts
         frame.time_base = time_base
+
+        if self.frame_callback:
+            self.frame_callback(frame)
+
         return frame
     
     def stop(self) -> None: # TODO fix with no image after reconnect to same drone, requires restart of drone...

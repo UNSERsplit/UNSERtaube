@@ -37,7 +37,7 @@ class FunkiMessage(ServerBoundMessage):
 
 ### CLIENTBOUND START ###
 class ClientBoundKeepAlive(ClientBoundMessage):
-    type: str = "keepalive"
+    type: str = "keepalive" # TODO
 
 class StateMessage(ClientBoundMessage):
     type: str = "state"

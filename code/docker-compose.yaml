@@ -23,9 +23,11 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: localhost
+      VIDEO_BASE_DIR: /app/videos
     network_mode: host
     volumes:
       - ./taube_rsa:/credentials/taube_rsa:ro
+      - ./videos:/app/videos
   
   forwarder:
     image: unserprojekt/forwarder:latest

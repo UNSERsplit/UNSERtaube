@@ -1,6 +1,6 @@
 fastapi[standard]
 sqlalchemy
 psycopg2-binary
-#opencv-python
+opencv-python
 av
 aiortc

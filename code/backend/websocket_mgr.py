@@ -1,8 +1,12 @@
 import traceback
+from av import VideoFrame
+import cv2
+import uuid
 from threading import Thread
 
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from video_writer import VideoWriter
 from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import *
 from websocket.webrtc import offer
@@ -49,12 +53,17 @@ class WsConnection:
         self.mngr = mngr
         self.drone: Drone = None # type: ignore
         self.pathcalculation = PathCalculation()
+        self.video_writer = VideoWriter()
 
     async def connect(self):
         pass
 
     async def disconnect(self, reason: str):
         if self.drone:
+            try:
+                self.end_capture()
+            except Exception:
+                pass
             try:
                 await self.drone.stopstream()
             except Exception:
@@ -82,8 +91,17 @@ class WsConnection:
             pass
 
 
-    async def on_frame(self, data: bytes):
-        await self.mngr.send_bytes(self.ws, data)
+    def on_frame(self, data: VideoFrame):
+        self.video_writer.feed(data)
+
+
+    def start_capture(self):
+        name = self.video_writer.start(uuid.uuid4().hex) # TODO insert into db
+        print("Recording to" + name)
+        return name
+
+    def end_capture(self):
+        self.video_writer.end()
 
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
@@ -101,6 +119,8 @@ class WsConnection:
                     await self.drone.startstream()
                     rtc_server = await offer(data.rtc_sdp, data.rtc_type, self.drone.get_video_port())
                     self.drone.set_video_stream(rtc_server["track"])
+                    rtc_server["track"].frame_callback = self.on_frame
+                    self.start_capture()
                     self.drone.set_state_callback(self.on_state)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
