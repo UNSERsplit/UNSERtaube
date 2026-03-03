@@ -10,14 +10,15 @@ class VideoWriter:
         self.base_dir = os.environ["VIDEO_BASE_DIR"]
 
     def start(self, filename_without_extention: str):
-        path = f"{os.path.join(self.base_dir, filename_without_extention)}.mp4"
+        name = f"{filename_without_extention}.mp4"
+        path = os.path.join(self.base_dir, name)
         self.container = av.open(path, "w", format="h264", options={
             "fflags": "nobuffer",
             "probesize": "32",
-            "analyzeduration": "0",
+            "analyzeduration": "0"
         })
         self.stream = self.container.add_stream("h264")
-        return path
+        return name
 
     def end(self):
         if not self.container or not self.stream: return

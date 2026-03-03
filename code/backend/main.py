@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
     dronemaster.start()
     yield
     dronemaster.stop()
+    manager.stop()
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(drone_router)

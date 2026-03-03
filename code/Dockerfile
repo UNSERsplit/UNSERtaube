@@ -14,7 +14,7 @@ FROM python:3.14-slim
 
 
 # Install nginx and sftp
-RUN mkdir -p /app && apt update && apt install -y --no-install-recommends --no-install-suggests nginx openssh-client curl ffmpeg libglib2.0-0 libgl1
+RUN mkdir -p /app && apt update && apt install -y --no-install-recommends --no-install-suggests nginx openssh-client curl ffmpeg libglib2.0-0 libgl1 acl
 WORKDIR /app
 
 # install backend requirements
@@ -32,6 +32,11 @@ COPY ./backend ./backend
 
 # copy frontend
 COPY --chown=www-data:www-data --from=frontend-build /build/dist/frontend/browser ./frontend
+
+RUN mkdir -p /app/videos
+VOLUME [ "/app/videos" ]
+
+RUN setfacl -R -m d:u:www-data:rx /app/videos && setfacl -R -m u:www-data:rx /app/videos
 
 STOPSIGNAL SIGINT
 

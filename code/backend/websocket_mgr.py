@@ -11,12 +11,19 @@ from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import *
 from websocket.webrtc import offer
 from dronemaster import Drone, State
+from dronemaster.utils import log
 from database import SessionLocal
+import asyncio
 
 
 class WebsocketManager:
     def __init__(self) -> None:
         self.connections: dict[WebSocket, WsConnection] = {}
+    
+    def stop(self):
+        for ws, conn in self.connections.items():
+            conn.end_capture()
+            conn.drone = None #type: ignore
     
     async def connnect(self, ws: WebSocket):
         self.connections[ws] = WsConnection(ws, self)
@@ -60,18 +67,22 @@ class WsConnection:
 
     async def disconnect(self, reason: str):
         if self.drone:
+            drone = self.drone
+            self.drone = None # type: ignore
+            log("Disconnect", reason)
             try:
                 self.end_capture()
             except Exception:
                 pass
             try:
-                await self.drone.stopstream()
+                await drone.stopstream()
             except Exception:
                 pass
             try:
-                await self.drone.disconnect()
+                await drone.disconnect()
             except Exception:
                 pass
+            
 
         await self.trysend(DroneDisconnected(reason=reason))
 
@@ -97,7 +108,7 @@ class WsConnection:
 
     def start_capture(self):
         name = self.video_writer.start(uuid.uuid4().hex) # TODO insert into db
-        print("Recording to" + name)
+        print("Recording to " + name)
         return name
 
     def end_capture(self):

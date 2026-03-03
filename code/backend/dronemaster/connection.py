@@ -37,6 +37,7 @@ class Connection:
         self.dest = (target_ip, ConnectionManager.REMOTE_CMD_PORT)
         self.loop: AbstractEventLoop = loop
         self.socket = socket
+        self.open = True
         self.last_sent_timestamp = 0
         self.async_future: Optional[Future[str]] = None
         self.read_data: Optional[str] = None # data to read
@@ -69,6 +70,7 @@ class Connection:
             log("ERROR", "stopping video stream")
         self.send_message_noanswer("streamoff")
         self.send_message_noanswer("emergency")
+        self.open =  False
 
     async def disconnect(self):
         await connection_manager.disconnect(self.ip)
@@ -138,6 +140,8 @@ class Connection:
         self.socket.sendto(message.encode(), self.dest)
 
     def _delay(self):
+        if not self.open:
+            raise ConnectionError("This connection has been closed")
         diff = time.time() - self.last_sent_timestamp
         if diff < ConnectionManager.TIME_BETWEEN_COMMANDS:
             time.sleep(diff)
@@ -208,7 +212,7 @@ class ConnectionManager:
                 self.data_received_from_ip.add(addr[0])
                 connection = self.connections.get(addr[0])
                 if connection is None:
-                    print(f"Data from unknown client {addr}: {data}")
+                    log("MSG", "???->S", addr[0], data.decode())
                     continue
 
                 connection.on_data(data)
