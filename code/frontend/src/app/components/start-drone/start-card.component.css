@@ -1,0 +1,93 @@
+.card {
+    background: var(--fancy-blue);
+    border-radius: 16px;
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 60rem;
+    box-shadow:
+        0 0 2px var(--fancy-blue-shadow),
+        0 0 3px var(--fancy-blue-shadow),
+        0 0 3px var(--fancy-blue-shadow);
+    transition: all 0.28s ease;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 0 2px var(--fancy-blue-shadow),
+        0 0 3px var(--fancy-blue-shadow),
+        0 0 3px var(--fancy-blue-shadow);
+}
+
+.card:active {
+    transform: translateY(-1px);
+    transition: all 0.12s ease;
+}
+
+.content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon {
+    width: 100%;
+    height: 100%;
+    max-width: 72px;
+    max-height: 72px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    margin-right: 8px;
+    padding: 4px;
+}
+
+.text {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    font-size: 0.95rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.15) 50%,
+        transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.7s ease;
+}
+
+.card:hover::before {
+    transform: translateX(100%);
+}

@@ -1,0 +1,64 @@
+body {
+    background-color: var(--card-bg);
+    outline: var(--card-border-color);
+    display: flex;
+    justify-content: center;
+    padding: 50px;
+    font-family: 'Inter', sans-serif;
+}
+
+.status-card {
+    background-color: #161b22; /* Dunkler Card-Hintergrund */
+    border: 1px solid #30363d; /* Subtiler Rahmen */
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+    color: #e6edf3;
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #238636; /* Grüner Punkt */
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(35, 134, 54, 0.6);
+}
+
+.status-text {
+    font-size: 18px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+}
+
+.disconnect-btn {
+    border-radius: 6px;
+
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.disconnect-btn:hover {
+
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    background-color: #00ff00;
+    box-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.5);
+}

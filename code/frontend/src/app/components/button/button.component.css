@@ -1,6 +1,6 @@
 button{
     width: 100%;
-    background-color: var(--button-color);
+    background-color: var(--blue-button-color);
     color: white;
     border: none;
     padding: 14px;
@@ -18,13 +18,18 @@ button{
 }
 
 .blue {
-    --background-color: var(--button-color);
+    background-color: var(--blue-button-color);
     --accent-glow: #0e5159;
 }
 
 .red {
-    --button-color: #3b5ab1;
-    --accent-glow: #3cd8c6;
+    background-color: var(--red-button-color);
+    --accent-glow: rgba(205, 64, 64, 0.66);
+}
+
+.green {
+    background-color: var(--green-button-color);
+    --accent-glow: rgba(3, 209, 3, 0.73);
 }
 
 #nuaZumKlickn:hover {

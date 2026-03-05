@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 
 @Component({
     selector: 'app-titel',
@@ -8,5 +8,6 @@ import { Component } from '@angular/core';
     styleUrl: './titel.component.css'
 })
 export class TitelComponent {
-
+    @Input() fontsize: number = 92;
+    @Input() margin: number = 50;
 }

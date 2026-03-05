@@ -11,4 +11,7 @@ import {FormsModule} from '@angular/forms';
 })
 export class StatusComponent {
     @Input() isConnected: boolean = false;
+    @Input() fontsize: number = 32;
+    @Input() margin: number = 10;
+    @Input() padding: number = 12;
 }

@@ -1,8 +1,13 @@
 :root {
     --bg-color: #121923;
     --card-bg: #161e2c;
-    --border-color: #1f2937;
-    --button-color: #0d59f2;
+    --card-border-color: #1f2937;
+    --blue-button-color: #0d59f2;
+    --fancy-blue: #0d59f2;
+    --fancy-blue-shadow: rgba(49, 115, 248, 0.8);
+    --red-button-color: #fa3f3f;
+    --green-button-color: rgba(0, 255, 0, 0.75);
+    --start-drone-card: #02e2ff;
     --label-color: #0F172A;
     --label-border-color: #334155;
     --text-muted: #6b7280;
@@ -11,6 +16,6 @@
 }
 
 body {
-    background: #121923;
+    background: var(--bg-color);
     margin: 0;
 }

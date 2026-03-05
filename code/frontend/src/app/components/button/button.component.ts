@@ -1,12 +1,5 @@
 import { Component, input, HostBinding } from '@angular/core';
-
-export enum ButtonVariant {
-    blue = 'blue',
-    secondary = 'secondary',
-    success = 'success',
-    warning = 'warning',
-    danger = 'danger'
-}
+import {ButtonVariants} from "./button.variants"
 
 @Component({
     selector: 'app-button',
@@ -17,5 +10,5 @@ export enum ButtonVariant {
 })
 export class ButtonComponent {
     text = input<string>();
-    variant = input<ButtonVariant>();
+    variant = input<ButtonVariants>();
 }
