@@ -21,6 +21,12 @@ class DisconnectFromDrone(ServerBoundMessage):
 class TakeOff(ServerBoundMessage):
     type: Literal["takeoff"]
 
+class StartRecording(ServerBoundMessage):
+    type: Literal["record_start"]
+
+class StopRecording(ServerBoundMessage):
+    type: Literal["record_stop"]
+
 class Land(ServerBoundMessage):
     type: Literal["land"]
 
@@ -42,6 +48,10 @@ class ClientBoundKeepAlive(ClientBoundMessage):
 class StateMessage(ClientBoundMessage):
     type: str = "state"
     state: State
+
+class RecordingResult(ClientBoundMessage):
+    type: str = "recording_name"
+    name: str
 
 class DroneConnected(ClientBoundMessage):
     type: str = "drone_connected"

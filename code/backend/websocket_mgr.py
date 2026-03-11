@@ -112,7 +112,7 @@ class WsConnection:
         return name
 
     def end_capture(self):
-        self.video_writer.end()
+        return self.video_writer.end()
 
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
@@ -131,7 +131,6 @@ class WsConnection:
                     rtc_server = await offer(data.rtc_sdp, data.rtc_type, self.drone.get_video_port())
                     self.drone.set_video_stream(rtc_server["track"])
                     rtc_server["track"].frame_callback = self.on_frame
-                    self.start_capture()
                     self.drone.set_state_callback(self.on_state)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
@@ -144,6 +143,12 @@ class WsConnection:
                     self.drone.rc(data.roll, data.pitch, data.throttle, data.yaw)
                 case DisconnectFromDrone():
                     await self.disconnect(reason="User")
+                case StartRecording():
+                    self.start_capture()
+                case StopRecording():
+                    filename = self.end_capture()
+                    assert filename is not None
+                    await self.send(RecordingResult(name=filename))
         except TimeoutError as e:
             await self.disconnect(reason=" ".join(e.args))
         except BaseException as e:

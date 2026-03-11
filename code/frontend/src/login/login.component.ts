@@ -30,4 +30,12 @@ export class LoginComponent {
   takeoff() {
     this.controllerApi.takeoff()
   }
+
+  record() {
+    this.controllerApi.start_recording()
+  }
+
+  stop_record() {
+    this.controllerApi.stop_recording().then(name => alert(name));
+  }
 }
