@@ -47,6 +47,7 @@ export class ControllerApiService {
   public status = signal("offline");
   public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN})
   private videoApi = inject(VideoApiService);
+  public pathmapsignal = signal<[number, number, number][]>([]);
 
   private ws: WebSocket;
 
@@ -81,6 +82,9 @@ export class ControllerApiService {
             const newState:State = data.state
             this.state.set(newState);
             break;
+          }
+          case "waypoints": {
+            this.pathmapsignal.set(data.context);
           }
         }
 
