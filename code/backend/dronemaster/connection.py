@@ -37,6 +37,7 @@ class Connection:
         self.dest = (target_ip, ConnectionManager.REMOTE_CMD_PORT)
         self.loop: AbstractEventLoop = loop
         self.socket = socket
+        self.sdk_version = -1
         self.open = True
         self.last_sent_timestamp = 0
         self.async_future: Optional[Future[str]] = None
@@ -61,6 +62,9 @@ class Connection:
 
     async def _connect(self): # called by ConnectionManager.connect
         await self.send_control_message("command")
+
+        self.sdk_version = int(await self.send_raw_message("sdk?"))
+        log("INFO", f"Connected to drone with Version", self.sdk_version)
 
     def _disconnect(self): # called by ConnectionManager.disconnect
         try:

@@ -104,7 +104,7 @@ export class ControllerApiService {
     const promise = new Promise((resolve, reject) => {
       const auto_reject = setTimeout(() => {
         if(this.waiting_messages[required_type]) {
-          reject("Timeout")
+          reject({"type": "timeout", "required_message": required_type, timeout})
           delete this.waiting_messages[required_type]
         }
       }, timeout)
@@ -124,6 +124,10 @@ export class ControllerApiService {
 
   start_recording() {
     this.ws.send(JSON.stringify({"type":"record_start"}))
+  }
+
+  send_rc(yaw: number, pitch: number, roll: number, throttle: number) {
+    this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 
   async stop_recording() {
