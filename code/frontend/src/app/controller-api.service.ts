@@ -50,6 +50,7 @@ export class ControllerApiService {
   private waiting_messages: {
     [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void]
   } = {}
+  public pathmapsignal = signal<[number, number, number][]>([]);
 
   private ws: WebSocket;
 
@@ -85,6 +86,9 @@ export class ControllerApiService {
             console.log(data.state.vgx, data.state.vgy, data.state.vgz)
             this.state.set(newState);
             break;
+          }
+          case "waypoints": {
+            this.pathmapsignal.set(data.context);
           }
         }
 

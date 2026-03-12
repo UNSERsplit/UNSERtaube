@@ -1,4 +1,3 @@
-from fractions import Fraction
 import socket
 import threading
 import random
@@ -11,6 +10,7 @@ import av
 import hashlib
 from av.container import InputContainer
 import io
+import math
 
 from websocket.webrtc import UDPVideoTrack
 
@@ -95,7 +95,7 @@ class Connection:
                 self.loop.call_soon_threadsafe(self.async_future.set_result, data)
             else:
                 log("DEBUG", f"Unsolicited data received {self.ip}: {data}")
-    
+
     def parse_state(self, raw_data: str) -> State:
         INT_FIELDS = ("pitch", "roll", "yaw", "vgx", "vgy", "vgz", "bat", "templ", "temph")
         FLOAT_FIELDS = ("agx", "agy", "agz")
@@ -179,7 +179,7 @@ class ConnectionManager:
 
         self.thread = threading.Thread(target=self._run)
         self.thread.start()
-    
+
     def _run_task(self, task, *args):
         self.loop.create_task(task(*args))
 
@@ -273,7 +273,7 @@ async def scan(myip: str, timeout: float = 5) -> list[ScanResult]:
             connections.append(ScanResult(ip=conn.ip, sn=sn, mac=mac))
         except:
             print(f"drone {ip} responded to initial scan but now does not work")
-    
+
     return connections
 
 class CanvasWaypoints:
@@ -288,9 +288,9 @@ class CanvasWaypoints:
 
 class PathCalculation:
     def __init__(self) -> None:
-        self.xpos = 0.0 # in m  - Aktuelle Position der Drohne relativ zum Start
-        self.ypos = 0.0 # in m  ^
-        self.zpos = 0.0 # in m  ^
+        self.xpos = 0.0 # in dm  - Aktuelle Position der Drohne relativ zum Start
+        self.ypos = 0.0 # in dm  ^
+        self.zpos = 0.0 # in dm  ^
         self.time_last_callback = None
         self.canvas_waypoints = CanvasWaypoints()
 
@@ -299,11 +299,17 @@ class PathCalculation:
             self.time_last_callback = time.time()
             return
         curr_time = time.time()
-        last_callback = self.time_last_callback - curr_time
+        last_callback = curr_time - self.time_last_callback
         self.time_last_callback = curr_time
 
-        self.xpos += (state.vgx/10) / last_callback
-        self.ypos += (state.vgy/10) / last_callback
-        self.zpos += (state.vgz/10) / last_callback
+        yaw = math.radians(state.yaw)
+
+        # 2. Lokale Geschwindigkeiten auf die globalen Achsen projizieren
+        x_yaw_corrected = (state.vgx * math.cos(yaw)) - (state.vgy * math.sin(yaw))
+        y_yaw_corrected = (state.vgx * math.sin(yaw)) + (state.vgy * math.cos(yaw))
+
+        self.xpos += x_yaw_corrected * last_callback
+        self.ypos += y_yaw_corrected * last_callback
+        self.zpos += state.vgz * last_callback
 
         self.canvas_waypoints.addwaypoint(int(self.xpos), int(self.ypos), int(self.zpos))
