@@ -3,12 +3,15 @@ import {StatusComponent} from '../status/status.component';
 import {Drone} from '../../../objects/drone';
 import {ButtonComponent, } from '../button/button.component';
 import {ButtonVariants} from '../button/button.variants';
+import {CardComponent} from '../card/card.component';
+import {CardVariants} from '../card/card.variants';
 
 @Component({
   selector: 'app-connected-drone',
     imports: [
         StatusComponent,
         ButtonComponent,
+        CardComponent,
     ],
   templateUrl: './connected-drone.component.html',
   styleUrl: './connected-drone.component.css',
@@ -29,4 +32,6 @@ export class ConnectedDroneComponent {
             this.ButtonVariant = ButtonVariants.green;
         }
     }
+    flexdirection: string = 'row';
+    protected readonly CardVariants = CardVariants;
 }

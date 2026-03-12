@@ -7,6 +7,7 @@
     margin: 10px;
     border-radius: 20px;
     width: fit-content;
+    color: white;
 }
 
 .status-dot {
@@ -22,7 +23,7 @@
 }
 
 .connected .status-text {
-    color: #00ff00;
+    color: #ffffff;
 }
 
 .disconnected .status-dot {

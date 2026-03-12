@@ -16,13 +16,15 @@ body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    max-width: 800px;
+    max-width: 60rem;
     color: #e6edf3;
 }
 
 .status-info {
     display: flex;
     align-items: center;
+    width: 100%;
+    height: 100%;
     gap: 12px;
 }
 
@@ -61,4 +63,8 @@ body {
     transition: all 0.3s ease;
     background-color: #00ff00;
     box-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+#textWeiß{
+    color: #ffffff;
 }
