@@ -127,7 +127,7 @@ class Connection:
         timer = threading.Timer(timeout, lambda : self.loop.call_soon_threadsafe(self.async_future.set_exception, TimeoutError(f"The drone did not respond withing {timeout}s")) if self.async_future is not None else None)
         self.async_future = self.loop.create_future()
         timer.start()
-        self.socket.sendto(message.encode(), self.dest)
+        self.socket.sendto(message.encode() + b"\n", self.dest)
         result = await self.async_future
         timer.cancel()
         return result.strip()
@@ -141,7 +141,7 @@ class Connection:
     def send_message_noanswer(self, message: str):
         self._delay()
         log("MSG", "S->D (noanswer)", message)
-        self.socket.sendto(message.encode(), self.dest)
+        self.socket.sendto(message.encode() + b"\n", self.dest)
 
     def _delay(self):
         if not self.open:

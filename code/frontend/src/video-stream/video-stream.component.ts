@@ -1,9 +1,10 @@
 import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { VideoApiService } from '../app/video-api.service';
+import { OverlayComponent } from './overlay/overlay.component';
 
 @Component({
   selector: 'video-stream',
-  imports: [],
+  imports: [OverlayComponent],
   templateUrl: './video-stream.component.html',
   styleUrl: './video-stream.component.css'
 })

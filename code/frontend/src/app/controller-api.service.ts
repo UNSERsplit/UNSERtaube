@@ -130,7 +130,8 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"record_start"}))
   }
 
-  send_rc(yaw: number, pitch: number, roll: number, throttle: number) {
+  send_rc(yaw: number, pitch: number, roll: number, throttle: number) { // alle Zahlen von -100 bis 100
+    if(this.ws.readyState !== WebSocket.OPEN) return;
     this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 

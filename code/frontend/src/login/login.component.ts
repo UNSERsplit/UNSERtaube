@@ -1,12 +1,10 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
-import {RouterOutlet} from '@angular/router';
 import {FormsModule} from '@angular/forms';
 import { ControllerApiService } from '../app/controller-api.service';
 
 @Component({
   selector: 'login',
     imports: [
-        RouterOutlet,
         FormsModule
     ],
   templateUrl: './login.component.html',
