@@ -23,7 +23,7 @@
 }
 
 .connected .status-text {
-    color: #ffffff;
+    color: #00ff00;
 }
 
 .disconnected .status-dot {

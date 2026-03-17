@@ -6,12 +6,13 @@ import {TitelComponent} from '../../components/titel/titel.component';
 import {DroneCarouselComponent} from '../../components/drone-carousel/drone-carousel.component';
 import {StatusComponent} from '../../components/status/status.component';
 import {ButtonVariants} from '../../components/button/button.variants';
+import {CardComponent} from '../../components/card/card.component';
 
 @Component({
     selector: 'app-desktop-login-page',
     templateUrl: './login-page.component.html',
     standalone: true,
-    imports: [ButtonComponent, InputHeaderComponent, TitelComponent, DroneCarouselComponent, StatusComponent, StatusComponent],
+    imports: [ButtonComponent, InputHeaderComponent, TitelComponent, DroneCarouselComponent, StatusComponent, StatusComponent, CardComponent],
     styleUrl: './login-page.component.css'
 })
 export class LoginPageComponent {

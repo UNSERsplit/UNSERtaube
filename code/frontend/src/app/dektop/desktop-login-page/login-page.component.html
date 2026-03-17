@@ -1,13 +1,14 @@
-<div class="topbar">
+<div class="container">
     <app-status [isConnected]="isDroneConnected"></app-status>
     <app-titel class="header"></app-titel>
     <div></div>
-</div>
-<div class="card">
-    <h2 class="title">Verbindung</h2>
-    <app-input-header headerText="NAME DER DROHNE" placeHolderText1="Hons" icon1="#"></app-input-header>
-    <app-input-header headerText="IP-ADRESSE" placeHolderText1="192.168.0.1" icon1="↔"></app-input-header>
-    <app-button text="Verbinden" (click)="handleConnect()" [variant]="ButtonVariant.blue"></app-button>
-</div>
+    <app-card class="card" [width]="65">
+        <h2 class="title">Verbindung</h2>
+        <app-input-header headerText="NAME DER DROHNE" placeHolderText1="Hons" icon1="#"></app-input-header>
+        <app-input-header headerText="IP-ADRESSE" placeHolderText1="192.168.0.1" icon1="↔"></app-input-header>
+        <app-button text="Verbinden" (click)="handleConnect()" [variant]="ButtonVariant.blue"></app-button>
+    </app-card>
 
-<app-drone-carousel class="carousel-container"></app-drone-carousel>
+    <app-drone-carousel class="carousel-container"></app-drone-carousel>
+
+</div>

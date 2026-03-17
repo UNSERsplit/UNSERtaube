@@ -1,4 +1,5 @@
 .input {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     border: 1px solid var(--label-border-color);
@@ -7,6 +8,7 @@
     transition: border-color 0.3s;
     background-color: var(--label-color);
     box-shadow: 0 10px 30px rgba(66, 66, 66, 0.5);
+    width: 100%;
 }
 
 .input:focus-within {

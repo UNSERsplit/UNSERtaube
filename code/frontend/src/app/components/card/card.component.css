@@ -4,7 +4,7 @@
 
 .black{
     background-color: var(--black-card-color);
-    border: 1px solid #30363d; /* Subtiler Rahmen */
+    border: 1px solid #30363d;
     border-radius: 12px;
     padding: 16px 24px;
     display: flex;
@@ -15,7 +15,7 @@
 
 .grey{
     background-color: var(--grey-card-color);
-    border: 1px solid #30363d; /* Subtiler Rahmen */
+    border: 1px solid #30363d;
     border-radius: 12px;
     padding: 16px 24px;
     display: flex;
