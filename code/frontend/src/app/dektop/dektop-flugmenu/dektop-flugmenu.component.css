@@ -33,3 +33,12 @@
     align-items: center;
     width: 100%;
 }
+
+.pathlist{
+    grid-column: span 2;
+    grid-row: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}

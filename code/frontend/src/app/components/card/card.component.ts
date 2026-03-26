@@ -10,7 +10,7 @@ import {CardVariants} from './card.variants';
 })
 export class CardComponent {
     @Input() width: number = 60;
-    @Input() height: number = 5;
+    @Input() height: number = 6;
     @Input() flexdirection: string = "column";
     @Input() shadow: string = "";
     variant = input<CardVariants>();

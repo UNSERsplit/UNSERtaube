@@ -4,8 +4,8 @@
     <div class="window">
         <div class="track" [style.transform]="'translateX(-' + (currentIndex * 33.33) + '%)'">
             @for (item of items; track item.color; let i =  $index) {
-                <div class="card" [style.background-color]="item.color" [style.box-shadow]="item.color">
-                    <div id="outerContentContainer">
+                <div class="card" [style.background-color]="item.color" [style.box-shadow]="item.color" >
+                    <div id="outerContentContainer" (click)="selectDrone()">
                         <img class="tello" src="droneList/telloDrone.svg" alt="Drone">
                         <div id="innerContentContainer">
                             <div class="textWrapper">

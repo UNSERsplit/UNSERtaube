@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {Drone} from '../../../objects/drone';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-drone-carousel',
@@ -10,6 +11,7 @@ import {Drone} from '../../../objects/drone';
 })
 export class DroneCarouselComponent {
     drone: Drone = new Drone("Herbert", "192.168.0.2");
+    private router = inject(Router);
 
     items : any = [
         {color: '#ffadad' },
@@ -39,5 +41,9 @@ export class DroneCarouselComponent {
         } else {
             this.currentIndex = this.items.length - 3; // Loop zum Ende
         }
+    }
+
+    selectDrone(){
+        this.router.navigate(['/home']);
     }
 }
