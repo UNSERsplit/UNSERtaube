@@ -14,8 +14,8 @@ def log(level, *args):
         return
     if level == "MSG" and len(args) >= 2 and str(args[1]).startswith("rc"):
         pass
-        return
-    if level == "MSG" and len(args) >= 3 and str(args[1]) == "???->S" and str(args[2]).startswith("mid"):
+        #return
+    if level == "MSG" and len(args) >= 3 and str(args[0]) == "???->S" and str(args[2]).startswith("mid"):
         pass
         return
     print(level, *map(lambda a: str(a).strip(), args), file=stderr)

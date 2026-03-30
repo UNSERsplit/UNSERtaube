@@ -12,7 +12,7 @@ from av.container import InputContainer
 import io
 import math
 
-from websocket.webrtc import UDPVideoTrack
+#from websocket.webrtc import UDPVideoTrack
 
 from .utils import find_mac, log
 
@@ -44,26 +44,35 @@ class Connection:
         self.read_data: Optional[str] = None # data to read
         self.state_callback: Optional[Callable[[State], Coroutine[Any, Any, None]]] = None
         self.future_video_port = int(hashlib.sha256(self.ip.encode('utf-8')).hexdigest(), 16) % (ConnectionManager.LOCAL_VIDEO_PORT_MAX - ConnectionManager.LOCAL_VIDEO_PORT_MIN) + ConnectionManager.LOCAL_VIDEO_PORT_MIN
-        self.videoTrack: Optional[UDPVideoTrack] = None
+        self.videoTrack: Optional[Any] = None
 
     def setupStateCallback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
         self.state_callback = cb
     
-    def setVideoTrack(self, track: UDPVideoTrack):
+    def setVideoTrack(self, track: Any):
         self.videoTrack = track
 
     async def setupVideoStream(self):
-        await self.send_control_message("moff") # mission pad off
-        await self.send_control_message("downvision 0")
-        await self.send_control_message("setfps high")
-        await self.send_control_message("setbitrate 5")
-        await self.send_control_message("setresolution high")
+        await self.send_control_message("moff", optional=True) # mission pad off
+        await self.send_control_message("downvision 0", optional=True)
+        await self.send_control_message("setfps high", optional=True)
+        await self.send_control_message("setbitrate 5", optional=True)
+        await self.send_control_message("setresolution high", optional=True)
         await self.send_control_message(f"port {ConnectionManager.LOCAL_STATE_PORT} {self.future_video_port}")
 
     async def _connect(self): # called by ConnectionManager.connect
-        await self.send_control_message("command")
+        try:
+            await self.send_control_message("command", optional=True)
+        except ConnectionError as e:
+            print(e)
 
-        self.sdk_version = int(await self.send_raw_message("sdk?"))
+        self.send_message_noanswer("rc 0 0 0 0")
+
+        _resp = await self.send_raw_message("sdk?")
+        try:
+            self.sdk_version = int(_resp)
+        except ValueError:
+            pass
         log("INFO", f"Connected to drone with Version", self.sdk_version)
 
     def _disconnect(self): # called by ConnectionManager.disconnect
@@ -74,6 +83,7 @@ class Connection:
             log("ERROR", "stopping video stream")
         self.send_message_noanswer("streamoff")
         self.send_message_noanswer("emergency")
+        #self.send_message_noanswer("reboot")
         self.open =  False
 
     async def disconnect(self):
@@ -117,7 +127,7 @@ class Connection:
     def _is_state_message(self, data: str):
         return data.startswith("mid:")
 
-    async def send_raw_message(self, message: str, timeout: float = 5) -> str:
+    async def send_raw_message(self, message: str, timeout: float = 5, repeat: int = 0) -> str:
         self._delay()
         log("MSG", "S->D", message)
         self.loop = get_event_loop()
@@ -127,21 +137,28 @@ class Connection:
         timer = threading.Timer(timeout, lambda : self.loop.call_soon_threadsafe(self.async_future.set_exception, TimeoutError(f"The drone did not respond withing {timeout}s")) if self.async_future is not None else None)
         self.async_future = self.loop.create_future()
         timer.start()
-        self.socket.sendto(message.encode() + b"\n", self.dest)
+        if repeat == 0:
+            self.socket.sendto(message.strip().encode(), self.dest)
+        else:
+            raise NotImplementedError("This method does for some reason not work with repeat")
+        for i in range(repeat):
+            self.socket.sendto(f"Re990{i+1}".encode()  + message.strip().encode(), self.dest)
         result = await self.async_future
         timer.cancel()
         return result.strip()
 
-    async def send_control_message(self, message: str, timeout: float = 5) -> bool:
-        response = await self.send_raw_message(message, timeout)
+    async def send_control_message(self, message: str, timeout: float = 5, optional: bool = False, repeat: int = 0) -> bool:
+        response = await self.send_raw_message(message, timeout, repeat)
         if response.strip().upper() == "OK":
             return True
-        raise ConnectionError(f"drone responed to {message} with {response}")
+        if optional and response.strip().lower() != "error":
+            return False
+        raise ConnectionError(f"drone responed to {message} with {repr(response)}")
 
     def send_message_noanswer(self, message: str):
         self._delay()
         log("MSG", "S->D (noanswer)", message)
-        self.socket.sendto(message.encode() + b"\n", self.dest)
+        self.socket.sendto(message.strip().encode(), self.dest)
 
     def _delay(self):
         if not self.open:
@@ -302,14 +319,23 @@ class PathCalculation:
         last_callback = curr_time - self.time_last_callback
         self.time_last_callback = curr_time
 
-        yaw = math.radians(state.yaw)
-
-        # 2. Lokale Geschwindigkeiten auf die globalen Achsen projizieren
-        x_yaw_corrected = (state.vgx * math.cos(yaw)) - (state.vgy * math.sin(yaw))
-        y_yaw_corrected = (state.vgx * math.sin(yaw)) + (state.vgy * math.cos(yaw))
-
-        self.xpos += x_yaw_corrected * last_callback
-        self.ypos += y_yaw_corrected * last_callback
-        self.zpos += state.vgz * last_callback
+        vx_local = state.vgx / 10.0
+        vy_local = state.vgy / 10.0
+        vz_local = state.vgz / 10.0
+ 
+ 
+        # Calculate world Velocity
+        world_vx = vx_local  - vy_local
+        world_vy = vx_local  + vy_local
+        world_vz = vz_local
+ 
+        # Integrate acceleration for accuracy
+        ax_m_s2 = (state.agx / 1000.0) * 9.8
+        ay_m_s2 = (state.agy / 1000.0) * 9.8
+ 
+        # Update positions
+        self.xpos += (world_vx * last_callback) + (0.5 * ax_m_s2 * last_callback ** 2)
+        self.ypos += (world_vy * last_callback) + (0.5 * ay_m_s2 * last_callback ** 2)
+        self.zpos += (world_vz * last_callback)
 
         self.canvas_waypoints.addwaypoint(int(self.xpos), int(self.ypos), int(self.zpos))

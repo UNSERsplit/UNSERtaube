@@ -134,26 +134,37 @@ class WsConnection:
                     self.drone.set_state_callback(self.on_state)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
+                    self.assertDrone()
                     await self.drone.takeoff()
                     await self.send(Accepted())
                 case Land():
+                    self.assertDrone()
                     await self.drone.land()
                     await self.send(Accepted())
                 case FunkiMessage():
+                    self.assertDrone()
                     self.drone.rc(data.roll, data.pitch, data.throttle, data.yaw)
                 case DisconnectFromDrone():
                     await self.disconnect(reason="User")
                 case StartRecording():
+                    self.assertDrone()
                     self.start_capture()
                 case StopRecording():
+                    self.assertDrone()
                     filename = self.end_capture()
                     assert filename is not None
                     await self.send(RecordingResult(name=filename))
         except TimeoutError as e:
             await self.disconnect(reason=" ".join(e.args))
+        except ConnectionError as e:
+            await self.send(Error(context=list(e.args), traceback=e.args[0]))
         except BaseException as e:
             tr = traceback.format_exc()
             print(tr)
             await self.send(Error(context=list(e.args), traceback=tr))
         finally:
             session.close()
+    
+    def assertDrone(self):
+        if not self.drone:
+            raise ConnectionError("drone not available")

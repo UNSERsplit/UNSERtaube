@@ -35,12 +35,14 @@ export class GamepadService {
 
   public tick() {
     if (!this.gamepad) return;
+    const gp = navigator.getGamepads()[this.gamepad.index]!;
+    
 
     this.mappedData.set({
-      throttle: this.gamepad.axes[this.currentMapping.throttle_axis_id] * 100,
-      roll: this.gamepad.axes[this.currentMapping.roll_axis_id] * 100,
-      pitch: this.gamepad.axes[this.currentMapping.pitch_axis_id] * 100,
-      yaw: this.gamepad.axes[this.currentMapping.yaw_axis_id] * 100,
+      throttle: gp.axes[this.currentMapping.throttle_axis_id] * 100,
+      roll: gp.axes[this.currentMapping.roll_axis_id] * 100,
+      pitch: gp.axes[this.currentMapping.pitch_axis_id] * 100,
+      yaw: gp.axes[this.currentMapping.yaw_axis_id] * 100,
     })
   }
 
