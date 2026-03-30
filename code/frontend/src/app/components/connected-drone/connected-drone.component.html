@@ -1,0 +1,7 @@
+<app-card [width]="60" [flexdirection]="flexdirection" [variant]="CardVariants.black">
+    <div class="status-info">
+        <app-status [fontsize]="18" [margin]="0" [isConnected]="isDroneConnected" [padding]="0"></app-status>
+        <span class="status-text" id="textWeiß">mit {{drone.getName}} / {{drone.getIp}}</span>
+    </div>
+    <app-button class="disconnect-btn" (click)="handleConnect()" [variant]="ButtonVariant" text="{{buttonContent}}"></app-button>
+</app-card>

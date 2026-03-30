@@ -1,0 +1,38 @@
+.card {
+
+}
+
+.black{
+    background-color: var(--black-card-color);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: auto;
+}
+
+.grey{
+    background-color: var(--grey-card-color);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: auto;
+    color: white;
+}
+.lightGrey{
+    background-color: var(--light-grey-card-color);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    height: auto;
+    width: auto;
+    color: white;
+}

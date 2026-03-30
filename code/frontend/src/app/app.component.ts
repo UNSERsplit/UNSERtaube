@@ -2,18 +2,19 @@ import {Component, inject} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {buildApplication} from '@angular-devkit/build-angular';
-import {StatusComponent} from '../status/status.component';
-import {LoginComponent} from '../login/login.component';
 import { VideoStreamComponent } from '../video-stream/video-stream.component';
 import {PathmapComponent} from '../pathmap/pathmap.component';
 import {ControllerApiService} from './controller-api.service';
+import {LoginPageComponent} from './dektop/desktop-login-page/login-page.component';
+import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.component';
 
 
 @Component({
     selector: 'app-root',
-  imports: [RouterOutlet, FormsModule, StatusComponent, LoginComponent, VideoStreamComponent, PathmapComponent],
+    imports: [RouterOutlet, FormsModule, LoginPageComponent, DektopFlugmenuComponent],
     styleUrl: './app.component.css',
     templateUrl: './app.component.html',
+    standalone: true
 })
 export class AppComponent {
   controllerApi = inject(ControllerApiService)

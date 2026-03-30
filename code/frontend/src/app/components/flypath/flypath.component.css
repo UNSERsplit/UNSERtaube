@@ -1,0 +1,46 @@
+.card {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    width: auto;
+    height: auto;
+    transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-1.5px);
+    transition: all 0.28s ease;
+}
+
+.content{
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+    padding-left: 1rem;
+    width: 100%;
+    height: 100%;
+
+}
+
+.autonomesfliegen{
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 550;
+    padding-top: 15px;
+}
+
+.ringeerkennen{
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.9rem;
+    padding-top: 5px;
+}
+
+.miGfreitsKoaneNomenMeaAussuachn{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    padding-left: 1rem;
+}
