@@ -1,0 +1,36 @@
+<app-card class="card"
+     [width]="60"
+     [height]="20"
+     [variant]="CardVariants.lightGrey">
+
+    <div class="card-header">
+        <h2>Flugprotokolle</h2>
+    </div>
+
+    <div class="flight-container">
+        <div class="flight-card" *ngFor="let flight of droneFlights; let i = index">
+            <div class="flight-info">
+                <div class="index-badge">{{ i + 1 }}</div>
+                <div class="details">
+                    <h3>{{ flight.flugName }}</h3>
+                    <p>Pilot: <span>{{ flight.name }}</span> • {{ flight.ip }}</p>
+                </div>
+            </div>
+
+            <div class="flight-stats">
+                <div class="stat-item">
+                    <span class="label">Dauer</span>
+                    <span class="value">{{ flight.flugZeit }} min</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="label">Distanz</span>
+                    <span class="value">{{ flight.flugDistanz }} m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</app-card>
+
+
