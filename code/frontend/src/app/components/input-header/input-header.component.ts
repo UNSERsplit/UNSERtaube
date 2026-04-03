@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import {Component, input, model} from '@angular/core';
 import {InputComponent} from '../input/input.component';
 
 @Component({
@@ -12,4 +12,6 @@ export class InputHeaderComponent {
     headerText = input<string>();
     placeHolderText1 = input<string>();
     icon1 = input<string>();
+
+    public value = model<string>("fd");
 }

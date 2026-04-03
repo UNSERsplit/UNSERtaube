@@ -73,7 +73,7 @@ class Ext:
     
     async def led_flash(self, red1: int, green1: int, blue1: int, freq: float, red2: int, green2: int, blue2: int):
         if not (0.1 <= freq <= 10):
-            raise ValueError("frequency must be between 0.1 and 2.5Hz")
+            raise ValueError("frequency must be between 0.1 and 10Hz")
         resp = await self.drone.connection.send_raw_message(f"EXT led bl {freq} {red1} {green1} {blue1} {red2} {green2} {blue2}")
         if resp != "led ok":
             raise ConnectionError(f"EXT led bl {freq} {red1} {green1} {blue1} {red2} {green2} {blue2}" + " responded with " + resp)

@@ -1,5 +1,6 @@
 import { inject, Injectable, signal, ViewChild } from '@angular/core';
 import { VideoApiService } from './video-api.service';
+import { Drone } from '../objects/drone';
 
 export interface State {
   /** pitch in degrees */
@@ -39,16 +40,19 @@ export interface State {
   agz: number;
 }
 
+export type Status = "offline" | "ws_connected" | "drone_connected" | "error" | "connecting";
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ControllerApiService {
-  public status = signal("offline");
+  public status = signal<Status>("offline");
+  public drone = signal<Drone | undefined>(undefined);
   public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN})
   private videoApi = inject(VideoApiService);
   private waiting_messages: {
-    [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void]
+    [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void, string[]]
   } = {}
   public pathmapsignal = signal<[number, number, number][]>([]);
 
@@ -58,7 +62,7 @@ export class ControllerApiService {
     this.ws = new WebSocket(`wss://${location.hostname}:${location.port}/api/ws`);
     this.ws.addEventListener("open", ev => {
       console.log(ev)
-      this.status.set("ok");
+      this.status.set("ws_connected");
     });
 
     this.ws.addEventListener("error", ev => {
@@ -95,24 +99,36 @@ export class ControllerApiService {
         const waiting_message = this.waiting_messages[data.type];
         if (waiting_message) {
           waiting_message[0](data); // resolve promise
-          delete this.waiting_messages[data.type]
+          this.clear_waiting_message(data.type)
         }
 
-        this.status.set("message:" + data.type + ":" + i);
         i++;
       }
     });
   }
 
-  wait_for_response(required_type: string, timeout:number): Promise<object> {
+  private clear_waiting_message(type: string) {
+    if (!this.waiting_messages[type]) return;
+
+    const reject_types = this.waiting_messages[type][2];
+    delete this.waiting_messages[type]
+    reject_types.forEach(reject => {
+      this.clear_waiting_message(reject);
+    })
+  }
+
+  wait_for_response(required_type: string, timeout:number, reject_types: string[] = []): Promise<object> {
     const promise = new Promise((resolve, reject) => {
       const auto_reject = setTimeout(() => {
         if(this.waiting_messages[required_type]) {
           reject({"type": "timeout", "required_message": required_type, timeout})
-          delete this.waiting_messages[required_type]
+          this.clear_waiting_message(required_type)
         }
       }, timeout)
-      this.waiting_messages[required_type] = [resolve, reject]
+      this.waiting_messages[required_type] = [resolve, reject, reject_types]
+      reject_types.forEach(type => {
+        this.waiting_messages[type] = [reject, resolve, [...reject_types, required_type]]
+      })
     }) as Promise<object>
 
     return promise;
@@ -141,13 +157,29 @@ export class ControllerApiService {
     return data.name;
   }
 
-  async connect(ip: string) {
+  async connect(name: string, ip: string) {
+    this.status.set("connecting");
     const conn = await this.videoApi.connect();
     this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "rtc_sdp": conn.sdp, "rtc_type": conn.type}))
-    const data: any = await this.wait_for_response("drone_connected",10_000);
-    await this.videoApi.set_rtc({
-      type: data.rtc_type,
-      sdp: data.rtc_sdp
-    })
+    try {
+      const data: any = await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
+      await this.videoApi.set_rtc({
+        type: data.rtc_type,
+        sdp: data.rtc_sdp
+      })
+    } catch (e: any) {
+      this.status.set("ws_connected");
+      alert(e.reason)
+      return;
+    }
+
+    this.drone.set(new Drone(name, ip))
+
+    this.status.set("drone_connected");
+  }
+
+  disconnect() {
+    //TODO
+    this.status.set("ws_connected");
   }
 }

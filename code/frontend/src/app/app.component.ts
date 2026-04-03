@@ -1,5 +1,5 @@
-import {Component, inject} from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {Component, effect, inject} from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {buildApplication} from '@angular-devkit/build-angular';
 import { VideoStreamComponent } from '../video-stream/video-stream.component';
@@ -11,13 +11,26 @@ import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.
 
 @Component({
     selector: 'app-root',
-    imports: [RouterOutlet, FormsModule, LoginPageComponent, DektopFlugmenuComponent],
+    imports: [RouterOutlet, FormsModule],
     styleUrl: './app.component.css',
     templateUrl: './app.component.html',
     standalone: true
 })
 export class AppComponent {
   controllerApi = inject(ControllerApiService)
+  private router = inject(Router);
+
+  constructor() {
+    effect(() => {
+      const status = this.controllerApi.status()
+      if(status == "ws_connected") {
+        this.router.navigate(["/login-page"])
+      } else if(status == "drone_connected") {
+        this.router.navigate(["/home"])
+      }
+    })
+  }
+
   loadTestData() {
     console.log("Sende Testdaten an Service...");
 

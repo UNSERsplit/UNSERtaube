@@ -39,6 +39,19 @@
     animation: pulse 2s infinite;
 }
 
+.connecting .status-dot {
+    background-color: #008cff;
+    box-shadow: 0 0 10px #008cff, 0 0 20px rgba(0, 140, 255, 0.5);
+}
+
+.connecting .status-text {
+    color: #008cff;
+}
+
+.connecting .status-dot {
+    animation: pulse 0.75s infinite;
+}
+
 @keyframes pulse {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.2); opacity: 0.7; }

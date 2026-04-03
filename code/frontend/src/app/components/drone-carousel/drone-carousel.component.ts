@@ -1,6 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {Drone} from '../../../objects/drone';
 import {Router} from '@angular/router';
+import { ControllerApiService } from '../../controller-api.service';
 
 @Component({
   selector: 'app-drone-carousel',
@@ -10,17 +11,29 @@ import {Router} from '@angular/router';
 
 })
 export class DroneCarouselComponent {
-    drone: Drone = new Drone("Herbert", "192.168.0.2");
     private router = inject(Router);
+    private controller = inject(ControllerApiService);
 
     items : any = [
-        {color: '#ffadad' },
+        {
+            name: "Drone 7 Hotspot",
+            ip: "192.168.43.49",
+            id: "hotspot7",
+            color: '#ffadad'
+        },
+        {
+            name: "Drone 2",
+            ip: "4.3.2.1",
+            id: "myid2",
+            color: '#ffd6a5'
+        }
+        /*{color: '#ffadad' },
         { title: 'Card 2', color: '#ffd6a5' },
         { title: 'Card 3', color: '#fdffb6' },
         { title: 'Card 4', color: '#caffbf' },
         { title: 'Card 5', color: '#9bf6ff' },
-        { title: 'Card 6', color: '#a0c4ff' }
-    ];
+        { title: 'Card 6', color: '#a0c4ff' }*/
+    ]; // TODO get from server
 
     currentIndex = 0;
 
@@ -43,7 +56,7 @@ export class DroneCarouselComponent {
         }
     }
 
-    selectDrone(){
-        this.router.navigate(['/home']);
+    selectDrone(drone: any){
+        this.controller.connect(drone.name, drone.ip);
     }
 }

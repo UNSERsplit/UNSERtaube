@@ -1,7 +1,7 @@
-<div class="status-container" [class.connected]="isConnected" [class.disconnected]="!isConnected" [style.font-size.px]="fontsize" [style.margin.px]="margin" [style.padding.px]="padding">
+<div class="status-container" [class.connected]="this.controllerApi.status() == 'drone_connected'" [class.disconnected]="this.controllerApi.status() != 'drone_connected'" [class.connecting]="this.controllerApi.status() == 'connecting'" [style.font-size.px]="fontsize" [style.margin.px]="margin" [style.padding.px]="padding">
     <span class="status-dot"></span>
     <span class="status-text">
-    {{ isConnected  ? 'Verbunden' : 'Nicht Verbunden' }}
+    {{ text() }}
   </span>
 </div>
 

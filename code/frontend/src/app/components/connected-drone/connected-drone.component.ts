@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import {StatusComponent} from '../status/status.component';
 import {Drone} from '../../../objects/drone';
 import {ButtonComponent, } from '../button/button.component';
 import {ButtonVariants} from '../button/button.variants';
 import {CardComponent} from '../card/card.component';
 import {CardVariants} from '../card/card.variants';
+import { ControllerApiService } from '../../controller-api.service';
 
 @Component({
   selector: 'app-connected-drone',
@@ -18,18 +19,36 @@ import {CardVariants} from '../card/card.variants';
     standalone:true
 })
 export class ConnectedDroneComponent {
-    drone: Drone = new Drone("Herbert", "192.168.0.2");
+    private controller = inject(ControllerApiService);
+
+    drone = computed(() => this.controller.drone()!)
+
+    isDroneConnected = computed(() => this.controller.status() == "drone_connected");
+    isDisconnected = computed(() => this.controller.status() == "ws_connected");
+
     protected  ButtonVariant = ButtonVariants.red;
-    isDroneConnected: boolean = true;
-    buttonContent: string = "Verbindung trennen";
+    buttonContent: string = "Trennen";
+
+    constructor() {
+        effect(() => {
+            if (this.isDroneConnected()) {
+                this.buttonContent = "Trennen";
+                this.ButtonVariant = ButtonVariants.red;
+            } else if(this.isDisconnected()) {
+                this.buttonContent = "Verbinden";
+                this.ButtonVariant = ButtonVariants.green;
+            }
+        })
+    }
+
     handleConnect() {
-        this.isDroneConnected = !this.isDroneConnected;
-        if (this.isDroneConnected) {
-            this.buttonContent = "Verbindung trennen";
-            this.ButtonVariant = ButtonVariants.red;
-        }else{
-            this.buttonContent = "Verbinden";
-            this.ButtonVariant = ButtonVariants.green;
+        if (this.isDroneConnected()) {
+            this.controller.disconnect()
+        } else if(this.isDisconnected()) {
+            this.controller.connect(
+                this.controller.drone()!.getName,
+                this.controller.drone()!.getIp
+            )
         }
     }
     flexdirection: string = 'row';
