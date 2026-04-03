@@ -1,0 +1,41 @@
+@startuml
+title Verteilungsdiagramm Gruppe 2
+
+node "Client Endgerät" {
+    artifact "Web Browser"
+}
+
+node "Raspberry PI" <<device>> {
+    node "Docker Container Backend" {
+        artifact "Backend" <<artifact>>
+    }
+    node "Docker Container Webhosting" {
+        artifact "Webapp" <<artifact>>
+    }
+    node "Docker Container Personenerkennung" {
+        artifact "Personenerkennung" <<artifact>>
+    }
+    node "Docker Container Ringerkennung" {
+        artifact "Ringerkennung" <<artifact>>
+    }
+
+}
+
+node "Drohne" <<device>> {
+    artifact "Data transmitter" <<artifact>>
+}
+
+database "PostgreSQL Server" {
+    folder "Drohnendaten"
+}
+
+"Web Browser" -- "Webapp" : HTTPS
+"Webapp" -- "Backend" : HTTPS
+
+"Personenerkennung" -- "Backend" : HTTPS
+"Ringerkennung" -- "Backend" : HTTPS
+
+"Drohne" -- "Backend" : WebSocket
+
+"Backend" -- "Drohnendaten" 
+@enduml

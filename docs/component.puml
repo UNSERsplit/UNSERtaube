@@ -1,0 +1,43 @@
+@startuml
+
+
+package Drone {
+    [Drone (RobomasterTT)]
+}
+
+package Backend {
+    package Sdk {
+        [ConnectionManager]
+        [VideoReceiver]
+    }
+    
+    [WebsocketConnection]
+    [VideoRecorder]
+    [WebRTCpeer]
+    
+    [ConnectionManager] --> [WebsocketConnection] : status
+    [ConnectionManager] <-- [WebsocketConnection] : commands
+    [PathCalculation] <-- [WebsocketConnection] : speed
+    
+    [VideoReceiver] --> [WebRTCpeer] : video
+    [VideoReceiver] --> [VideoRecorder] : video
+}
+
+package Frontend {
+    [Video]
+    [Telemetry]
+    [Pathmap]
+    [Flight-Control]
+    [Led-Editor]
+}
+
+[Drone (RobomasterTT)] ..> [ConnectionManager] : status
+[Drone (RobomasterTT)] <.. [ConnectionManager] : commands
+[Drone (RobomasterTT)] ..> [VideoReceiver] : video
+
+[Video] <.. [WebRTCpeer] : video
+[Telemetry] <.. [WebsocketConnection] : telemetry
+[Flight-Control] ..> [WebsocketConnection] : flight-control
+[Led-Editor] ..> [WebsocketConnection] : led
+[Pathmap] <.. [PathCalculation] : path
+@enduml
