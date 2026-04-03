@@ -1,0 +1,131 @@
+.flight-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    width: 100%; /* Oder 100% je nach Container */
+
+    overflow-y: auto; /* Aktiviert das Scrollen */
+
+    /* --- Scrollbar Styling --- */
+
+    /* 1. Die Breite der Scrollbar */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    /* 2. Der Hintergrund (Track) */
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+    }
+
+    /* 3. Der bewegliche Schieber (Thumb) */
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3); /* Dein Blau mit Transparenz */
+        border-radius: 10px;
+        border: 2px solid transparent; /* Erzeugt einen kleinen Abstand zum Rand */
+        background-clip: content-box;
+        transition: background 0.3s ease;
+    }
+
+    /* 4. Hover-Effekt für den Schieber */
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(231, 234, 237, 0.6); /* Helleres Blau beim Drüberfahren */
+    }
+}
+
+.flight-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .flight-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+
+        .index-badge {
+            color: #3b82f6;
+            font-weight: bold;
+            font-size: 1.2rem;
+            min-width: 25px;
+        }
+
+        h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            margin: 4px 0 0;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            span { color: #cbd5e1; }
+        }
+    }
+
+    .flight-stats {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            .label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                color: #64748b;
+                letter-spacing: 1px;
+            }
+
+            .value {
+                color: #f8fafc;
+                font-weight: 600;
+                font-size: 1rem;
+            }
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+    }
+}
+.card-header{
+    display: flex;
+    justify-content: flex-start;
+    align-content: start;
+    font-size: 1rem;
+    font-weight: 550;
+}
+
+.card{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    align-content: center;
+    font-family: 'Inter', sans-serif;
+
+}
+
+
