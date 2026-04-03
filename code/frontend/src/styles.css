@@ -22,3 +22,88 @@ body {
     background: var(--bg-color);
     margin: 0;
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ============================================================
+   STYLE NR. 1: DASHBOARD STYLE (Dunkel mit Blauem Hover)
+   Klasse: .scrollbar-dashboard
+   ============================================================ */
+
+.scrollbar-dark::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+    background: #0d1117;
+    border-radius: 20px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 20px;
+    border: 3px solid #0d1117;
+    transition: all 0.3s ease-in-out;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background: #0066FF;
+    box-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:active {
+    background: #0052cc;
+}
+
+/* Firefox Support für Style 1 */
+.scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: #30363d #0d1117;
+}
+
+
+/* ============================================================
+   STYLE NR. 2: MINIMAL STYLE (Transparent / Subtil)
+   Klasse: .scrollbar-minimal
+   ============================================================ */
+
+.scrollbar-minimal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background 0.3s ease;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-thumb:hover {
+    background: rgba(231, 234, 237, 0.6);
+}
+
+/* Firefox Support für Style 2 */
+.scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.02);
+}
+
+
+/* ============================================================
+   ZUSATZ-FIXES FÜR ANGULAR MATERIAL & DIALOGE
+   ============================================================ */
+
+.cdk-overlay-pane {
+    overflow: hidden !important;
+}
+
+.mat-mdc-dialog-content {scrollbar-gutter: stable;
+}
