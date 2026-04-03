@@ -7,6 +7,7 @@ import {PathmapComponent} from '../pathmap/pathmap.component';
 import {ControllerApiService} from './controller-api.service';
 import {LoginPageComponent} from './dektop/desktop-login-page/login-page.component';
 import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.component';
+import { patch } from './ws_service.patch';
 
 
 @Component({
@@ -21,6 +22,9 @@ export class AppComponent {
   private router = inject(Router);
 
   constructor() {
+    if(window.location.port == "4200") {
+      patch(this.controllerApi);
+    }
     effect(() => {
       const status = this.controllerApi.status()
       if(status == "ws_connected") {

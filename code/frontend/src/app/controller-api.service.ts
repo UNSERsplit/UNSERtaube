@@ -71,40 +71,35 @@ export class ControllerApiService {
       this.status.set("error")
     });
 
-    let i = 0;
     this.ws.addEventListener("message", ev => {
-      if(ev.data instanceof Blob) {
-        // video frame
-        
-      } else {
-
-        const data = JSON.parse(ev.data);
-        if (data.type === "validation_error") {
-          alert("Validation error, fix the ws message format");
-          alert(data.context);
-        }
-
-        switch(data.type) {
-          case "state": {
-            const newState:State = data.state
-            console.log(data.state.vgx, data.state.vgy, data.state.vgz)
-            this.state.set(newState);
-            break;
-          }
-          case "waypoints": {
-            this.pathmapsignal.set(data.context);
-          }
-        }
-
-        const waiting_message = this.waiting_messages[data.type];
-        if (waiting_message) {
-          waiting_message[0](data); // resolve promise
-          this.clear_waiting_message(data.type)
-        }
-
-        i++;
-      }
+      this.handle_message(ev)
     });
+  }
+
+  private handle_message(ev: any) {
+    const data = JSON.parse(ev.data);
+    if (data.type === "validation_error") {
+      alert("Validation error, fix the ws message format");
+      alert(data.context);
+    }
+
+    switch(data.type) {
+      case "state": {
+        const newState:State = data.state
+        console.log(data.state.vgx, data.state.vgy, data.state.vgz)
+        this.state.set(newState);
+        break;
+      }
+      case "waypoints": {
+        this.pathmapsignal.set(data.context);
+      }
+    }
+
+    const waiting_message = this.waiting_messages[data.type];
+    if (waiting_message) {
+      waiting_message[0](data); // resolve promise
+      this.clear_waiting_message(data.type)
+    }
   }
 
   private clear_waiting_message(type: string) {
@@ -163,13 +158,15 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "rtc_sdp": conn.sdp, "rtc_type": conn.type}))
     try {
       const data: any = await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
-      await this.videoApi.set_rtc({
-        type: data.rtc_type,
-        sdp: data.rtc_sdp
-      })
+      if(data.rtc_type != "mock" && data.rtc_sdp != "mock") {
+        await this.videoApi.set_rtc({
+          type: data.rtc_type,
+          sdp: data.rtc_sdp
+        })
+      }
     } catch (e: any) {
       this.status.set("ws_connected");
-      alert(e.reason)
+      alert(e.reason || e)
       return;
     }
 
