@@ -1,0 +1,14 @@
+.video-container {
+    width: 100vw;
+    height: 100vh;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#video {
+    background-color: blue;
+    width: 960;
+    height: 720;
+}

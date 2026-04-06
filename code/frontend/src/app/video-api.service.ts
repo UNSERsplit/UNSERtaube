@@ -6,23 +6,31 @@ import { Injectable, signal } from '@angular/core';
 })
 export class VideoApiService {
   private element: HTMLVideoElement | undefined;
-  private mediaSource: MediaSource | undefined;
-  private sourceBuffer: SourceBuffer | undefined;
+  private stream: MediaStream | undefined;
   private peer: RTCPeerConnection;
 
   constructor() {
     this.peer = new RTCPeerConnection();
     this.peer.addTransceiver('video', { direction: 'recvonly' });
+
+    this.peer.addEventListener("track", event => {
+        this.stream = event.streams[0];
+
+        if(this.element) {
+          this.element.srcObject = this.stream!;
+          this.element.play()
+        }
+      })
   }
 
 
   initVideo(playbackId: string) {
-    this.peer.addEventListener("track", event => {
-      this.element!.srcObject = event.streams[0];
-      this.element?.play()
-    })
-
     this.element = document.getElementById(playbackId) as HTMLVideoElement;
+
+    if(this.stream) {
+      this.element.srcObject = this.stream!;
+      this.element.play()
+    }
   }
 
   async connect(): Promise<RTCSessionDescription> {

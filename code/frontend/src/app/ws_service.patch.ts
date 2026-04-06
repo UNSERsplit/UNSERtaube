@@ -46,8 +46,7 @@ class Ws {
 
 export const patch = (inst: ControllerApiService) => {
     // @ts-ignore
-    window.c = inst
-    console.log(ControllerApiService)
+    window.controllerApi = inst
 
     const ws = new Ws();
 

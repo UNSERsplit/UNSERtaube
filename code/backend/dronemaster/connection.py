@@ -83,7 +83,7 @@ class Connection:
             log("ERROR", "stopping video stream")
         self.send_message_noanswer("streamoff")
         self.send_message_noanswer("emergency")
-        #self.send_message_noanswer("reboot")
+        self.send_message_noanswer("reboot")
         self.open =  False
 
     async def disconnect(self):
