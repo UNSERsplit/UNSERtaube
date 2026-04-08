@@ -77,3 +77,17 @@ class Ext:
         resp = await self.drone.connection.send_raw_message(f"EXT led bl {freq} {red1} {green1} {blue1} {red2} {green2} {blue2}")
         if resp != "led ok":
             raise ConnectionError(f"EXT led bl {freq} {red1} {green1} {blue1} {red2} {green2} {blue2}" + " responded with " + resp)
+
+    async def matrix_set_startup_pattern(self, colorstr:str):
+        if colorstr != "":
+            colorstr = "0"
+        resp = await self.drone.connection.send_raw_message(f"EXT mled sg {colorstr}")
+        if resp != "mled ok":
+            raise ConnectionError(f"EXT mled sg {colorstr} responded with {resp}")
+
+    async def matrix_set_pattern(self, colorstr:str):
+        if colorstr != "":
+            colorstr = "0"
+        resp = await self.drone.connection.send_raw_message(f"EXT mled g {colorstr}")
+        if resp != "mled ok":
+            raise ConnectionError(f"EXT mled g {colorstr} responded with {resp}")
