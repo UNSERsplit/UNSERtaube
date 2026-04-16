@@ -1,0 +1,38 @@
+<app-card class="dashboard-wrapper" [width]="buttonWidth1" [variant]="CardVariants.grey" [height]="buttonHeight1" [flexdirection]="flexdirection">
+    <div class="content">
+        <div class="matrix-container">
+            <h1>LED STEUERUNG</h1>
+
+            <app-card class="matrix" [variant]="CardVariants.lightGrey" [height]="buttonHeight2" [width]="buttonWidth2" flexdirection="column">
+
+                <div class="led-grid">
+                    <ng-container *ngFor="let row of leds; let rowIndex = index">
+                        <div *ngFor="let led of row; let colIndex = index"
+                             class="led"
+                             [class.active]="led.ledstatus !== 0"
+                             [style.background-color]="getLedColor(led.ledstatus)"
+                             [style.--glow-color]="getLedColor(led.ledstatus)"
+                             (click)="setLedColor(rowIndex, colIndex)">
+                        </div>
+                    </ng-container>
+                </div>
+
+            </app-card>
+        </div>
+
+        <aside class="sidebar">
+            <app-card [variant]="CardVariants.lightGrey" [width]="buttonWidth3" [height]="buttonHeight3" flexdirection="column">
+                <h3 class="label">FARBAUSWAHL</h3>
+                <div class="color-row">
+                    <div *ngFor="let c of colorCodes; let i = index"
+                         class="swatch"
+                         [class.selected]="selectedColor === i"
+                         [style.background]="c"
+                         (click)="selectedColor = i">
+                    </div>
+                </div>
+                <app-button class="clearButton" [variant]="ButtonVariant" (click)="clearLeds()" text="{{buttonText}}"/>
+            </app-card>
+        </aside>
+    </div>
+</app-card>
