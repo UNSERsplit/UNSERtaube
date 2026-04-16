@@ -39,6 +39,38 @@ class FunkiMessage(ServerBoundMessage):
     pitch: float
     roll: float
     throttle: float
+
+class SetStartupMatrix(ServerBoundMessage):
+    type: Literal["set_init_matrix"]
+    data: str
+
+class SetMatrix(ServerBoundMessage):
+    type: Literal["set_matrix"]
+    data: str
+
+class SetStaticLed(ServerBoundMessage):
+    type: Literal["static_led"]
+    red: int
+    green: int
+    blue: int
+
+class SetPulsingLed(ServerBoundMessage):
+    type: Literal["pulsing_led"]
+    red: int
+    green: int
+    blue: int
+    freq: int
+
+class SetFlashingLed(ServerBoundMessage):
+    type: Literal["flashing_led"]
+    red1: int
+    green1: int
+    blue1: int
+    freq: int
+    red2: int
+    green2: int
+    blue2: int
+
 ### SERVERBOUND END ###
 
 ### CLIENTBOUND START ###
