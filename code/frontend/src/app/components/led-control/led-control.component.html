@@ -1,5 +1,5 @@
-<app-card class="card" [width]="28" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="6">
-    <div class="content">
+<app-card class="card" [width]="buttonWidth" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="buttonHeight" (click)="openPopup()">
+    <div class="content" >
         <div class="miGfreitsKoaneNomenMeaAussuachn">
             <span class="ledControl">LED-Control</span>
             <span class="chooseMode">Choose Mode</span>

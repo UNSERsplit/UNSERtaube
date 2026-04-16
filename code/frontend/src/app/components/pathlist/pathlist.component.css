@@ -1,38 +1,10 @@
-.flight-container {
+#flight-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 10px;
     width: 100%; /* Oder 100% je nach Container */
-
     overflow-y: auto; /* Aktiviert das Scrollen */
-
-    /* --- Scrollbar Styling --- */
-
-    /* 1. Die Breite der Scrollbar */
-    &::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    /* 2. Der Hintergrund (Track) */
-    &::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 10px;
-    }
-
-    /* 3. Der bewegliche Schieber (Thumb) */
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3); /* Dein Blau mit Transparenz */
-        border-radius: 10px;
-        border: 2px solid transparent; /* Erzeugt einen kleinen Abstand zum Rand */
-        background-clip: content-box;
-        transition: background 0.3s ease;
-    }
-
-    /* 4. Hover-Effekt für den Schieber */
-    &::-webkit-scrollbar-thumb:hover {
-        background: rgba(231, 234, 237, 0.6); /* Helleres Blau beim Drüberfahren */
-    }
 }
 
 .flight-card {

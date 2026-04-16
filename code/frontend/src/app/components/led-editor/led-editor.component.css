@@ -1,0 +1,113 @@
+.dashboard-wrapper {
+    display: flex;
+    gap: 5rem;
+    justify-content: center;
+    background-color: var(--grey-card-color);
+}
+
+.led-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 15px;
+    padding: 10px;
+}
+
+.led {
+    width: 30px;
+    height: 30px;
+    background: #21262d;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.led.active {
+    background-color: var(--glow-color);
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+.header h1 {
+    font-size: 0.5rem;
+    margin-bottom: 0;
+    letter-spacing: 1px;
+}
+
+.header p {
+    color: #8b949e;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+}
+
+.color-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.status-bar {
+    display: flex;
+    gap: 20px;
+    font-size: 0.75rem;
+    color: #8b949e;
+    margin-top: 15px;
+    padding-left: 10px;
+}
+
+.signal { color: #238636; }
+
+.matrix{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Den Glow nur anzeigen, wenn die LED nicht 'OFF' ist */
+.led.active {
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+.swatch.selected {
+    border: 1px solid white;
+    transform: scale(1.1);
+}
+
+.clearButton{
+    padding: 0.5rem;
+    height: 3rem;
+    width: 10rem;
+}
+
+.matrix-container{
+    padding: 0px 50px 50px 50px;
+    font-size: 1.5rem;
+}
+
+.sidebar{
+    display: flex;
+    justify-content: center;
+}
+
+.content{
+    display: flex;
+    flex-direction: row;
+}
+
+.h1{
+    font-size: 0.2rem;
+}
+
+.matrix-container h1 {
+    margin: 0;
+    padding: 20px;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+}

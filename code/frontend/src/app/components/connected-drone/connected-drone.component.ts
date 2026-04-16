@@ -49,7 +49,7 @@ export class ConnectedDroneComponent {
                 this.controller.drone()!.getName,
                 this.controller.drone()!.getIp
             )
-        }
+            }
     }
     flexdirection: string = 'row';
     protected readonly CardVariants = CardVariants;

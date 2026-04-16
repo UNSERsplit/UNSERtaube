@@ -3,14 +3,15 @@ import {ButtonVariants} from '../button/button.variants';
 import {CardVariants} from './card.variants';
 
 @Component({
-  selector: 'app-card',
-  imports: [],
-  templateUrl: './card.component.html',
-  styleUrl: './card.component.css'
+    selector: 'app-card',
+    imports: [],
+    templateUrl: './card.component.html',
+    standalone: true,
+    styleUrl: './card.component.css'
 })
 export class CardComponent {
-    @Input() width: number = 60;
-    @Input() height: number = 6;
+    @Input() width: string = '60rem';
+    @Input() height: string = '6rem';
     @Input() flexdirection: string = "column";
     @Input() shadow: string = "";
     variant = input<CardVariants>();

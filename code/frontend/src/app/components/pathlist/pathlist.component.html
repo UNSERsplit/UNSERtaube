@@ -1,13 +1,12 @@
 <app-card class="card"
-     [width]="60"
-     [height]="20"
+     [width]="buttonWidth"
+     [height]="buttonHeight"
      [variant]="CardVariants.lightGrey">
 
     <div class="card-header">
         <h2>Flugprotokolle</h2>
     </div>
-
-    <div class="flight-container">
+    <div class="scrollbar-minimal" id="flight-container">
         <div class="flight-card" *ngFor="let flight of droneFlights; let i = index">
             <div class="flight-info">
                 <div class="index-badge">{{ i + 1 }}</div>

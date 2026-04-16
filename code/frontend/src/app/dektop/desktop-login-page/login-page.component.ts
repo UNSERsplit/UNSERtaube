@@ -25,6 +25,8 @@ export class LoginPageComponent {
     protected readonly ButtonVariant = ButtonVariants;
     private router = inject(Router);
 
+    buttonWidth: string = '65rem';
+    buttonHeight: string = '4rem';
 
     private async createAndConnect(name: string, ip: string) {
         //create
