@@ -5,7 +5,6 @@ import uuid
 from threading import Thread
 
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
-from starlette.websockets import WebSocket, WebSocketDisconnect
 from video_writer import VideoWriter
 from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import *
@@ -19,7 +18,6 @@ import asyncio
 class WebsocketManager:
     def __init__(self) -> None:
         self.connections: dict[WebSocket, WsConnection] = {}
-    
     def stop(self):
         for ws, conn in self.connections.items():
             conn.end_capture()
@@ -68,6 +66,7 @@ class WsConnection:
     async def disconnect(self, reason: str):
         if self.drone:
             drone = self.drone
+            drone.ext.led_set(255,0,0)
             self.drone = None # type: ignore
             log("Disconnect", reason)
             try:
@@ -82,9 +81,9 @@ class WsConnection:
                 await drone.disconnect()
             except Exception:
                 pass
-            
 
         await self.trysend(DroneDisconnected(reason=reason))
+
 
     async def send(self, data: ClientBoundMessage):
         await self.mngr.send(self.ws, data)
@@ -100,7 +99,6 @@ class WsConnection:
             await self.send(SendWaypoints(context=self.pathcalculation.canvas_waypoints.getwaypoints()))
         except Exception:
             pass
-
 
     def on_frame(self, data: VideoFrame):
         self.video_writer.feed(data)
@@ -132,6 +130,7 @@ class WsConnection:
                     self.drone.set_video_stream(rtc_server["track"])
                     rtc_server["track"].frame_callback = self.on_frame
                     self.drone.set_state_callback(self.on_state)
+                    self.drone.ext.led_set(0, 0, 255)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
                     self.assertDrone()
@@ -154,6 +153,23 @@ class WsConnection:
                     filename = self.end_capture()
                     assert filename is not None
                     await self.send(RecordingResult(name=filename))
+                case SetStartupMatrix():
+                    self.assertDrone()
+                    await self.drone.ext.matrix_set_startup_pattern(colorstr=data)
+                case SetMatrix():
+                    self.assertDrone()
+                    await self.drone.ext.matrix_set_pattern(colorstr=data)
+                case SetStaticLed():
+                    self.assertDrone()
+                    await self.drone.ext.led_set(data.red, data.green, data.blue)
+                case SetPulsingLed():
+                    self.assertDrone()
+                    await self.drone.ext.led_pulse(data.red, data.green, data.blue, data.freq)
+                case SetFlashingLed():
+                    self.assertDrone()
+                    await self.drone.ext.led_flash(data.red1, data.green1, data.blue1, data.freq, data.red2, data.green2, data.blue2)
+
+
         except TimeoutError as e:
             await self.disconnect(reason=" ".join(e.args))
         except ConnectionError as e:
@@ -164,7 +180,7 @@ class WsConnection:
             await self.send(Error(context=list(e.args), traceback=tr))
         finally:
             session.close()
-    
+
     def assertDrone(self):
         if not self.drone:
             raise ConnectionError("drone not available")
