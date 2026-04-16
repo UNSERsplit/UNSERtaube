@@ -30,11 +30,10 @@ h2{
 }
 
 .header{
-    top: 0;
-    margin: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 10px;
+    color: var(--accent-blue);
+    margin: 50px;
+
 }
 
 .carousel-container{

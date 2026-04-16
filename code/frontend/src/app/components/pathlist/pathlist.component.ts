@@ -17,6 +17,8 @@ import {flypath} from '../../../objects/flypath';
 export class PathlistComponent {
 
     protected readonly CardVariants = CardVariants;
+    buttonWidth: string = '60rem';
+    buttonHeight: string = '20rem';
     //@Input() shadow: string = "rgba(0, 255, 0, 0.75) 0px 0px 4px, rgba(0, 255, 0, 0.75) 0px 0px 4px, rgba(0, 255, 0, 0.75) 0px 0px 4px";
 
     items = ['Angular lernen', 'Einkaufen gehen', 'Fitnessstudio', 'Projekt abschließen'];

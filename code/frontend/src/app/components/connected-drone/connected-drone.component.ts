@@ -22,6 +22,7 @@ export class ConnectedDroneComponent {
     protected  ButtonVariant = ButtonVariants.red;
     isDroneConnected: boolean = true;
     buttonContent: string = "Verbindung trennen";
+    buttonWidth: string = '60rem';
     handleConnect() {
         this.isDroneConnected = !this.isDroneConnected;
         if (this.isDroneConnected) {

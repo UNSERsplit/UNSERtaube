@@ -5,6 +5,9 @@ import {StartCardComponent} from '../../components/start-drone/start-card.compon
 import {FlypathComponent} from '../../components/flypath/flypath.component';
 import {LedControlComponent} from '../../components/led-control/led-control.component';
 import {PathlistComponent} from '../../components/pathlist/pathlist.component';
+import {MatDialog} from '@angular/material/dialog';
+import {LedEditorComponent} from '../../components/led-editor/led-editor.component';
+
 
 @Component({
   selector: 'app-dektop-flugmenu',

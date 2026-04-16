@@ -19,6 +19,9 @@ import {Router} from '@angular/router';
 export class LoginPageComponent {
     protected readonly ButtonVariant = ButtonVariants;
     isDroneConnected: boolean = false;
+    buttonWidth: string = '65rem';
+    buttonHeight: string = '18rem';
+
     private router = inject(Router);
     handleConnect() {
         this.isDroneConnected = !this.isDroneConnected;

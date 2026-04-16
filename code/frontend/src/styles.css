@@ -107,3 +107,9 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .mat-mdc-dialog-content {scrollbar-gutter: stable;
 }
+
+.purpleShadow{
+    box-shadow: rgba(244, 3, 252, 0.8) 0px 0px 4px, rgba(244, 3, 252, 0.8) 0px 0px 4px, rgba(255, 3, 252, 0.8) 0px 0px 4px;
+    border: none !important;
+    border-radius: 27px;
+}
