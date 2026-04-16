@@ -92,6 +92,11 @@ export class ControllerApiService {
       }
       case "waypoints": {
         this.pathmapsignal.set(data.context);
+        break;
+      }
+      case "drone_disconnected": {
+        alert(data.reason);
+        break;
       }
     }
 

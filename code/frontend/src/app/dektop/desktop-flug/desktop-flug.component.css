@@ -1,14 +1,47 @@
 .video-container {
-    width: 100vw;
-    height: 100vh;
-    
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 #video {
-    background-color: blue;
-    width: 960;
-    height: 720;
+    background-color: rgba(0, 0, 0, 0.192);
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.top, .bottom {
+    display: flex;
+    width: calc(100% - 1rem);
+    color: white;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.overlay p {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+}
+
+.seperator {
+    flex-grow: 1;
+}
+
+:host {
+    position: relative;
+}
+
+:host > * {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
 }

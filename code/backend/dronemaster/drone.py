@@ -1,12 +1,16 @@
 from typing import Any, Callable, Coroutine, Optional
 #from websocket.webrtc import UDPVideoTrack
 from . import connection, State
+from threading import Timer
 
 class Drone:
     def __init__(self, ip: str) -> None:
         self.ip = ip
         self.connection: connection.Connection = None # type: ignore
         self.ext = Ext(self)
+        self.state_callback: Callable[[State], Coroutine[Any, Any, None]] = None  # type: ignore
+        self.disconnect_callback: Callable[[], Coroutine[Any, Any, None]] = None  # type: ignore
+        self.timer = None
     
     def get_video_port(self) -> int:
         return self.connection.future_video_port
@@ -16,19 +20,37 @@ class Drone:
     
     async def connect(self):
         self.connection = await connection.connection_manager.connect(self.ip)
+        self.connection.setupStateCallback(self._state_callback)
+
     
     async def disconnect(self):
         if self.connection:
             await self.connection.disconnect()
 
     async def takeoff(self):
-        await self.connection.send_control_message(f"takeoff", timeout=30, repeat=0)
+        self.connection.send_message_noanswer("takeoff")
     
     async def land(self):
-        await self.connection.send_control_message("land", timeout=10, repeat=0)
+        self.connection.send_message_noanswer("land")
+    
+    async def _disconnect_(self):
+        if self.disconnect_callback:
+            await self.disconnect_callback()
+
+    async def _state_callback(self, state: State):
+        if self.timer:
+            self.timer.cancel()
+        self.timer = Timer(5, lambda : self.connection.loop.call_soon_threadsafe(self.connection._run_task, self._disconnect_))
+        self.timer.start()
+
+        if self.state_callback:
+            await self.state_callback(state)
+
+    def set_disconnect_callback(self, cb: Callable[[], Coroutine[Any, Any, None]]):
+        self.disconnect_callback = cb
     
     def set_state_callback(self, cb: Callable[[State], Coroutine[Any, Any, None]]):
-        self.connection.setupStateCallback(cb)
+        self.state_callback = cb
 
     async def emergency_stop(self):
         self.connection.send_message_noanswer("emergency")

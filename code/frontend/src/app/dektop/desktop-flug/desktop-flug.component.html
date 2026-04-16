@@ -1,3 +1,35 @@
 <div class="video-container">
     <video id="video"></video>
 </div>
+<div class="overlay">
+    <div class="top">
+        <p id="mode">Mode: {{ modeName() }}</p>
+        <div class="seperator"></div>
+        <button (click)="takeoff()">Takeoff</button>
+        <button (click)="land()">Land</button>
+        <div class="seperator"></div>
+        <p id="temp">{{ state().templ }}°C - {{ state().temph }}°C</p>
+        <p id="battery">{{ state().bat }}%</p>
+        <p id="drone-connection">{{ drone().getName }} ({{ drone().getIp }})</p>
+    </div>
+
+    <div class="bottom">
+        <p id="height">100m</p>
+        <p id="speed">{{ speed() }}km/h</p>
+        <div class="seperator"></div>
+        <p id="pitch">{{ state().pitch }}°</p>
+        <p id="roll">{{ state().roll }}°</p>
+        <p id="yaw">{{ state().yaw }}°</p>
+        <div class="seperator"></div>
+        <p id="flight-time">1m 15s</p>
+        <p id="flight-distance">200m</p>
+    </div>
+</div>
+
+@if (mode() == "KEYBOARD") {
+    <app-keyboard-input></app-keyboard-input>
+}
+
+@if (mode() == "CONTROLLER") {
+    <app-controller-input></app-controller-input>
+}

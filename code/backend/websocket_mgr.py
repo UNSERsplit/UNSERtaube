@@ -119,6 +119,9 @@ class WsConnection:
         await self.send(StateMessage(state=state))
         await self.sendpathpoints()
 
+    async def _disconnect_from_timeout(self):
+        await self.disconnect("Drone stopped sending state messages")
+
     async def on_message(self, data: messages):
         session = SessionLocal()
 
@@ -132,6 +135,7 @@ class WsConnection:
                     self.drone.set_video_stream(rtc_server["track"])
                     rtc_server["track"].frame_callback = self.on_frame
                     self.drone.set_state_callback(self.on_state)
+                    self.drone.set_disconnect_callback(self._disconnect_from_timeout)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
                     self.assertDrone()
