@@ -1,6 +1,6 @@
 import dronemaster
 import asyncio
-import cv2
+import pygame
 import av, av.error
 import threading
 import numpy as np
@@ -39,11 +39,25 @@ async def __main__():
     reader = FrameReader(drone.get_video_port())
     reader.start()
 
+    window = pygame.display.set_mode((640,480))
+
     try:
         while True:
-            print(reader.frame)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    break
+
+            frame = reader.frame
+            if frame is None:
+                continue
+            video_surf = pygame.image.frombuffer(
+                frame.tobytes(), frame.shape[1::-1], "RGB")
+            
+            window.blit(video_surf, (0, 0))
+            pygame.display.flip()
     finally:
         reader.stopped = True
+        pygame.quit()
         await drone.disconnect()
 
 dronemaster.start()
