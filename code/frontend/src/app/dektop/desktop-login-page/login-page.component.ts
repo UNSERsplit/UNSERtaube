@@ -20,7 +20,7 @@ export class LoginPageComponent {
     protected readonly ButtonVariant = ButtonVariants;
     isDroneConnected: boolean = false;
     buttonWidth: string = '65rem';
-    buttonHeight: string = '18rem';
+    buttonHeight: string = '4rem';
 
     private router = inject(Router);
     handleConnect() {
