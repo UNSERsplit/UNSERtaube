@@ -66,6 +66,7 @@ class WsConnection:
     async def disconnect(self, reason: str):
         if self.drone:
             drone = self.drone
+            drone.ext.led_set(255,0,0)
             self.drone = None # type: ignore
             log("Disconnect", reason)
             try:
@@ -129,6 +130,7 @@ class WsConnection:
                     self.drone.set_video_stream(rtc_server["track"])
                     rtc_server["track"].frame_callback = self.on_frame
                     self.drone.set_state_callback(self.on_state)
+                    self.drone.ext.led_set(0, 0, 255)
                     await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
                 case TakeOff():
                     self.assertDrone()
@@ -178,7 +180,7 @@ class WsConnection:
             await self.send(Error(context=list(e.args), traceback=tr))
         finally:
             session.close()
-    
+
     def assertDrone(self):
         if not self.drone:
             raise ConnectionError("drone not available")
