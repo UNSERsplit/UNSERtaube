@@ -60,6 +60,7 @@ export class ControllerApiService {
 
   constructor() {
     this.ws = new WebSocket(`wss://${location.hostname}:${location.port}/api/ws`);
+    this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener("open", ev => {
       console.log(ev)
       this.status.set("ws_connected");
@@ -72,7 +73,11 @@ export class ControllerApiService {
     });
 
     this.ws.addEventListener("message", ev => {
-      this.handle_message(ev)
+      if(ev.data instanceof ArrayBuffer) {
+        this.videoApi.set_frame(ev.data)
+      } else {
+        this.handle_message(ev)
+      }
     });
   }
 
@@ -80,7 +85,7 @@ export class ControllerApiService {
     const data = JSON.parse(ev.data);
     if (data.type === "validation_error") {
       alert("Validation error, fix the ws message format");
-      alert(data.context);
+      console.error(data.context);
     }
 
     switch(data.type) {
@@ -95,6 +100,7 @@ export class ControllerApiService {
         break;
       }
       case "drone_disconnected": {
+        console.error(data.reason);
         alert(data.reason);
         break;
       }
@@ -151,6 +157,16 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 
+  async send_debug_command(command: string, timeout: number) {
+    this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": true, "timeout":timeout}))
+    const data: any = await this.wait_for_response("rawanswer", 5_000);
+    return data.answer;
+  }
+
+  send_debug_command_noanswer(command: string) {
+    this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": false, "timeout":-1}))
+  }
+
   async stop_recording() {
     this.ws.send(JSON.stringify({"type":"record_stop"}))
     const data: any = await this.wait_for_response("recording_name", 5_000);
@@ -159,18 +175,12 @@ export class ControllerApiService {
 
   async connect(name: string, ip: string) {
     this.status.set("connecting");
-    const conn = await this.videoApi.connect();
-    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "rtc_sdp": conn.sdp, "rtc_type": conn.type}))
+    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip}))
     try {
-      const data: any = await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
-      if(data.rtc_type != "mock" && data.rtc_sdp != "mock") {
-        await this.videoApi.set_rtc({
-          type: data.rtc_type,
-          sdp: data.rtc_sdp
-        })
-      }
+      await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
     } catch (e: any) {
       this.status.set("ws_connected");
+      console.error(e.reason || e)
       alert(e.reason || e)
       return;
     }

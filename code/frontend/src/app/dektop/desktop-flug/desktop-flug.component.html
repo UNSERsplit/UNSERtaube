@@ -1,5 +1,5 @@
 <div class="video-container">
-    <video id="video"></video>
+    <canvas id="video"></canvas>
 </div>
 <div class="overlay">
     <div class="top">
@@ -7,15 +7,17 @@
         <div class="seperator"></div>
         <button (click)="takeoff()">Takeoff</button>
         <button (click)="land()">Land</button>
+        <button (click)="record()">Record</button>
+        <button (click)="stop()">Stop</button>
         <div class="seperator"></div>
-        <p id="temp">{{ state().templ }}°C - {{ state().temph }}°C</p>
+        <p id="temp" [class.critical]="temp() >= 100" [class.danger]="temp() > 80">{{ temp() }}°C</p>
         <p id="battery">{{ state().bat }}%</p>
         <p id="drone-connection">{{ drone().getName }} ({{ drone().getIp }})</p>
     </div>
 
     <div class="bottom">
         <p id="height">100m</p>
-        <p id="speed">{{ speed() }}km/h</p>
+        <p id="speed">{{ speedInDMS() }}dm/s</p>
         <div class="seperator"></div>
         <p id="pitch">{{ state().pitch }}°</p>
         <p id="roll">{{ state().roll }}°</p>

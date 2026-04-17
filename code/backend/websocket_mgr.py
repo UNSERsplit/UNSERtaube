@@ -1,8 +1,7 @@
 import traceback
-from av import VideoFrame
-import cv2
+import av, av.error
 import uuid
-from threading import Thread
+import threading
 
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from video_writer import VideoWriter
@@ -12,7 +11,35 @@ from websocket.webrtc import offer
 from dronemaster import Drone, State
 from dronemaster.utils import log
 from database import SessionLocal
-import asyncio
+import numpy as np
+import struct
+
+class FrameReader:
+    def __init__(self, port) -> None:
+        self.container = av.open(f"udp://0.0.0.0:{port}", timeout=(5, None))
+        self.frame = None
+        self.raw_frame = None
+        self.stopped = False
+
+        self.thread = threading.Thread(target=self._update_frame, daemon=True)
+    
+    def start(self):
+        self.thread.start()
+    
+    def _update_frame(self):
+        try:
+            for frame in self.container.decode(video=0):
+                self.raw_frame = frame
+                self.on_frame(frame)
+                self.frame = np.array(frame.to_image())
+                if self.stopped:
+                    self.container.close()
+                    break
+        except av.error.ExitError:
+            print('Do not have enough frames for decoding, please try again or increase video fps before get_frame_read()')
+    
+    def on_frame(self, frame):
+        pass
 
 
 class WebsocketManager:
@@ -59,6 +86,7 @@ class WsConnection:
         self.drone: Drone = None # type: ignore
         self.pathcalculation = PathCalculation()
         self.video_writer = VideoWriter()
+        self.reader = None
 
     async def connect(self):
         pass
@@ -66,9 +94,12 @@ class WsConnection:
     async def disconnect(self, reason: str):
         if self.drone:
             drone = self.drone
-            await drone.ext.led_set(255,0,0)
             self.drone = None # type: ignore
             log("Disconnect", reason)
+            try:
+                await drone.ext.led_set(255,0,0)
+            except Exception:
+                pass
             try:
                 self.end_capture()
             except Exception:
@@ -87,6 +118,9 @@ class WsConnection:
 
     async def send(self, data: ClientBoundMessage):
         await self.mngr.send(self.ws, data)
+    
+    async def send_bytes(self, data: bytes):
+        await self.mngr.send_bytes(self.ws, data)
 
     async def trysend(self, data: ClientBoundMessage):
         try:
@@ -100,8 +134,8 @@ class WsConnection:
         except Exception:
             pass
 
-    def on_frame(self, data: VideoFrame):
-        self.video_writer.feed(data)
+    def on_frame(self, frame):
+        self.video_writer.feed(frame)
 
 
     def start_capture(self):
@@ -116,6 +150,15 @@ class WsConnection:
         await self.pathcalculation.incoming_callback(state=state)
         await self.send(StateMessage(state=state))
         await self.sendpathpoints()
+        if self.reader:
+            frame = self.reader.frame
+            if frame is not None:
+                #print(np.average(frame))
+                h, w, _ = frame.shape
+                #print(len(frame.tobytes()), w * h * 3)
+                header = struct.pack("III", w, h, 3)
+                await self.send_bytes(header + frame.tobytes())
+                #self.on_frame(self.reader.raw_frame)
 
     async def _disconnect_from_timeout(self):
         await self.disconnect("Drone stopped sending state messages")
@@ -129,13 +172,15 @@ class WsConnection:
                     self.drone = Drone(data.ip)
                     await self.drone.connect()
                     await self.drone.startstream()
-                    rtc_server = await offer(data.rtc_sdp, data.rtc_type, self.drone.get_video_port())
-                    self.drone.set_video_stream(rtc_server["track"])
-                    rtc_server["track"].frame_callback = self.on_frame
+                    
                     self.drone.set_state_callback(self.on_state)
                     self.drone.set_disconnect_callback(self._disconnect_from_timeout)
                     await self.drone.ext.led_set(0, 0, 255)
-                    await self.send(DroneConnected(rtc_sdp=rtc_server["sdp"], rtc_type=rtc_server["type"]))
+                    self.reader = FrameReader(self.drone.get_video_port())
+                    self.reader.start()
+                    self.reader.on_frame = self.on_frame
+                    
+                    await self.send(DroneConnected())
                 case TakeOff():
                     self.assertDrone()
                     await self.drone.takeoff()
@@ -172,6 +217,13 @@ class WsConnection:
                 case SetFlashingLed():
                     self.assertDrone()
                     await self.drone.ext.led_flash(data.red1, data.green1, data.blue1, data.freq, data.red2, data.green2, data.blue2)
+                case DebugSendRawCommand():
+                    self.assertDrone()
+                    if data.wait_for_response:
+                        response = await self.drone.connection.send_raw_message(data.command, timeout=data.timeout)
+                        await self.send(DebugCommandAnswer(answer=response))
+                    else:
+                        self.drone.connection.send_message_noanswer(data.command)
 
 
         except TimeoutError as e:

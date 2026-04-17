@@ -33,7 +33,7 @@ async def __main__():
 
     #await drone.connection.send_control_message("motoron")
 
-    await drone.ext.led_set(0, 0, 15)
+    await drone.ext.led_set(0, 0, 12)
     await drone.startstream()
 
     reader = FrameReader(drone.get_video_port())
@@ -45,7 +45,7 @@ async def __main__():
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    break
+                    raise Exception("Exiting")
 
             frame = reader.frame
             if frame is None:

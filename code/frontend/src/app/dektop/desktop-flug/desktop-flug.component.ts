@@ -36,6 +36,7 @@ export class DesktopFlugComponent implements OnInit{
 
   protected drone = computed(() => this.controllerApi.drone()!)
   protected modeName = computed(() => toString[this.mode()])
+  protected temp = computed(() => (this.state().temph + this.state().templ) / 2);
 
   constructor() {
     effect(() => {
@@ -60,4 +61,14 @@ export class DesktopFlugComponent implements OnInit{
   land() {
     this.controllerApi.land()
   }
+
+  record() {
+    this.controllerApi.start_recording()
+  }
+
+  async stop() {
+    const name = await this.controllerApi.stop_recording()
+    alert(name)
+  }
 }
+

@@ -16,8 +16,6 @@ class Ws {
                     case "select_drone":
                         this.mock_recv(JSON.stringify({
                             type: "drone_connected",
-                            rtc_sdp: "mock",
-                            rtc_type: "mock",
                         }))
                         break;
                     
