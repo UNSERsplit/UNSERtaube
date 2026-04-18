@@ -16,15 +16,52 @@
     </div>
 
     <div class="bottom">
-        <p id="height">100m</p>
-        <p id="speed">{{ speedInDMS() }}dm/s</p>
+        <p id="height">{{ state().h }}cm</p>
+        <p id="speed">{{ speed() }}dm/s</p>
         <div class="seperator"></div>
         <p id="pitch">{{ state().pitch }}°</p>
         <p id="roll">{{ state().roll }}°</p>
         <p id="yaw">{{ state().yaw }}°</p>
+
+        <p id="x">{{ speedInDMS().x }}</p>
+        <p id="y">{{ speedInDMS().y }}</p>
+        <p id="z">{{ speedInDMS().z }}</p>
         <div class="seperator"></div>
-        <p id="flight-time">1m 15s</p>
-        <p id="flight-distance">200m</p>
+        <p id="flight-time">{{ state().time }}s</p>
+        <p id="flight-distance">{{ state().tof }}cm AGL</p>
+    </div>
+
+    <div class="left">
+        <div style="display: flex;">
+            <p>Show Processed Frame: </p>
+            <input type="checkbox" [(ngModel)]="showProcessed">
+        </div>
+    </div>
+    <div class="right">
+        <div style="display: flex; justify-content:space-between">
+            <p>Hue Lower ({{ hue_lower() }}): </p>
+            <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Hue Upper ({{ hue_upper() }}): </p>
+            <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_upper">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Saturation Lower ({{ saturation_lower() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Saturation Upper ({{ saturation_upper() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_upper">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Value Lower ({{ value_lower() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="value_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Value Upper ({{ value_upper() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="value_upper">
+        </div>
     </div>
 </div>
 

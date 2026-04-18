@@ -34,6 +34,16 @@ class DebugSendRawCommand(ServerBoundMessage):
     wait_for_response: bool
     timeout: int
 
+class DebugFineTuneVision(ServerBoundMessage):
+    type: Literal["finetune_vision"]
+    show_processed_output: bool
+    hue_lower: int
+    hue_upper: int
+    saturation_lower: int
+    saturation_upper: int
+    value_lower: int
+    value_upper: int
+
 class ServerBoundKeepAlive(ServerBoundMessage):
     type: Literal["keepalive"]
 

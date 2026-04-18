@@ -38,6 +38,18 @@ export interface State {
 
   /** acceleration z in cm/s² */
   agz: number;
+
+  /** tof distance in cm */
+  tof: number;
+
+  /** height relative to takeoff point in cm */
+  h: number;
+
+  /** motor time in s */
+  time: number;
+
+  /** height above sea level by barometer */
+  baro: number;
 }
 
 export type Status = "offline" | "ws_connected" | "drone_connected" | "error" | "connecting";
@@ -49,7 +61,7 @@ export type Status = "offline" | "ws_connected" | "drone_connected" | "error" | 
 export class ControllerApiService {
   public status = signal<Status>("offline");
   public drone = signal<Drone | undefined>(undefined);
-  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN})
+  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN, h: NaN, time: NaN, tof: NaN, baro: NaN})
   private videoApi = inject(VideoApiService);
   private waiting_messages: {
     [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void, string[]]
@@ -79,6 +91,22 @@ export class ControllerApiService {
         this.handle_message(ev)
       }
     });
+
+
+    // Für debug zwecke die raw commands exposen
+    // @ts-ignore
+    window.send_command = (command, timeout) => {
+      this.send_debug_command(command, timeout).then((v) => {
+        console.log("ANSWER:", v)
+      }).catch(e => {
+        console.error(e)
+      });
+    };
+    // @ts-ignore
+    window.send_noanswer_command = (command) => {
+      this.send_debug_command_noanswer(command)
+    };
+
   }
 
   private handle_message(ev: any) {
@@ -157,9 +185,13 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 
+  send_debug_finetune(data: {show_processed_output: boolean, hue_lower: number, hue_upper: number, saturation_lower: number, saturation_upper: number, value_lower: number, value_upper: number}) {
+    this.ws.send(JSON.stringify({"type": "finetune_vision", ...data}))
+  }
+
   async send_debug_command(command: string, timeout: number) {
     this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": true, "timeout":timeout}))
-    const data: any = await this.wait_for_response("rawanswer", 5_000);
+    const data: any = await this.wait_for_response("rawanswer", timeout * 1000 + 500);
     return data.answer;
   }
 

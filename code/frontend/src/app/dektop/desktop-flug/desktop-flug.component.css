@@ -18,6 +18,19 @@
     color: white;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.281);
+
+}
+
+.left, .right {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.281);
 }
 
 .overlay p {
@@ -28,6 +41,16 @@
 .bottom {
     position: absolute;
     bottom: 0;
+}
+
+.right {
+    position: absolute;
+    right: 0;
+}
+
+.left {
+    position: absolute;
+    left: 0;
 }
 
 .seperator {
