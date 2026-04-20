@@ -12,9 +12,15 @@ from websocket.webrtc import offer
 from dronemaster import Drone, State
 from dronemaster.utils import log
 from database import SessionLocal
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func, and_, or_
 import numpy as np
 import struct
+from typing import Optional
 import cv2
+
+from models.drone import Drone as DBDrone
+from models.route import Route, RouteEntry
 
 class FrameReader:
     def __init__(self, port) -> None:
@@ -52,7 +58,7 @@ class WebsocketManager:
         self.connections: dict[WebSocket, WsConnection] = {}
     def stop(self):
         for ws, conn in self.connections.items():
-            conn.end_capture()
+            conn.end_capture(None)
             conn.drone = None #type: ignore
     
     async def connnect(self, ws: WebSocket):
@@ -89,6 +95,7 @@ class WsConnection:
         self.ws = ws
         self.mngr = mngr
         self.drone: Drone = None # type: ignore
+        self.db_drone: Optional[DBDrone] = None
         self.pathcalculation = PathCalculation()
         self.video_writer = VideoWriter()
         self.vision_worker = VisionWorker()
@@ -107,7 +114,7 @@ class WsConnection:
             except Exception:
                 pass
             try:
-                self.end_capture()
+                self.end_capture(None)
             except Exception:
                 pass
             try:
@@ -150,79 +157,21 @@ class WsConnection:
         print("Recording to " + name)
         return name
 
-    def end_capture(self):
-        return self.video_writer.end()
+    def end_capture(self, session: Optional[Session], name: str = "NAME"):
+        raw_data = self.drone.stop_recording()
+        filename = self.video_writer.end()
 
-    def modify_frame(self, frame):
-        img = cv2.bilateralFilter(frame, 11, 75, 75)
+        if not session:
+            return
+        assert self.db_drone is not None
 
-        img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+        route = Route()
+        route.name = name # pyright: ignore[reportAttributeAccessIssue]
+        route.video = filename # pyright: ignore[reportAttributeAccessIssue]
+        route.drone_id = self.db_drone.id
+        session.add(route)
 
-        # Lower mask (0-10)
-        lower_red = np.array([0, 100, 100])
-        upper_red = np.array([10, 255, 255])
-        mask0 = cv2.inRange(img_hsv, lower_red, upper_red)
 
-        # Upper mask (170-180)
-        lower_red = np.array([170, 100, 100])
-        upper_red = np.array([180, 255, 255])
-        mask1 = cv2.inRange(img_hsv, lower_red, upper_red)
-
-        # Join the masks
-        raw_mask = mask0 | mask1
-
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-
-        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_OPEN, kernel, iterations=2)
-        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
-
-        ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
-
-        final = cv2.drawContours(cv2.bitwise_and(img, img, mask=raw_mask), ctns, -1, (0,255,0), 3)
-
-        return final
-
-        ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
-        big_contour = []
-
-        ctns_sorted = sorted(ctns, key=cv2.contourArea)
-
-        for i, ctns in enumerate(ctns_sorted):
-            if i > 4:
-                break
-            big_contour.append(ctns)
-        final = cv2.drawContours(cv2.bitwise_and(img, img, mask=raw_mask), ctns, -1, (0,255,0), 3)
-
-        return final
-        
-
-        ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
-
-        mask = np.zeros_like(raw_mask)  # Fill mask with zeros
-
-        o = np.zeros_like(frame)
-
-        idx = 0
-        # Iterate contours
-        for c in ctns:
-            area = cv2.contourArea(c)  # Find the area of each contours
-
-            if (area > 50):  # Ignore small contours (assume noise).
-                cv2.drawContours(mask, [c], 0, 255, -1)
-
-                # https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
-                (x, y), radius = cv2.minEnclosingCircle(c)
-                center = (int(x), int(y))
-                radius = int(radius)
-                cv2.circle(mask, center, radius, 255, -1)
-
-                tmp_mask = np.zeros_like(mask)
-                cv2.circle(tmp_mask, center, radius, 255, -1)
-                output = cv2.bitwise_and(img, img, mask=tmp_mask)
-                cv2.bitwise_or(o, output, o)
-                idx += 1
-
-        return o
 
     async def on_state(self, state: State):
         await self.pathcalculation.incoming_callback(state=state)
@@ -232,7 +181,6 @@ class WsConnection:
             frame = self.reader.frame
             if frame is not None:
                 #print(np.average(frame))
-                #frame = self.modify_frame(frame)
                 frame = self.vision_worker.on_frame(frame)
 
                 h, w, _ = frame.shape
@@ -243,6 +191,25 @@ class WsConnection:
 
     async def _disconnect_from_timeout(self):
         await self.disconnect("Drone stopped sending state messages")
+    
+    def get_drone(self, name: str, ip: str, session: Session):
+        stmt = select(DBDrone).where(and_(
+            func.lower(DBDrone.name) == func.lower(name),
+            DBDrone.ip == ip))
+        
+        drones = session.scalars(stmt).fetchall()
+
+        if len(drones) > 0:
+            return drones[0]
+        
+        drone = DBDrone()
+        drone.ip = ip # pyright: ignore[reportAttributeAccessIssue]
+        drone.name = name # pyright: ignore[reportAttributeAccessIssue]
+
+        session.add(drone)
+        session.commit()
+
+        return drone
 
     async def on_message(self, data: messages):
         session = SessionLocal()
@@ -259,6 +226,7 @@ class WsConnection:
                     self.vision_worker.show_filtered_frame = data.show_processed_output
 
                 case ConnectToDrone():
+                    self.db_drone = self.get_drone(data.name, data.ip, session)
                     self.drone = Drone(data.ip)
                     await self.drone.connect()
                     await self.drone.startstream()
@@ -289,7 +257,7 @@ class WsConnection:
                     self.start_capture()
                 case StopRecording():
                     self.assertDrone()
-                    filename = self.end_capture()
+                    filename = self.end_capture(session, name=data.route_name)
                     assert filename is not None
                     await self.send(RecordingResult(name=filename))
                 case SetStartupMatrix():

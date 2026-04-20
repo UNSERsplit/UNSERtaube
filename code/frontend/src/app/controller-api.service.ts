@@ -109,6 +109,13 @@ export class ControllerApiService {
 
   }
 
+  async get_drones() {
+    let resp = await fetch("/api/drone/");
+    let json = await resp.json();
+
+    return json;
+  }
+
   private handle_message(ev: any) {
     const data = JSON.parse(ev.data);
     if (data.type === "validation_error") {
@@ -204,14 +211,14 @@ export class ControllerApiService {
   }
 
   async stop_recording() {
-    this.ws.send(JSON.stringify({"type":"record_stop"}))
+    this.ws.send(JSON.stringify({"type":"record_stop", "route_name": "ROUTE_NAME"}))
     const data: any = await this.wait_for_response("recording_name", 5_000);
     return data.name;
   }
 
   async connect(name: string, ip: string) {
     this.status.set("connecting");
-    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip}))
+    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "name": name}))
     try {
       await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
     } catch (e: any) {

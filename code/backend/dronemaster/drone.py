@@ -2,6 +2,7 @@ from typing import Any, Callable, Coroutine, Optional
 #from websocket.webrtc import UDPVideoTrack
 from . import connection, State
 from threading import Timer
+import time
 
 class Drone:
     def __init__(self, ip: str) -> None:
@@ -11,6 +12,18 @@ class Drone:
         self.state_callback: Callable[[State], Coroutine[Any, Any, None]] = None  # type: ignore
         self.disconnect_callback: Callable[[], Coroutine[Any, Any, None]] = None  # type: ignore
         self.timer = None
+        self.recording = False
+        self.recording_start = 0
+        self.recording_data = []
+    
+    def start_recording(self):
+        self.recording = True
+        self.recording_start = time.time_ns()
+    
+    def stop_recording(self):
+        self.recording = False
+
+        return self.recording_data
     
     def get_video_port(self) -> int:
         return self.connection.future_video_port
@@ -28,9 +41,13 @@ class Drone:
             await self.connection.disconnect()
 
     async def takeoff(self):
+        if self.recording:
+            self.recording_data.append((time.time_ns(), "takeoff"))
         self.connection.send_message_noanswer("takeoff")
     
     async def land(self):
+        if self.recording:
+            self.recording_data.append((time.time_ns(), "land"))
         self.connection.send_message_noanswer("land")
     
     async def _disconnect_(self):
@@ -65,6 +82,8 @@ class Drone:
     def rc(self, roll: float, pitch: float, throttle: float, yaw: float):
         """all args from -100 to 100"""
         message = f"rc {roll} {pitch} {throttle} {yaw}"
+        if self.recording:
+            self.recording_data.append((time.time_ns(), message))
         self.connection.send_message_noanswer(message)
 
 class Ext:

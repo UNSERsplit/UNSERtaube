@@ -10,8 +10,7 @@ class Route(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String)
-    video = Column(Integer)
-    Flugvideo = Column(String) # cltype: text in deiner Datei
+    video = Column(String) # cltype: text in deiner Datei
 
     # Fremdschlüssel zur Drohne
     drone_id = Column(UUID(as_uuid=True), ForeignKey("Drone.id"), nullable=False)

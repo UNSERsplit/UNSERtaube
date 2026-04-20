@@ -11,7 +11,8 @@ class ClientBoundMessage(BaseModel):
 ### SERVERBOUND START ###
 class ConnectToDrone(ServerBoundMessage):
     type: Literal["select_drone"]
-    ip: str # TODO replace with drone id
+    name: str
+    ip: str
 
 class DisconnectFromDrone(ServerBoundMessage):
     type: Literal["disconnect"]
@@ -24,6 +25,7 @@ class StartRecording(ServerBoundMessage):
 
 class StopRecording(ServerBoundMessage):
     type: Literal["record_stop"]
+    route_name: str
 
 class Land(ServerBoundMessage):
     type: Literal["land"]

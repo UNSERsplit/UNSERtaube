@@ -3,6 +3,15 @@ import {Drone} from '../../../objects/drone';
 import {Router} from '@angular/router';
 import { ControllerApiService } from '../../controller-api.service';
 
+const COLORS = [
+    '#ffadad',
+    '#ffd6a5',
+    '#fdffb6',
+    '#caffbf',
+    '#9bf6ff',
+    '#a0c4ff'
+]
+
 @Component({
   selector: 'app-drone-carousel',
   imports: [],
@@ -14,28 +23,29 @@ export class DroneCarouselComponent {
     private router = inject(Router);
     private controller = inject(ControllerApiService);
 
-    items : any = [
-        {
-            name: "Drone 7 Hotspot",
-            ip: "192.168.43.49",
-            id: "hotspot7",
-            color: '#ffadad'
-        },
-        {
-            name: "Drone 2",
-            ip: "4.3.2.1",
-            id: "myid2",
-            color: '#ffd6a5'
-        }
-        /*{color: '#ffadad' },
-        { title: 'Card 2', color: '#ffd6a5' },
-        { title: 'Card 3', color: '#fdffb6' },
-        { title: 'Card 4', color: '#caffbf' },
-        { title: 'Card 5', color: '#9bf6ff' },
-        { title: 'Card 6', color: '#a0c4ff' }*/
-    ]; // TODO get from server
+    items: {name: string, ip: string, id: string, color: string}[] = []; // TODO get from server
 
     currentIndex = 0;
+
+    constructor() {
+        this.items = []
+        this.controller.get_drones().then(drones => {
+            drones.forEach((v: any) => {
+                console.log(v.id)
+                const hash = BigInt("0x" + v.id.replaceAll("-",""))
+                const color = COLORS[Number(hash % BigInt(COLORS.length))]
+
+                this.items.push(
+                    {
+                        name: v.name,
+                        ip: v.ip,
+                        id: v.id,
+                        color: color
+                    }
+                )
+            })
+        })
+    }
 
     next() {
         console.log(this.items.length);
