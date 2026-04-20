@@ -31,6 +31,11 @@ class State(BaseModel):
      agy: float # acceleration y in cm/s²
      agz: float # acceleration z in cm/s²
 
+     tof: int # tof distance in cm
+     h: int # height relative to takeoff point in cm
+     time: int # motor time in s
+     baro: float # height above sea level from barometer in m
+
 class Connection:
     def __init__(self, target_ip: str, socket: socket.socket, loop: AbstractEventLoop) -> None:
         self.ip = target_ip
@@ -107,8 +112,8 @@ class Connection:
                 log("DEBUG", f"Unsolicited data received {self.ip}: {data}")
 
     def parse_state(self, raw_data: str) -> State:
-        INT_FIELDS = ("pitch", "roll", "yaw", "vgx", "vgy", "vgz", "bat", "templ", "temph")
-        FLOAT_FIELDS = ("agx", "agy", "agz")
+        INT_FIELDS = ("pitch", "roll", "yaw", "vgx", "vgy", "vgz", "bat", "templ", "temph", "tof", "h", "time")
+        FLOAT_FIELDS = ("agx", "agy", "agz", "baro")
 
         state = State.model_construct()
         for entry in raw_data.strip().split(";"):
@@ -118,8 +123,11 @@ class Connection:
 
             if name in INT_FIELDS:
                 setattr(state, name, int(value))
-            if name in FLOAT_FIELDS:
+            elif name in FLOAT_FIELDS:
                 setattr(state, name, float(value))
+            else:
+                pass
+                #print(name)
 
         return state
 

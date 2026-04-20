@@ -12,8 +12,6 @@ class ClientBoundMessage(BaseModel):
 class ConnectToDrone(ServerBoundMessage):
     type: Literal["select_drone"]
     ip: str # TODO replace with drone id
-    rtc_sdp: str
-    rtc_type: str
 
 class DisconnectFromDrone(ServerBoundMessage):
     type: Literal["disconnect"]
@@ -29,6 +27,22 @@ class StopRecording(ServerBoundMessage):
 
 class Land(ServerBoundMessage):
     type: Literal["land"]
+
+class DebugSendRawCommand(ServerBoundMessage):
+    type: Literal["rawcommand"]
+    command: str
+    wait_for_response: bool
+    timeout: int
+
+class DebugFineTuneVision(ServerBoundMessage):
+    type: Literal["finetune_vision"]
+    show_processed_output: bool
+    hue_lower: int
+    hue_upper: int
+    saturation_lower: int
+    saturation_upper: int
+    value_lower: int
+    value_upper: int
 
 class ServerBoundKeepAlive(ServerBoundMessage):
     type: Literal["keepalive"]
@@ -77,6 +91,10 @@ class SetFlashingLed(ServerBoundMessage):
 class ClientBoundKeepAlive(ClientBoundMessage):
     type: str = "keepalive" # TODO
 
+class DebugCommandAnswer(ClientBoundMessage):
+    type: str = "rawanswer"
+    answer: str
+
 class StateMessage(ClientBoundMessage):
     type: str = "state"
     state: State
@@ -87,8 +105,6 @@ class RecordingResult(ClientBoundMessage):
 
 class DroneConnected(ClientBoundMessage):
     type: str = "drone_connected"
-    rtc_sdp: str
-    rtc_type: str
 
 class DroneDisconnected(ClientBoundMessage):
     type: str = "drone_disconnected"

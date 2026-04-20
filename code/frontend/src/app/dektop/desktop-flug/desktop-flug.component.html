@@ -1,5 +1,5 @@
 <div class="video-container">
-    <video id="video"></video>
+    <canvas id="video"></canvas>
 </div>
 <div class="overlay">
     <div class="top">
@@ -14,7 +14,7 @@
         </div>
         <div class="seperator"></div>
         <div class="tempBatCon">
-            <p id="temp">{{ state().templ }}°C - {{ state().temph }}°C</p>
+            <p id="temp" [class.critical]="temp() >= 100" [class.danger]="temp() > 80">{{ temp() }}°C</p>
             <p id="battery">{{ state().bat }}%</p>
             <p id="drone-connection">{{ drone().getName }} ({{ drone().getIp }})</p>
         </div>
@@ -23,8 +23,8 @@
 
     <div class="bottom">
         <div class="heightSpeed">
-            <p id="height">100m</p>
-            <p id="speed">{{ speed() }}km/h</p>
+            <p id="height">{{ state().tof }}cm AGL</p>
+            <p id="speed">{{ speed() }}dm/s</p>
         </div>
 
         <div class="PRY">
@@ -34,11 +34,45 @@
         </div>
 
         <div class="timeDist">
-            <p id="flight-time">1m 15s</p>
+            <p id="flight-time">{{ state().time }}s</p>
             <p id="flight-distance">200m</p>
         </div>
 
     </div>
+    @if (showDebugHud()) {
+    <div class="left">
+        <div style="display: flex;">
+            <p>Show Processed Frame: </p>
+            <input type="checkbox" [(ngModel)]="showProcessed">
+        </div>
+    </div>
+    <div class="right">
+        <div style="display: flex; justify-content:space-between">
+            <p>Hue Lower ({{ hue_lower() }}): </p>
+            <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Hue Upper ({{ hue_upper() }}): </p>
+            <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_upper">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Saturation Lower ({{ saturation_lower() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Saturation Upper ({{ saturation_upper() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_upper">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Value Lower ({{ value_lower() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="value_lower">
+        </div>
+        <div style="display: flex; justify-content:space-between">
+            <p>Value Upper ({{ value_upper() }}): </p>
+            <input type="range" min="0" max="255" step="1" [(ngModel)]="value_upper">
+        </div>
+    </div>
+    }
 </div>
 
 @if (mode() == "KEYBOARD") {
