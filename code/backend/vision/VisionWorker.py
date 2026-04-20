@@ -12,7 +12,7 @@ class VisionWorker:
         self.value_lower = 120
 
         self.saturation_upper = 255
-        self.saturation_lower = 70
+        self.saturation_lower = 80
 
     def on_frame(self, frame):
         processed_frame = self._process_frame(frame)
@@ -22,8 +22,39 @@ class VisionWorker:
         else:
             return frame
     
-    def _process_frame(self, frame):
+    def _process_frame(self, original_frame):
 
+        frame, mask = self._filter_red_parts(original_frame)
+        mask = self._fix_mask(mask)
+        #mask = self._canny(mask)
+        #return cv2.bitwise_and(original_frame, original_frame, mask=mask)
+        frame, mask, contours = self._find_contours(frame, mask)
+        
+        final = original_frame
+        original_frame = original_frame.copy()
+
+        for contour in contours:
+            if len(contour) < 5:
+                continue
+            ellipse = cv2.fitEllipse(contour)
+            center, axes, angle = ellipse
+            center = list(map(lambda x: int(x),list(center)))
+            final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
+            final = cv2.circle(final, center, 3, (0,255,0), -1)
+
+        return cv2.bitwise_and(original_frame, original_frame, mask=mask)
+    
+    def _canny(self, frame):
+        sigma = 0.33
+
+        median = np.median(frame)
+        lower = int(max(0, (1.0 - sigma) * median))
+        upper = int(min(255, (1.0 + sigma) * median))
+        edge_image = cv2.Canny(frame, lower, upper)
+
+        return edge_image
+    
+    def _filter_red_parts(self, frame):
         img = cv2.bilateralFilter(frame, 11, 75, 75)
 
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
@@ -57,13 +88,17 @@ class VisionWorker:
         # Join the masks
         raw_mask = mask0 | mask1 # type: ignore Kein plan was vs-code hier hat, es funktioniert eh
 
+        return frame, raw_mask
+
+    def _fix_mask(self, raw_mask):
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
 
-        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_OPEN, kernel, iterations=2)
-        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_CLOSE, kernel, iterations=20)
+        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+        raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_CLOSE, kernel, iterations=15)
+        return raw_mask
+
+    def _find_contours(self, frame, raw_mask):
 
         ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
 
-        final = cv2.drawContours(cv2.bitwise_and(frame, frame, mask=raw_mask), ctns, -1, (0,255,0), 3)
-
-        return final
+        return frame, raw_mask, ctns

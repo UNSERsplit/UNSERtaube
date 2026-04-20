@@ -35,19 +35,15 @@ export class DesktopFlugComponent implements OnInit{
   protected showProcessed = model(false);
   protected hue_lower = model(5)
   protected hue_upper = model(170)
-  protected saturation_lower = model(120)
+  protected saturation_lower = model(85)
   protected saturation_upper = model(255)
   protected value_lower = model(70)
   protected value_upper = model(255)
 
+  protected showDebugHud = signal(false);
+
 
   protected state = this.controllerApi.state.asReadonly()
-
-  protected speedDelta = signal<{"x":number, "y":number, "z":number}>({
-      "x": 0,
-      "y": 0,
-      "z": 0
-    });
 
   protected speedInDMS = computed<{"x":number, "y":number, "z":number}>(() => {
     return {
@@ -73,18 +69,6 @@ export class DesktopFlugComponent implements OnInit{
       }
     })
 
-    let last_update = performance.now();
-    effect(() => {
-      const COEF = 1 / (performance.now() - last_update);
-      last_update = performance.now();
-      this.speedDelta.update((v) => {
-        v.x += this.state().agx * COEF;
-        v.y += this.state().agy * COEF;
-        v.z += this.state().agz * COEF;
-        return {...v}
-      })
-    })
-
 
     effect(() => {
       this.controllerApi.send_debug_finetune({
@@ -97,6 +81,9 @@ export class DesktopFlugComponent implements OnInit{
         value_upper: this.value_upper()
       })
     })
+
+    // @ts-ignore
+    window.showDebugHud = this.showDebugHud;
   }
 
   ngOnInit(): void {

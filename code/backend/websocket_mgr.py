@@ -28,6 +28,9 @@ class FrameReader:
     def start(self):
         self.thread.start()
     
+    def close(self):
+        self.container.close()
+    
     def _update_frame(self):
         try:
             for frame in self.container.decode(video=0):
@@ -37,7 +40,7 @@ class FrameReader:
                 if self.stopped:
                     self.container.close()
                     break
-        except av.error.ExitError:
+        except av.error.ExitError | av.error.ValueError:
             print('Do not have enough frames for decoding, please try again or increase video fps before get_frame_read()')
     
     def on_frame(self, frame):
@@ -115,6 +118,7 @@ class WsConnection:
                 await drone.disconnect()
             except Exception:
                 pass
+            self.reader.close()
 
         await self.trysend(DroneDisconnected(reason=reason))
 

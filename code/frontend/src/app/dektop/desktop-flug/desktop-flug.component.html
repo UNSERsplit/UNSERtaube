@@ -30,7 +30,7 @@
         <p id="flight-time">{{ state().time }}s</p>
         <p id="flight-distance">{{ state().tof }}cm AGL</p>
     </div>
-
+    @if (showDebugHud()) {
     <div class="left">
         <div style="display: flex;">
             <p>Show Processed Frame: </p>
@@ -63,6 +63,7 @@
             <input type="range" min="0" max="255" step="1" [(ngModel)]="value_upper">
         </div>
     </div>
+    }
 </div>
 
 @if (mode() == "KEYBOARD") {
