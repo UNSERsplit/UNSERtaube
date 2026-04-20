@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, inject, Input} from '@angular/core';
 import {
     MatDialogModule,
 } from '@angular/material/dialog';
@@ -11,6 +11,7 @@ import { CardVariants } from '../card/card.variants';
 import {CardComponent} from '../card/card.component';
 import {ButtonComponent} from '../button/button.component';
 import {ButtonVariants} from '../button/button.variants';
+import { ControllerApiService } from '../../controller-api.service';
 
 interface Led{
     ledstatus: number;
@@ -41,6 +42,8 @@ enum LedStatus {
 })
 
 export class LedEditorComponent {
+    private controllerApi = inject(ControllerApiService);
+
     readonly CardVariants = CardVariants;
     flexdirection: string = 'row';
     selectedColor: number = 0;
@@ -70,6 +73,19 @@ export class LedEditorComponent {
     // Setzt die LED auf die aktuell gewählte Farbe aus der Sidebar
     setLedColor(rowIndex: number, colIndex: number) {
         this.leds[rowIndex][colIndex].ledstatus = this.selectedColor;
+        this.updateDroneMled();
+    }
+
+    updateDroneMled() {
+        const MAPPING: {[index: number]: string} = {
+            0: "0",
+            1: "b",
+            2: "p",
+            3: "r"
+        }
+
+        const data = this.leds.flat().map((v) => MAPPING[v.ledstatus]).join("")
+        this.controllerApi.matrix("set_matrix", data);
     }
 
     // Hilfsfunktion für das Template, um den Hex-Code zu bekommen
@@ -84,5 +100,7 @@ export class LedEditorComponent {
                 this.leds[i][j] = { ledstatus: LedStatus.OFF };
             }
         }
+
+        this.updateDroneMled();
     }
 }

@@ -185,6 +185,10 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 
+  matrix(type: "set_matrix" | "set_init_matrix", data: string) {
+    this.ws.send(JSON.stringify({"type":type, "data": data}))
+  }
+
   send_debug_finetune(data: {show_processed_output: boolean, hue_lower: number, hue_upper: number, saturation_lower: number, saturation_upper: number, value_lower: number, value_upper: number}) {
     this.ws.send(JSON.stringify({"type": "finetune_vision", ...data}))
   }
