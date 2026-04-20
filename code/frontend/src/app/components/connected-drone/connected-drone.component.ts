@@ -28,6 +28,7 @@ export class ConnectedDroneComponent {
 
     protected  ButtonVariant = ButtonVariants.red;
     buttonContent: string = "Trennen";
+    buttonWidth: string = '60rem';
 
     constructor() {
         effect(() => {
@@ -49,7 +50,7 @@ export class ConnectedDroneComponent {
                 this.controller.drone()!.getName,
                 this.controller.drone()!.getIp
             )
-            }
+        }
     }
     flexdirection: string = 'row';
     protected readonly CardVariants = CardVariants;

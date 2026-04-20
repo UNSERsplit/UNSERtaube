@@ -13,11 +13,15 @@
 }
 
 .top, .bottom {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
     width: calc(100% - 1rem);
     color: white;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+
+
 }
 
 .overlay p {
@@ -44,4 +48,59 @@
     right: 0;
     width: 100vw;
     height: 100vh;
+}
+
+.landStartbtn{
+    margin: 5px 10px 10px 10px;
+    height: 3rem;
+    width: 6rem;
+}
+
+.modeSepa{
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+}
+
+.buttonContainer{
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.tempBatCon{
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+}
+
+.heightSpeed{
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+
+}
+
+.PRY{
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.timeDist{
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
 }

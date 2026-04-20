@@ -4,6 +4,8 @@ import { ControllerApiService } from '../../controller-api.service';
 import { KeyboardInputComponent } from '../keyboard-input/keyboard-input.component';
 import { GamepadService } from '../../gamepad.service';
 import { ControllerInputComponent } from '../controller-input/controller-input.component';
+import {ButtonComponent} from '../../components/button/button.component';
+import {ButtonVariants} from '../../components/button/button.variants';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -16,10 +18,11 @@ const toString = {
 
 @Component({
   selector: 'app-desktop-flug',
-  imports: [
-    KeyboardInputComponent,
-    ControllerInputComponent
-  ],
+    imports: [
+        KeyboardInputComponent,
+        ControllerInputComponent,
+        ButtonComponent
+    ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'
 })
@@ -36,6 +39,10 @@ export class DesktopFlugComponent implements OnInit{
 
   protected drone = computed(() => this.controllerApi.drone()!)
   protected modeName = computed(() => toString[this.mode()])
+    protected readonly ButtonVariant = ButtonVariants;
+
+  buttonHeight: string = "3rem";
+  buttonWidth: string = "5rem";
 
   constructor() {
     effect(() => {
