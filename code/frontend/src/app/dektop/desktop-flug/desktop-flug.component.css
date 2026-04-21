@@ -35,6 +35,16 @@
 
 }
 
+.leftContainer{
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    padding-left: 0.7rem;
+}
+
 .center{
     grid-row: 2;
     display: grid;
@@ -42,6 +52,7 @@
 }
 
 .rightContainer{
+    grid-column: 3;
     padding: 10px;
 }
 
@@ -57,10 +68,12 @@
 
 .overlay{
     display: grid;
-    grid-template-rows: 1fr 5fr 1fr;
+    grid-template-rows: 1fr 10fr 1fr;
 }
 
 .overlay p {
+    display: flex;
+    align-items: center;
     padding-right: 0.5rem;
     padding-left: 0.5rem;
 }
@@ -97,9 +110,10 @@
 }
 
 .landStartbtn{
-    margin: 5px 10px 10px 10px;
+    margin: 5px;
     height: 3rem;
-    width: 6rem;
+    width: 7rem;
+    padding-bottom: 20px;
 }
 
 .modeSepa{
@@ -116,6 +130,7 @@
     display: flex;
     justify-content: center;
     flex-direction: row;
+    align-items: center;
 }
 
 .tempBatCon{
@@ -239,4 +254,30 @@
     background: #fff;
     font-family: sans-serif;
     gap: 1.5rem;
+}
+
+goackLedBtn{
+    width: 64px;   /* oder größer, z.B. 20px */
+    height: 64px;
+    border-radius: 50%; /* rund wie eine LED */
+    padding: 0;
+    background-color: var(--orange-button-color);
+    border: none;
+    cursor: pointer;
+
+}
+
+.ledBtn{
+    width: 72px;   /* oder größer, z.B. 20px */
+    height: 72px;
+    border-radius: 50%; /* rund wie eine LED */
+    padding: 0;
+    background-color: rgb(244, 3, 252, 0.1);
+    border-color: var(--pink-button-color);
+    border: 3px solid var(--pink-button-color);
+    cursor: pointer;
+}
+
+.ihossNomenSuachn{
+    margin: 6px;
 }

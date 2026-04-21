@@ -33,6 +33,16 @@ button{
     --accent-glow: rgba(3, 209, 3, 0.73);
 }
 
+.orange {
+    background-color: var(--orange-button-color);
+    --accent-glow: rgba(255, 196, 0, 0.66);
+}
+
+.pink{
+    background-color: var(--pink-button-color);
+    --accent-glow: rgba(255, 196, 0, 0.66);
+}
+
 #nuaZumKlickn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px var(--accent-glow);

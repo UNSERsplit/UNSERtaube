@@ -1,0 +1,311 @@
+.stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    gap: 1rem;
+}
+
+.btn-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 160px;
+    height: 64px;
+}
+
+.record-btn {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2.5px solid color-mix(in srgb, var(--red-button-color) 75%, transparent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.record-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: var(--red-button-color);
+}
+
+.record-btn:active {
+    filter: brightness(0.9);
+}
+
+.record-btn.recording {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.inner-circle {
+    display: block;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--red-button-color) 85%, transparent);
+    transition:
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        min-width 0.3s,
+        min-height 0.3s,
+        background 0.2s;
+}
+
+.record-btn.recording .inner-circle {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    background: color-mix(in srgb, var(--red-button-color) 60%, black);
+}
+
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0px color-mix(in srgb, var(--red-button-color) 40%, transparent); }
+    60%  { box-shadow: 0 0 0 10px transparent; }
+    100% { box-shadow: 0 0 0 0px transparent; }
+}
+
+.label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    min-height: 1.4em;
+    margin: 0;
+    text-align: center;
+    transition: color 0.2s;
+}
+
+.label.active {
+    color: var(--red-button-color);
+    font-weight: 500;
+}
+
+.timer {
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.3);
+    min-height: 1.2em;
+    margin: 0;
+    text-align: center;
+}
+
+/* Overlay */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 100;
+}
+
+.overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Popup */
+.popup {
+    background: rgba(28, 28, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 320px;
+    transform: scale(0.88) translateY(12px);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.save-popup {
+    width: 400px;
+}
+
+.overlay.visible .popup {
+    transform: scale(1) translateY(0);
+}
+
+.popup-icon {
+    font-size: 22px;
+    color: var(--red-button-color);
+    line-height: 1;
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 0;
+}
+
+.popup-sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0 0 0.25rem;
+    text-align: center;
+}
+
+/* Video Platzhalter */
+.video-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.25rem 0;
+    overflow: hidden;
+}
+
+.video-placeholder-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.play-icon {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.15);
+}
+
+.placeholder-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 0;
+}
+
+.placeholder-sub {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.12);
+    margin: 0;
+}
+
+/* Input */
+.input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.input-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.03em;
+}
+
+.name-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.88);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.name-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.name-input:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+/* Buttons */
+.popup-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.popup-btn {
+    flex: 1;
+    padding: 0.65rem 0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.popup-btn:active {
+    transform: scale(0.97);
+}
+
+.popup-btn.discard {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-btn.discard:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.popup-btn.save {
+    background: var(--green-button-color);
+    color: #fff;
+}
+
+.popup-btn.save:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.popup-btn.save:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.btn-icon {
+    font-size: 12px;
+}
