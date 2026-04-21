@@ -1,3 +1,7 @@
+<div class="video-container">
+    <canvas id="video"></canvas>
+</div>
+
 <div class="overlay">
     <div class="top">
         <div class="modeSepa">
@@ -5,11 +9,12 @@
             <div class="seperator"></div>
         </div>
 
-        <div class="buttonContainer">
-            <app-button class="landStartbtn" text="Takeoff" (click)="takeoff()" [variant]="ButtonVariant.green"></app-button>
-            <app-button class="landStartbtn" text="Land" (click)="land()" [variant]="ButtonVariant.red"></app-button>
+        <div class="PRY">
+            <p id="pitch">{{ state().pitch }}°</p>
+            <p id="roll">{{ state().roll }}°</p>
+            <p id="yaw">{{ state().yaw }}°</p>
         </div>
-        <div class="seperator"></div>
+
         <div class="tempBatCon">
             <p id="temp" [class.critical]="temp() >= 100" [class.danger]="temp() > 80">{{ temp() }}°C</p>
             <p id="battery">{{ state().bat }}%</p>
@@ -19,10 +24,8 @@
 
     <div class="center">
         <div class="leftContainer">
-
-        </div>
-        <div class="video-container">
-            <canvas id="video"></canvas>
+            <app-home-button class="ihossNomenSuachn"></app-home-button>
+            <app-led-control-button class="ihossNomenSuachn"></app-led-control-button>
         </div>
         <div class="rightContainer">
             <canvas id="myCanvas">
@@ -37,10 +40,10 @@
             <p id="speed">{{ speed() }}dm/s</p>
         </div>
 
-        <div class="PRY">
-            <p id="pitch">{{ state().pitch }}°</p>
-            <p id="roll">{{ state().roll }}°</p>
-            <p id="yaw">{{ state().yaw }}°</p>
+        <div class="buttonContainer">
+            <app-button class="landStartbtn" text="Takeoff" (click)="takeoff()" [variant]="ButtonVariant.green"></app-button>
+            <app-button class="landStartbtn" text="Land" (click)="land()" [variant]="ButtonVariant.orange"></app-button>
+            <app-button class="landStartbtn" text="Emergency" (click)="emergency()" [variant]="ButtonVariant.red"></app-button>
         </div>
 
         <div class="timeDist">

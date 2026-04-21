@@ -8,6 +8,8 @@ import {ButtonComponent} from '../../components/button/button.component';
 import {ButtonVariants} from '../../components/button/button.variants';
 import { FormsModule } from '@angular/forms';
 import {RecordButtonComponent} from '../../components/record-button/record-button.component';
+import {LedControlButtonComponent} from '../../components/led-control-button/led-control-button.component';
+import {HomeButtonComponent} from '../../components/home-button/home-button.component';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -26,7 +28,9 @@ const toString = {
         ControllerInputComponent,
         ButtonComponent,
         FormsModule,
-        RecordButtonComponent
+        RecordButtonComponent,
+        LedControlButtonComponent,
+        HomeButtonComponent
     ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'
@@ -106,6 +110,10 @@ export class DesktopFlugComponent implements OnInit{
 
   land() {
     this.controllerApi.land()
+  }
+
+  emergency(){
+      //Todo Apicall für Notstop
   }
 
   record() {
