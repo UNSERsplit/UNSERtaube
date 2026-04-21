@@ -1,6 +1,3 @@
-<div class="video-container">
-    <canvas id="video"></canvas>
-</div>
 <div class="overlay">
     <div class="top">
         <div class="modeSepa">
@@ -18,7 +15,20 @@
             <p id="battery">{{ state().bat }}%</p>
             <p id="drone-connection">{{ drone().getName }} ({{ drone().getIp }})</p>
         </div>
+    </div>
 
+    <div class="center">
+        <div class="leftContainer">
+
+        </div>
+        <div class="video-container">
+            <canvas id="video"></canvas>
+        </div>
+        <div class="rightContainer">
+            <canvas id="myCanvas">
+            </canvas>
+            <app-record-button></app-record-button>
+        </div>
     </div>
 
     <div class="bottom">
@@ -37,8 +47,8 @@
             <p id="flight-time">{{ state().time }}s</p>
             <p id="flight-distance">200m</p>
         </div>
-
     </div>
+
     @if (showDebugHud()) {
     <div class="left">
         <div style="display: flex;">
