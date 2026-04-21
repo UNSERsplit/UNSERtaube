@@ -1,0 +1,96 @@
+<!-- Hauptbereich: Aufnahme-Button + Status -->
+<div class="stage">
+    <div class="btn-row">
+
+        <!-- Roter Aufnahme-Button:
+             - Klick startet die Aufnahme
+             - Klick während Aufnahme öffnet Popup 1 -->
+        <button
+            class="record-btn"
+            [class.recording]="isRecording"
+            (click)="toggleRecording()"
+            [attr.aria-label]="isRecording ? 'Aufnahme stoppen' : 'Aufnahme starten'"
+        >
+            <span class="inner-circle"></span>
+        </button>
+
+    </div>
+
+    <!-- Statustext z. B. "Aufnahme läuft …" oder "Aufnahme starten" -->
+    <p class="label" [class.active]="isRecording">{{ statusLabel }}</p>
+
+    <!-- Laufzeit-Anzeige MM:SS, nur sichtbar während Aufnahme -->
+    <p class="timer">{{ timerDisplay }}</p>
+</div>
+
+<!-- ─── Popup 1: Aufnahme beenden? ─────────────────────────────────────────
+     Öffnet sich wenn man während der Aufnahme auf den roten Button klickt.
+     Klick auf den Hintergrund (overlay) schließt das Popup. -->
+<div class="overlay" [class.visible]="showStopPopup" (click)="closePopups()">
+    <div class="popup" (click)="$event.stopPropagation()">
+
+        <!-- Pulsierendes Aufnahme-Symbol -->
+        <div class="popup-icon">●</div>
+        <p class="popup-title">Aufnahme beenden?</p>
+        <p class="popup-sub">Was möchtest du mit der Aufnahme machen?</p>
+
+        <div class="popup-actions">
+            <!-- Aufnahme verwerfen → stoppt ohne zu speichern -->
+            <button class="popup-btn discard" (click)="discardRecording()">
+                <span class="btn-icon">✕</span>
+                Abbrechen
+            </button>
+
+            <!-- Weiter zu Popup 2 (Speichern + Videovorschau) -->
+            <button class="popup-btn save" (click)="openSavePopup()">
+                <span class="btn-icon">↓</span>
+                Speichern
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ─── Popup 2: Speichern ──────────────────────────────────────────────────
+     Öffnet sich nach Klick auf "Speichern" in Popup 1.
+     Zeigt Videovorschau (Platzhalter) und Namens-Eingabefeld. -->
+<div class="overlay" [class.visible]="showSavePopup" (click)="closePopups()">
+    <div class="popup save-popup" (click)="$event.stopPropagation()">
+
+        <p class="popup-title">Aufnahme speichern</p>
+
+        <!-- Videovorschau-Platzhalter (noch nicht implementiert) -->
+        <div class="video-placeholder">
+            <div class="video-placeholder-inner">
+                <span class="play-icon">▶</span>
+                <p class="placeholder-text">Videovorschau</p>
+                <p class="placeholder-sub">Wird nach der Implementierung angezeigt</p>
+            </div>
+        </div>
+
+        <!-- Namens-Eingabe, gebunden via [(ngModel)] an recordingName im TS -->
+        <div class="input-group">
+            <label class="input-label" for="recordingName">Name der Aufnahme</label>
+            <input
+                id="recordingName"
+                class="name-input"
+                type="text"
+                placeholder="z. B. Meeting vom 21.04.2026"
+                [(ngModel)]="recordingName"
+                (keydown.enter)="saveRecording()"
+            />
+        </div>
+
+        <div class="popup-actions">
+            <!-- Zurück ohne zu speichern -->
+            <button class="popup-btn discard" (click)="closePopups()">Abbrechen</button>
+
+            <!-- Speichern – deaktiviert solange kein Name eingegeben wurde -->
+            <button class="popup-btn save" (click)="saveRecording()" [disabled]="!recordingName.trim()">
+                <span class="btn-icon">↓</span>
+                Speichern
+            </button>
+        </div>
+
+    </div>
+</div>
