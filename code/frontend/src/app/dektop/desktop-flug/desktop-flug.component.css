@@ -1,4 +1,5 @@
 .video-container {
+    grid-column:2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -12,7 +13,7 @@
     object-fit: contain;*/
 }
 
-.top, .bottom {
+.top{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: 1fr;
@@ -20,6 +21,28 @@
     color: white;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+    grid-column: 1;
+}
+
+.bottom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+    width: calc(100% - 1rem);
+    color: white;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+}
+
+.center{
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 1fr 4fr 1fr;
+}
+
+.rightContainer{
+    padding: 10px;
 }
 
 .left, .right {
@@ -30,6 +53,11 @@
     padding-left: 0.5rem;
     padding-right: 0.5rem;
     color: white;
+}
+
+.overlay{
+    display: grid;
+    grid-template-rows: 1fr 5fr 1fr;
 }
 
 .overlay p {
@@ -136,4 +164,79 @@
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.2); opacity: 0.7; }
     100% { transform: scale(1); opacity: 1; }
+}
+
+
+#myCanvas{
+    width:400px;
+    height:300px;
+    background-color:white;
+}
+
+.record-btn {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #e24b4a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, transform 0.1s;
+    outline: none;
+}
+
+.record-btn:hover {
+    border-color: #c03030;
+    transform: scale(1.04);
+}
+
+.record-btn:active {
+    transform: scale(0.97);
+}
+
+.inner-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e24b4a;
+    transition: border-radius 0.3s cubic-bezier(.4,0,.2,1),
+    width 0.3s cubic-bezier(.4,0,.2,1),
+    height 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Aufnahme aktiv: Kreis wird zum Quadrat */
+.record-btn.recording .inner-circle {
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    background: #a32d2d;
+}
+
+/* Pulsieren während der Aufnahme */
+.record-btn.recording {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0px rgba(226,75,74,0.35); }
+    60%  { box-shadow: 0 0 0 14px rgba(226,75,74,0); }
+    100% { box-shadow: 0 0 0 0px rgba(226,75,74,0); }
+}
+
+.label { font-size: 14px; color: #888; }
+.label.active { color: #e24b4a; font-weight: 600; }
+.timer { font-family: monospace; font-size: 13px; color: #aaa; min-height: 1.2em; }
+
+.record-btn-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background: #fff;
+    font-family: sans-serif;
+    gap: 1.5rem;
 }

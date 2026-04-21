@@ -7,6 +7,7 @@ import { ControllerInputComponent } from '../controller-input/controller-input.c
 import {ButtonComponent} from '../../components/button/button.component';
 import {ButtonVariants} from '../../components/button/button.variants';
 import { FormsModule } from '@angular/forms';
+import {RecordButtonComponent} from '../../components/record-button/record-button.component';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -17,14 +18,16 @@ const toString = {
   "AUTONOMOUS": "Ringerkennung"
 }
 
+// @ts-ignore
 @Component({
   selector: 'app-desktop-flug',
-  imports: [
-      KeyboardInputComponent,
-      ControllerInputComponent,
-      ButtonComponent,
-      FormsModule
-  ],
+    imports: [
+        KeyboardInputComponent,
+        ControllerInputComponent,
+        ButtonComponent,
+        FormsModule,
+        RecordButtonComponent
+    ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'
 })
@@ -44,7 +47,6 @@ export class DesktopFlugComponent implements OnInit{
   protected value_upper = model(255)
 
   protected showDebugHud = signal(false);
-
 
   protected state = this.controllerApi.state.asReadonly()
 
