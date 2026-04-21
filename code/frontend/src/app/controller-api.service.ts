@@ -95,6 +95,8 @@ export class ControllerApiService {
 
     // Für debug zwecke die raw commands exposen
     // @ts-ignore
+    window.control = this
+    // @ts-ignore
     window.send_command = (command, timeout) => {
       this.send_debug_command(command, timeout).then((v) => {
         console.log("ANSWER:", v)
@@ -102,15 +104,17 @@ export class ControllerApiService {
         console.error(e)
       });
     };
-    // @ts-ignore
-    window.send_noanswer_command = (command) => {
-      this.send_debug_command_noanswer(command)
-    };
-
   }
 
   async get_drones() {
     let resp = await fetch("/api/drone/");
+    let json = await resp.json();
+
+    return json;
+  }
+
+  async get_paths() {
+    let resp = await fetch("/api/route/");
     let json = await resp.json();
 
     return json;
@@ -210,10 +214,19 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": false, "timeout":-1}))
   }
 
-  async stop_recording() {
-    this.ws.send(JSON.stringify({"type":"record_stop", "route_name": "ROUTE_NAME"}))
+  async stop_recording(route_name: string) {
+    this.ws.send(JSON.stringify({"type":"record_stop", "route_name": route_name}))
     const data: any = await this.wait_for_response("recording_name", 5_000);
     return data.name;
+  }
+
+  async replay_path(id: string) {
+    this.ws.send(JSON.stringify({"type":"replay_recording", "id": id}))
+    await this.wait_for_response("accepted", 5_000);
+  }
+
+  emergency() {
+    this.ws.send(JSON.stringify({"type":"emergency"}))
   }
 
   async connect(name: string, ip: string) {
@@ -223,6 +236,9 @@ export class ControllerApiService {
       await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
     } catch (e: any) {
       this.status.set("ws_connected");
+      if(e.type == "drone_disconnected") {
+        return;
+      }
       console.error(e.reason || e)
       alert(e.reason || e)
       return;

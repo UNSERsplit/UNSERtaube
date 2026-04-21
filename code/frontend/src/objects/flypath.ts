@@ -4,18 +4,24 @@ export class flypath{
     private _ip: string;
     private _flugZeit: string;
     private _flugDistanz: string;
+    private _id: string
 
 
-    constructor(flugName: string, name: string, ip: string, flugZeit: string, flugDistanz: string) {
+    constructor(flugName: string, name: string, ip: string, flugZeit: string, flugDistanz: string, id: string) {
         this._flugName = flugName;
         this._name = name;
         this._ip = ip;
         this._flugZeit = flugZeit;
         this._flugDistanz = flugDistanz;
+        this._id = id;
     }
 
     get flugName(): string {
         return this._flugName;
+    }
+
+    get id(): string {
+        return this._id;
     }
 
     get name(): string {

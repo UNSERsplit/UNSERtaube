@@ -17,13 +17,17 @@ from sqlalchemy import select, func, and_, or_
 import numpy as np
 import struct
 from typing import Optional
-import cv2
+import datetime
+import math
 
 from models.drone import Drone as DBDrone
 from models.route import Route, RouteEntry
 
 class FrameReader:
-    def __init__(self, port) -> None:
+    def __init__(self, port, mock=False) -> None:
+        self.mock = mock
+        if mock:
+            return
         self.container = av.open(f"udp://0.0.0.0:{port}", timeout=(5, None))
         self.frame = None
         self.raw_frame = None
@@ -32,12 +36,21 @@ class FrameReader:
         self.thread = threading.Thread(target=self._update_frame, daemon=True)
     
     def start(self):
+        if self.mock:
+            self._update_frame()
+            return
         self.thread.start()
     
     def close(self):
+        if self.mock:
+            return
         self.container.close()
     
     def _update_frame(self):
+        if self.mock:
+            self.frame = np.full((1080, 720, 3), 100, dtype=np.uint8)
+            self.on_frame(self.frame)
+            return
         try:
             for frame in self.container.decode(video=0):
                 self.raw_frame = frame
@@ -125,7 +138,8 @@ class WsConnection:
                 await drone.disconnect()
             except Exception:
                 pass
-            self.reader.close()
+            if self.reader:
+                self.reader.close()
 
         await self.trysend(DroneDisconnected(reason=reason))
 
@@ -153,15 +167,19 @@ class WsConnection:
 
 
     def start_capture(self):
+        self.drone.start_recording()
         name = self.video_writer.start(uuid.uuid4().hex) # TODO insert into db
         print("Recording to " + name)
         return name
 
     def end_capture(self, session: Optional[Session], name: str = "NAME"):
-        raw_data = self.drone.stop_recording()
-        filename = self.video_writer.end()
+        ts_start, raw_data = self.drone.stop_recording()
+        if self.drone.connection.sdk_version == -1:
+            filename = "NOTEXISTING.MP4" # mocking drone
+        else:
+            filename = self.video_writer.end()
 
-        if not session:
+        if not session or name == "":
             return
         assert self.db_drone is not None
 
@@ -169,8 +187,73 @@ class WsConnection:
         route.name = name # pyright: ignore[reportAttributeAccessIssue]
         route.video = filename # pyright: ignore[reportAttributeAccessIssue]
         route.drone_id = self.db_drone.id
+        route.distance = 20
+        route.duration = -1 # pyright: ignore[reportAttributeAccessIssue]
         session.add(route)
+        session.commit()
 
+        duration = 0
+
+        for data in raw_data:
+            ts, row = data
+
+            if isinstance(row, str):
+                if row == "land":
+                    row = (-999, -999, -999, -999)
+                if row == "takeoff":
+                    row = (999, 999, 999, 999)
+
+            roll, pitch, throttle, yaw = row
+            entry = RouteEntry()
+            entry.route_id = route.id
+            if (ts - ts_start) / 1e9 > duration:
+                duration = (ts - ts_start) / 1e9
+            entry.Timestamp = datetime.datetime.fromtimestamp((ts - ts_start) / 1e9)
+            entry.Pitch = pitch
+            entry.Roll = roll
+            entry.Throttle = throttle
+            entry.Yaw = yaw
+            session.add(entry)
+        
+        route.duration = math.ceil(duration)
+        
+
+        session.commit()
+
+        return filename
+
+    async def replayRoute(self, session: Session, id: str):
+        stmt = select(Route).where(Route.id == id)
+        route = session.execute(stmt).scalar_one()
+        
+        stmt = select(RouteEntry).where(RouteEntry.route_id == id)
+        routeEntries = session.execute(stmt).all()
+
+        entries = []
+
+        prev = 0
+
+        for row in routeEntries:
+            entry = row.tuple()[0]
+
+            _ts = entry.Timestamp.timestamp()
+            ts = _ts - prev
+            prev = _ts
+            log("DEBUG", ts)
+            pitch = entry.Pitch
+            roll = entry.Roll
+            throttle = entry.Throttle
+            yaw = entry.Yaw
+            
+
+            if pitch == -999:
+                entries.append((ts, "land"))
+            elif pitch == 999:
+                entries.append((ts, "takeoff"))
+            else:
+                entries.append((ts, (roll, pitch, throttle, yaw)))
+        
+        self.drone.replay_route(entries)
 
 
     async def on_state(self, state: State):
@@ -208,6 +291,7 @@ class WsConnection:
 
         session.add(drone)
         session.commit()
+        session.refresh(drone)
 
         return drone
 
@@ -234,7 +318,7 @@ class WsConnection:
                     self.drone.set_state_callback(self.on_state)
                     self.drone.set_disconnect_callback(self._disconnect_from_timeout)
                     await self.drone.ext.led_set(0, 0, 255)
-                    self.reader = FrameReader(self.drone.get_video_port())
+                    self.reader = FrameReader(self.drone.get_video_port(), mock=self.drone.connection.sdk_version == -1)
                     self.reader.start()
                     self.reader.on_frame = self.on_frame
                     
@@ -275,6 +359,13 @@ class WsConnection:
                 case SetFlashingLed():
                     self.assertDrone()
                     await self.drone.ext.led_flash(data.red1, data.green1, data.blue1, data.freq, data.red2, data.green2, data.blue2)
+                case Emergency():
+                    self.assertDrone()
+                    await self.drone.emergency_stop()
+                case ReplayRoute():
+                    self.assertDrone()
+                    await self.replayRoute(session, data.id)
+                    await self.send(Accepted())
                 case DebugSendRawCommand():
                     self.assertDrone()
                     if data.wait_for_response:

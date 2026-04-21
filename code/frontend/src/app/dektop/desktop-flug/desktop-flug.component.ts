@@ -113,7 +113,7 @@ export class DesktopFlugComponent implements OnInit{
   }
 
   emergency(){
-      //Todo Apicall für Notstop
+    this.controllerApi.emergency()
   }
 
   record() {
@@ -121,7 +121,8 @@ export class DesktopFlugComponent implements OnInit{
   }
 
   async stop() {
-    const name = await this.controllerApi.stop_recording()
+    const name = await this.controllerApi.stop_recording("")
+    window.open("/video/" + name, "_blank")
     alert(name)
   }
 }

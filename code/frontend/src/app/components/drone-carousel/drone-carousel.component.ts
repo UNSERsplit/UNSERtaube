@@ -23,7 +23,7 @@ export class DroneCarouselComponent {
     private router = inject(Router);
     private controller = inject(ControllerApiService);
 
-    items: {name: string, ip: string, id: string, color: string}[] = []; // TODO get from server
+    items: {name: string, ip: string, id: string, color: string}[] = [];
 
     currentIndex = 0;
 

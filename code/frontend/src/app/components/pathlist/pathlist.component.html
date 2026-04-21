@@ -7,19 +7,19 @@
         <h2>Flugprotokolle</h2>
     </div>
     <div class="scrollbar-minimal" id="flight-container">
-        <div class="flight-card" *ngFor="let flight of droneFlights; let i = index">
+        <div class="flight-card" *ngFor="let flight of droneFlights; let i = index" (click)="replay(flight.id)">
             <div class="flight-info">
                 <div class="index-badge">{{ i + 1 }}</div>
                 <div class="details">
                     <h3>{{ flight.flugName }}</h3>
-                    <p>Pilot: <span>{{ flight.name }}</span> • {{ flight.ip }}</p>
+                    <p>Drone: <span>{{ flight.name }}</span> • {{ flight.ip }}</p>
                 </div>
             </div>
 
             <div class="flight-stats">
                 <div class="stat-item">
                     <span class="label">Dauer</span>
-                    <span class="value">{{ flight.flugZeit }} min</span>
+                    <span class="value">{{ flight.flugZeit }} s</span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">

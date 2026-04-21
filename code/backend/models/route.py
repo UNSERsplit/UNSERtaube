@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from database import Base # Hier wird die Base aus deiner database.py importiert
 import uuid
 from .route_entry import RouteEntry
+import datetime
 
 class Route(Base):
     __tablename__ = "Route"
@@ -14,6 +15,9 @@ class Route(Base):
 
     # Fremdschlüssel zur Drohne
     drone_id = Column(UUID(as_uuid=True), ForeignKey("Drone.id"), nullable=False)
+    created_at = Column(TIMESTAMP, default=datetime.datetime.utcnow)
+    duration = Column(Integer)
+    distance = Column(Integer)
 
     # Beziehungen
     drone = relationship("Drone", back_populates="routes")

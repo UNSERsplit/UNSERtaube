@@ -10,19 +10,23 @@ from uuid import UUID
 
 routes_router = APIRouter(prefix="/route")
 
-@routes_router.post("/")
-def create_route_for_drohne(route: RouteCreate, db: Session = Depends(get_db)) -> RouteSchema:
-    # Prüfen, ob Drohne existiert
-    drohne = db.query(Drone).filter(Drone.id == route.drone_id).first()
-    if not drohne:
-        raise HTTPException(status_code=404, detail="Drohne nicht gefunden")
-
-    db_route = Route(**route.dict())
-    db.add(db_route)
-    db.commit()
-    db.refresh(db_route)
-    return db_route
-
-@routes_router.get("/{id}")
-def get_route(id: UUID, db: Session = Depends(get_db)) -> RouteSchema:
-    return db.query(Route).where(Route.id == id).one()
+@routes_router.get("/")
+def get_route(db: Session = Depends(get_db)) -> list[RouteSchema]:
+    d = db.query(Route,Drone.name,Drone.ip).join(Route.drone).all()
+    l = []
+    for data in d:
+        route, name, ip = data
+        l.append(
+            RouteSchema(
+                name=route.name,
+                drone_id=route.drone_id,
+                id=route.id,
+                created_at=route.created_at,
+                drone_name=name,
+                ip=ip,
+                distance=route.distance,
+                duration=route.duration
+            )
+        )
+    
+    return l

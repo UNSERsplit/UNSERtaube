@@ -1,7 +1,8 @@
+import asyncio
 from typing import Any, Callable, Coroutine, Optional
 #from websocket.webrtc import UDPVideoTrack
 from . import connection, State
-from threading import Timer
+from threading import Timer, Thread
 import time
 
 class Drone:
@@ -15,7 +16,32 @@ class Drone:
         self.recording = False
         self.recording_start = 0
         self.recording_data = []
+        self.emergency = False
+
+        self.replay_thread = None
     
+    def replay_route(self, data):
+        self.replay_thread = Thread(target=self._replay_route, args=(data,))
+        self.replay_thread.start()
+    
+    def _replay_route(self, data):
+        i = 0
+        while not self.emergency and i < len(data):
+            d = data[i]
+            i += 1
+
+            ts, cmd = d
+            time.sleep(ts)
+            if self.emergency:
+                return
+            if isinstance(cmd, str):
+                self.connection.send_message_noanswer(cmd)
+            else:
+                roll, pitch, throttle, yaw = cmd
+                message = f"rc {roll} {pitch} {throttle} {yaw}"
+                self.connection.send_message_noanswer(message)
+        self.emergency = False
+
     def start_recording(self):
         self.recording = True
         self.recording_start = time.time_ns()
@@ -23,7 +49,7 @@ class Drone:
     def stop_recording(self):
         self.recording = False
 
-        return self.recording_data
+        return self.recording_start, self.recording_data
     
     def get_video_port(self) -> int:
         return self.connection.future_video_port
@@ -70,6 +96,8 @@ class Drone:
         self.state_callback = cb
 
     async def emergency_stop(self):
+        self.emergency = True
+        self.connection.send_message_noanswer("rc 0 0 0 0")
         self.connection.send_message_noanswer("emergency")
 
     async def startstream(self):
@@ -83,7 +111,7 @@ class Drone:
         """all args from -100 to 100"""
         message = f"rc {roll} {pitch} {throttle} {yaw}"
         if self.recording:
-            self.recording_data.append((time.time_ns(), message))
+            self.recording_data.append((time.time_ns(), (roll, pitch, throttle, yaw)))
         self.connection.send_message_noanswer(message)
 
 class Ext:

@@ -27,6 +27,13 @@ class StopRecording(ServerBoundMessage):
     type: Literal["record_stop"]
     route_name: str
 
+class ReplayRoute(ServerBoundMessage):
+    type: Literal["replay_recording"]
+    id: str
+
+class Emergency(ServerBoundMessage):
+    type: Literal["emergency"]
+
 class Land(ServerBoundMessage):
     type: Literal["land"]
 
