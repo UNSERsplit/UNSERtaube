@@ -62,7 +62,7 @@ class Connection:
         await self.send_control_message("downvision 0", optional=True)
         await self.send_control_message("setfps high", optional=True)
         await self.send_control_message("setbitrate 5", optional=True)
-        await self.send_control_message("setresolution high", optional=True)
+        await self.send_control_message("setresolution low", optional=True)
         await self.send_control_message(f"port {ConnectionManager.LOCAL_STATE_PORT} {self.future_video_port}")
 
     async def _connect(self): # called by ConnectionManager.connect

@@ -26,7 +26,7 @@ class Drone:
     
     def _replay_route(self, data):
         i = 0
-        while not self.emergency and i < len(data):
+        while not self.emergency and i < len(data): #TODO nach emergency mag er nimma
             d = data[i]
             i += 1
 

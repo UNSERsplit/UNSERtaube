@@ -1,6 +1,7 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ControllerApiService } from '../../controller-api.service';
 
 @Component({
     selector: 'app-record-button',
@@ -30,19 +31,23 @@ export class RecordButtonComponent implements OnDestroy {
 
     // ─── Template-Methoden ─────────────────────────────────────────────────────
 
+    private controllerApi = inject(ControllerApiService);
+
     /** Aufnahme starten oder Popup 1 öffnen falls bereits aufgenommen wird */
     toggleRecording(): void {
         if (this.isRecording) {
             this.showStopPopup = true;
         } else {
+            this.controllerApi.start_recording()
             this.startRecording();
         }
     }
 
     /** Popup 1 → "Abbrechen": Aufnahme verwerfen ohne zu speichern */
-    discardRecording(): void {
+    async discardRecording(): Promise<void> {
         this.closePopups();
         this.isRecording = false;
+        await this.controllerApi.stop_recording("")
         this.stopRecording('Aufnahme abgebrochen');
     }
 
@@ -54,10 +59,12 @@ export class RecordButtonComponent implements OnDestroy {
     }
 
     /** Popup 2 → "Speichern": Aufnahme speichern und Status kurz anzeigen */
-    saveRecording(): void {
+    async saveRecording(): Promise<void> {
         if (!this.recordingName.trim()) return; // Zusätzliche Absicherung zum disabled-Attribut
         this.closePopups();
         this.isRecording = false;
+        const videoName = await this.controllerApi.stop_recording(this.recordingName.trim())
+        window.open("/video/" + videoName, "_blank")
         this.stopRecording(`"${this.recordingName}" gespeichert`);
     }
 
