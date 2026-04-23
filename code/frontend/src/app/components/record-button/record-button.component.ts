@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 @Component({
     selector: 'app-record-button',

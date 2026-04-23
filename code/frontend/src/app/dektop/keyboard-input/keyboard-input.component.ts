@@ -1,5 +1,5 @@
 import { Component, effect, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 @Component({
   selector: 'app-keyboard-input',
@@ -9,10 +9,10 @@ import { ControllerApiService } from '../../controller-api.service';
 })
 export class KeyboardInputComponent implements OnInit, OnDestroy{
   ngOnInit(): void {
-    
+
   }
   ngOnDestroy(): void {
-    
+
   }
   private keys = signal<{
     [index: string]: boolean

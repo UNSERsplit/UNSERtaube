@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
-import {LoginPageComponent} from './dektop/desktop-login-page/login-page.component';
-import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.component';
-import {DesktopFlugComponent} from './dektop/desktop-flug/desktop-flug.component';
+import {LoginPageComponent} from './pages/login.page/login.page.component';
+import {FlugmenuPageComponent} from './pages/flugmenu.page/flugmenu.page.component';
+import {FlugPageComponent} from './pages/flug.page/flug.page.component';
 
 
 export const routes: Routes = [
     { path: 'login-page', component: LoginPageComponent },
-    { path: 'home', component: DektopFlugmenuComponent },
-    {path: 'flyyy', component: DesktopFlugComponent },
+    { path: 'home', component: FlugmenuPageComponent },
+    {path: 'flyyy', component: FlugPageComponent },
     { path: '', redirectTo: 'login-page', pathMatch: 'full' }
 ];

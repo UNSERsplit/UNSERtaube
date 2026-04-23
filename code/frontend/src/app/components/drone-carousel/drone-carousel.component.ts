@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {Drone} from '../../../objects/drone';
 import {Router} from '@angular/router';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 const COLORS = [
     '#ffadad',

@@ -5,7 +5,7 @@ import {ButtonComponent, } from '../button/button.component';
 import {ButtonVariants} from '../button/button.variants';
 import {CardComponent} from '../card/card.component';
 import {CardVariants} from '../card/card.variants';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 @Component({
   selector: 'app-connected-drone',

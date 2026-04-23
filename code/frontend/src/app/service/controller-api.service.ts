@@ -1,6 +1,6 @@
 import { inject, Injectable, signal, ViewChild } from '@angular/core';
 import { VideoApiService } from './video-api.service';
-import { Drone } from '../objects/drone';
+import { Drone } from '../../objects/drone';
 
 export interface State {
   /** pitch in degrees */

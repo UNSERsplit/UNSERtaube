@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
-import { VideoApiService } from '../app/video-api.service';
+import { VideoApiService } from '../app/service/video-api.service';
 import { OverlayComponent } from './overlay/overlay.component';
 
 @Component({

@@ -1,8 +1,8 @@
 import { Component, computed, effect, HostListener, inject, model, OnInit, signal } from '@angular/core';
-import { VideoApiService } from '../../video-api.service';
-import { ControllerApiService } from '../../controller-api.service';
+import { VideoApiService } from '../../service/video-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 import { KeyboardInputComponent } from '../keyboard-input/keyboard-input.component';
-import { GamepadService } from '../../gamepad.service';
+import { GamepadService } from '../../service/gamepad.service';
 import { ControllerInputComponent } from '../controller-input/controller-input.component';
 import {ButtonComponent} from '../../components/button/button.component';
 import {ButtonVariants} from '../../components/button/button.variants';
