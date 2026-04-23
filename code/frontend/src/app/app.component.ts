@@ -5,7 +5,7 @@ import {buildApplication} from '@angular-devkit/build-angular';
 import { VideoStreamComponent } from '../video-stream/video-stream.component';
 import {PathmapComponent} from '../pathmap/pathmap.component';
 import {ControllerApiService} from './service/controller-api.service';
-import {LoginPageComponent} from './dektop/desktop-login-page/login-page.component';
+import {LoginPageComponentx} from './dektop/desktop-login-page/login-page.component';
 import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.component';
 import { patch } from './service/ws_service.patch';
 
