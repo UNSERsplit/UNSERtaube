@@ -1,0 +1,35 @@
+@startuml
+
+|Frontend|
+start
+floating note left: Video stream
+:start video stream;
+|Backend|
+:open udp stream receiver;
+repeat
+    |Drone|
+    :send h264 udp stream;
+    :h264 frames; <<object>>
+    |Backend|
+    :decode h264 frame;
+    fork
+    :send frame to vision worker;
+    :process result;
+    end
+    fork again
+    :convert to raw RGB pixel values;
+    end fork
+    
+    :raw RGB values; <<object>>
+    :send to frontend;
+    |Frontend|
+    partition show frame {
+        :receive raw values;
+        :convert RGB to RGBA;
+        :draw to canvas;
+    }
+    |Backend|
+repeat while (stream is active) is (yes) not (no)
+stop
+
+@enduml

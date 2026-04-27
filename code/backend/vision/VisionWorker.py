@@ -25,7 +25,7 @@ class VisionWorker:
     def _process_frame(self, original_frame):
 
         frame, mask = self._filter_red_parts(original_frame)
-        mask = self._fix_mask(mask)
+        #mask = self._fix_mask(mask)
         #mask = self._canny(mask)
         #return cv2.bitwise_and(original_frame, original_frame, mask=mask)
         frame, mask, contours = self._find_contours(frame, mask)
@@ -37,12 +37,17 @@ class VisionWorker:
             if len(contour) < 5:
                 continue
             ellipse = cv2.fitEllipse(contour)
+            area = cv2.contourArea(contour)
+            if area < 2000:
+                continue
             center, axes, angle = ellipse
             center = list(map(lambda x: int(x),list(center)))
             final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
             final = cv2.circle(final, center, 3, (0,255,0), -1)
+            final = cv2.putText(final, str(int(area)), center, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
-        return cv2.bitwise_and(original_frame, original_frame, mask=mask)
+
+        return cv2.bitwise_and(frame, frame)
     
     def _canny(self, frame):
         sigma = 0.33
@@ -55,7 +60,7 @@ class VisionWorker:
         return edge_image
     
     def _filter_red_parts(self, frame):
-        img = cv2.bilateralFilter(frame, 11, 75, 75)
+        img = cv2.bilateralFilter(frame, 30, 75, 75)
 
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
@@ -88,7 +93,7 @@ class VisionWorker:
         # Join the masks
         raw_mask = mask0 | mask1 # type: ignore Kein plan was vs-code hier hat, es funktioniert eh
 
-        return frame, raw_mask
+        return img, raw_mask
 
     def _fix_mask(self, raw_mask):
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
