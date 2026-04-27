@@ -1,6 +1,6 @@
 import {Component, computed, inject, Input, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 const LOOKUP = {
   "offline": "No Internet",

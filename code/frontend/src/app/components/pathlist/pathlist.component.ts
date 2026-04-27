@@ -3,7 +3,7 @@ import {CardComponent} from '../card/card.component';
 import {CardVariants} from '../card/card.variants';
 import {NgForOf} from '@angular/common';
 import {flypath} from '../../../objects/flypath';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 import { Router } from '@angular/router';
 
 

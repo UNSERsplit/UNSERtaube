@@ -8,7 +8,7 @@ import {StatusComponent} from '../../components/status/status.component';
 import {ButtonVariants} from '../../components/button/button.variants';
 import {CardComponent} from '../../components/card/card.component';
 import {Router} from '@angular/router';
-import { ControllerApiService } from '../../controller-api.service';
+import { ControllerApiService } from '../../service/controller-api.service';
 
 @Component({
     selector: 'app-desktop-login-page',
@@ -17,7 +17,7 @@ import { ControllerApiService } from '../../controller-api.service';
     imports: [ButtonComponent, InputHeaderComponent, TitelComponent, DroneCarouselComponent, StatusComponent, StatusComponent, CardComponent],
     styleUrl: './login-page.component.css'
 })
-export class LoginPageComponent {
+export class LoginPageComponentx {
     controllerApi = inject(ControllerApiService)
 
     protected name = signal<string>("");

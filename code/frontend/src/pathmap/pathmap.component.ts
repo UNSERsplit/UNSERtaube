@@ -1,5 +1,5 @@
 import { Component, computed, effect, ElementRef, inject, ViewChild } from '@angular/core';
-import { ControllerApiService } from '../app/controller-api.service';
+import { ControllerApiService } from '../app/service/controller-api.service';
 
 @Component({
   selector: 'app-pathmap',

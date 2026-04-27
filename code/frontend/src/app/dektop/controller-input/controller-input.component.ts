@@ -1,6 +1,6 @@
 import { Component, effect, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { ControllerApiService } from '../../controller-api.service';
-import { GamepadService } from '../../gamepad.service';
+import { ControllerApiService } from '../../service/controller-api.service';
+import { GamepadService } from '../../service/gamepad.service';
 
 @Component({
   selector: 'app-controller-input',
@@ -17,7 +17,7 @@ export class ControllerInputComponent implements OnInit, OnDestroy{
     }, 10);
   }
   ngOnDestroy(): void {
-    
+
   }
 
   private controllerApi = inject(ControllerApiService);
