@@ -1,0 +1,21 @@
+@startuml
+
+UI --> Backend: start recording
+
+loop video stream is active
+    Drone --> Backend: video frames
+    Backend --> UI: video frames
+    database FileSystem as FS
+    Backend --> FS: write video frames
+end
+
+UI -> Backend: stop recording
+Backend -> FS: convert raw frames
+FS --> Backend: mp4 file
+Backend --> UI: path to mp4 file
+
+UI -> FS: get mp4 file via url
+FS --> UI: mp4 file
+
+@enduml
+
