@@ -1,0 +1,34 @@
+@startuml
+skinparam style strictuml
+actor Pilot as Pil
+participant "Drohne (Kamera)" as K
+participant "Prozessor" as P
+participant "KI-Modell (Ring)" as A
+participant "Flugsteuerung" as S
+participant "Ground Station" as G
+
+K->P: Live-Stream Frame
+activate P
+
+' Pfad für die Ringerkennung
+P->A: Bilddaten zur Inferenz
+activate A
+alt Ring erkannt
+    A->S: Koordinaten (X, Y)
+    activate S
+    S->S: PID-Flugkorrektur
+    S->S: Motoren anpassen
+    deactivate S
+else Kein Ring
+    A->S: Status: "Suche"
+end
+deactivate A
+
+' Pfad für den Videostream zur Ground Station
+P->G: Videodaten senden (RTP/UDP)
+activate G
+G->Pil: Video anzeigen
+deactivate G
+
+deactivate P
+@enduml
