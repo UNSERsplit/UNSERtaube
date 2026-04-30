@@ -107,3 +107,24 @@ class VisionWorker:
         ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
 
         return frame, raw_mask, ctns
+    
+    def _merge_ellipses(self, e1, e2, final):
+        mask = np.zeros((500, 500), dtype=np.uint8)
+        cv2.ellipse(mask, e1, 255, -1) # type: ignore
+        cv2.ellipse(mask, e2, 255, -1)
+
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) # Konturen der beiden Ellipsen herausfiltern
+
+        # 5. Fit a new ellipse to the combined contours
+        if len(contours) > 0:
+            # Combine all points from all contours found
+            all_points = np.vstack(contours)
+            if len(all_points) >= 5: # Need at least 5 points to fit an ellipse
+                new_ellipse = cv2.fitEllipse(all_points)
+                
+                # 6. Draw the new combined ellipse
+                combined = cv2.ellipse(final, new_ellipse, (0, 255, 0), 2)
+                cv2.ellipse(img, e1, (255,0,0),2)
+                cv2.ellipse(img, e2, (255,0,0),2)
+
+        return
