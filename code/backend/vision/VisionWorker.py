@@ -29,10 +29,11 @@ class VisionWorker:
         #mask = self._canny(mask)
         #return cv2.bitwise_and(original_frame, original_frame, mask=mask)
         frame, mask, contours = self._find_contours(frame, mask)
-        
+
         final = original_frame
         original_frame = original_frame.copy()
 
+        ellipselist = []
         for contour in contours:
             if len(contour) < 5:
                 continue
@@ -40,6 +41,12 @@ class VisionWorker:
             area = cv2.contourArea(contour)
             if area < 2000:
                 continue
+            ellipselist.append(ellipse)
+
+        # while i in range(len(ellipselist)):
+
+
+        for ellipse in ellipselist:
             center, axes, angle = ellipse
             center = list(map(lambda x: int(x),list(center)))
             final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
@@ -107,24 +114,46 @@ class VisionWorker:
         ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
 
         return frame, raw_mask, ctns
-    
+
+    def _check_mergeable_ellipses(self, ellipselist):
+        new_ellipselist = []
+        for ellipse1 in ellipselist:
+            for ellipse2 in ellipselist:
+                if ellipse1 == ellipse2:
+                    continue
+                (x1, y1), (w1, h1), angle1 = ellipse1
+                (x2, y2), (w2, h2), angle2 = ellipse2
+                if x1 < x2:
+                    left = ellipse1
+                    right = ellipse2
+                else:
+                    left = ellipse2
+                    right = ellipse1
+
+                if abs(y1-y2)<20 and abs(angle1 + angle2 - 180) < 30:
+                    self._merge_ellipses()
+
+
+
+
+        return new_ellipselist
+
     def _merge_ellipses(self, e1, e2, final):
-        mask = np.zeros((500, 500), dtype=np.uint8)
-        cv2.ellipse(mask, e1, 255, -1) # type: ignore
+
+        mask = np.zeros(final.shape[:2], dtype=np.uint8) # final.shape: gleich großer Canvas wie final
+
+        cv2.ellipse(mask, e1, 255, -1)
         cv2.ellipse(mask, e2, 255, -1)
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) # Konturen der beiden Ellipsen herausfiltern
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 5. Fit a new ellipse to the combined contours
-        if len(contours) > 0:
-            # Combine all points from all contours found
+        if contours:
             all_points = np.vstack(contours)
-            if len(all_points) >= 5: # Need at least 5 points to fit an ellipse
-                new_ellipse = cv2.fitEllipse(all_points)
-                
-                # 6. Draw the new combined ellipse
-                combined = cv2.ellipse(final, new_ellipse, (0, 255, 0), 2)
-                cv2.ellipse(img, e1, (255,0,0),2)
-                cv2.ellipse(img, e2, (255,0,0),2)
 
-        return
+            if len(all_points) >= 5:
+                new_ellipse = cv2.fitEllipse(all_points)
+                cv2.ellipse(final, new_ellipse, (0, 255, 0), 2)
+
+                return new_ellipse
+
+        return None
