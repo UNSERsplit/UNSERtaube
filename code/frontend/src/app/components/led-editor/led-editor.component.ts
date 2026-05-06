@@ -60,6 +60,7 @@ export class LedEditorComponent {
 
     buttonText: string = "Clear";
     protected  ButtonVariant = ButtonVariants.blue;
+    protected  ButtonVariant2 = ButtonVariants.green;
 
     constructor() {
         for (let i = 0; i < 8; i++) {
@@ -74,6 +75,10 @@ export class LedEditorComponent {
     setLedColor(rowIndex: number, colIndex: number) {
         this.leds[rowIndex][colIndex].ledstatus = this.selectedColor;
         this.updateDroneMled();
+    }
+
+    blinkPolice() {
+        this.controllerApi.flash(255,0,0,0,0,255, 1)
     }
 
     updateDroneMled() {

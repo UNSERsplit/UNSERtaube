@@ -202,6 +202,19 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":type, "data": data}))
   }
 
+  flash(r1: number, r2: number, g1: number, g2: number, b1: number, b2: number, freq: number) {
+    this.ws.send(JSON.stringify({
+      "type": "flashing_led",
+      red1: r1,
+      red2: r2,
+      green1: g1,
+      green2: g2,
+      blue1: b1,
+      blue2: b2,
+      freq
+    }))
+  }
+
   send_debug_finetune(data: {show_processed_output: boolean, hue_lower: number, hue_upper: number, saturation_lower: number, saturation_upper: number, value_lower: number, value_upper: number}) {
     this.ws.send(JSON.stringify({"type": "finetune_vision", ...data}))
   }
