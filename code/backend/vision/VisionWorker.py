@@ -4,6 +4,8 @@ import threading
 import time
 from dronemaster.connection import log
 
+#showDebugHud.set(true)
+
 class VisionWorker:
     def __init__(self) -> None:
         self.show_filtered_frame = False
@@ -37,7 +39,9 @@ class VisionWorker:
             self.processing_frame = frame
 
         if self.show_filtered_frame:
-            return self.processed_frame or frame
+            if self.processed_frame is not None:
+                return self.processed_frame
+            return np.zeros_like(frame)
         else:
             return frame
     
@@ -135,7 +139,8 @@ class VisionWorker:
         return frame, raw_mask, ctns
 
     def _check_mergeable_ellipses(self, ellipselist):
-        new_ellipselist = []
+        new_ellipses = []
+        merged_ellipses = []
         for ellipse1 in ellipselist:
             for ellipse2 in ellipselist:
                 if ellipse1 == ellipse2:
@@ -149,17 +154,24 @@ class VisionWorker:
                     left = ellipse2
                     right = ellipse1
 
-                if abs(y1-y2)<20 and abs(angle1 + angle2 - 180) < 30:
-                    self._merge_ellipses()
+                if abs(y1-y2)<40 and abs(angle1 + angle2 - 180) < 30:
+                    new_ellipse = self._merge_ellipses(ellipse1, ellipse2)
+                    if new_ellipse is not None:
+                        new_ellipses.append(new_ellipse)
+                        merged_ellipses.append(ellipse1)
+                        merged_ellipses.append(ellipse2)
+
+        for ellipse in merged_ellipses:
+            ellipselist.remove(ellipse)
+        for ellipse in ellipselist:
+            new_ellipses.append(ellipse)
+
+        return new_ellipses
 
 
+    def _merge_ellipses(self, e1, e2, canvas_shape):
 
-
-        return new_ellipselist
-
-    def _merge_ellipses(self, e1, e2, final):
-
-        mask = np.zeros(final.shape[:2], dtype=np.uint8) # final.shape: gleich großer Canvas wie final
+        mask = np.zeros(canvas_shape, dtype=np.uint8)
 
         cv2.ellipse(mask, e1, 255, -1)
         cv2.ellipse(mask, e2, 255, -1)
@@ -167,12 +179,12 @@ class VisionWorker:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if contours:
+            # Alle Konturpunkte aller gefundenen Inseln zusammenfassen
             all_points = np.vstack(contours)
 
+            # 4. FitEllipse benötigt mindestens 5 Punkte
             if len(all_points) >= 5:
                 new_ellipse = cv2.fitEllipse(all_points)
-                cv2.ellipse(final, new_ellipse, (0, 255, 0), 2)
-
                 return new_ellipse
 
         return None
