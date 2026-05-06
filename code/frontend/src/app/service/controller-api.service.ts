@@ -67,6 +67,7 @@ export class ControllerApiService {
     [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void, string[]]
   } = {}
   public pathmapsignal = signal<[number, number, number][]>([]);
+  public flightDistance = signal<number>(0);
 
   private ws: WebSocket;
 
@@ -136,6 +137,7 @@ export class ControllerApiService {
       }
       case "waypoints": {
         this.pathmapsignal.set(data.context);
+        this.flightDistance.set(data.distance);
         break;
       }
       case "drone_disconnected": {

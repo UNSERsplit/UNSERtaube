@@ -125,6 +125,7 @@ class Accepted(ClientBoundMessage):
 class SendWaypoints(ClientBoundMessage):
     type: str = "waypoints"
     context: list[tuple[int,int,int]]
+    distance: float
 
 class Error(ClientBoundMessage):
     type: str = "error"

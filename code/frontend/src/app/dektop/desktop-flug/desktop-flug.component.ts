@@ -53,6 +53,7 @@ export class DesktopFlugComponent implements OnInit{
   protected showDebugHud = signal(false);
 
   protected state = this.controllerApi.state.asReadonly()
+  protected distance = this.controllerApi.flightDistance.asReadonly();
 
   protected speedInDMS = computed<{"x":number, "y":number, "z":number}>(() => {
     return {
@@ -61,7 +62,7 @@ export class DesktopFlugComponent implements OnInit{
       "z": this.state().vgz,
     }
   })
-  protected speed = computed(() => Math.sqrt(Math.pow(this.speedInDMS().z, 2) + Math.pow(this.speedInDMS().y, 2) + Math.pow(this.speedInDMS().z, 2)))
+  protected speed = computed(() => Math.floor(Math.sqrt(Math.pow(this.speedInDMS().z, 2) + Math.pow(this.speedInDMS().y, 2) + Math.pow(this.speedInDMS().z, 2))))
 
   protected drone = computed(() => this.controllerApi.drone()!)
   protected modeName = computed(() => toString[this.mode()])

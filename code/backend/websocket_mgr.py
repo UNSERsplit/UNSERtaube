@@ -158,7 +158,7 @@ class WsConnection:
 
     async def sendpathpoints(self):
         try:
-            await self.send(SendWaypoints(context=self.pathcalculation.canvas_waypoints.getwaypoints()))
+            await self.send(SendWaypoints(context=self.pathcalculation.canvas_waypoints.getwaypoints(), distance=self.pathcalculation.flight_distance))
         except Exception:
             pass
 
@@ -168,37 +168,30 @@ class WsConnection:
 
     def start_capture(self):
         self.drone.start_recording()
-        name = self.video_writer.start(uuid.uuid4().hex) # TODO insert into db
+        name = self.video_writer.start(uuid.uuid4().hex)
         print("Recording to " + name)
         return name
 
     def end_capture(self, session: Optional[Session], name: str = "NAME"):
-        log(0)
         ts_start, raw_data = self.drone.stop_recording()
-        log(1)
         if self.drone.connection.sdk_version == -1:
             filename = "NOTEXISTING.MP4" # mocking drone
         else:
             filename = self.video_writer.end()
         
-        log(2)
 
         if not session or name == "":
             return
         assert self.db_drone is not None
 
-        log(3)
-
         route = Route()
         route.name = name # pyright: ignore[reportAttributeAccessIssue]
         route.video = filename # pyright: ignore[reportAttributeAccessIssue]
         route.drone_id = self.db_drone.id
-        route.distance = 20
+        route.distance = self.pathcalculation.flight_distance # pyright: ignore[reportAttributeAccessIssue]
         route.duration = -1 # pyright: ignore[reportAttributeAccessIssue]
         session.add(route)
         session.commit()
-
-        log(4, len(raw_data))
 
         duration = 0
 
@@ -223,13 +216,11 @@ class WsConnection:
             entry.Yaw = yaw
             session.add(entry)
         
-        log(5)
         
         route.duration = math.ceil(duration)
         
 
         session.commit()
-        log(6)
 
         return filename
 
@@ -308,6 +299,8 @@ class WsConnection:
 
     async def on_message(self, data: messages):
         session = SessionLocal()
+
+        log("msg", type(data))
 
         try:
             match data:
