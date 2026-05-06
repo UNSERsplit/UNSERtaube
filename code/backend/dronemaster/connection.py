@@ -173,6 +173,7 @@ class Connection:
             raise ConnectionError("This connection has been closed")
         diff = time.time() - self.last_sent_timestamp
         if diff < ConnectionManager.TIME_BETWEEN_COMMANDS:
+            log("sleep", diff)
             time.sleep(diff)
         self.last_sent_timestamp = time.time()
 
@@ -316,6 +317,7 @@ class PathCalculation:
         self.xpos = 0.0 # in dm  - Aktuelle Position der Drohne relativ zum Start
         self.ypos = 0.0 # in dm  ^
         self.zpos = 0.0 # in dm  ^
+        self.flight_distance: float = 0
         self.time_last_callback = None
         self.canvas_waypoints = CanvasWaypoints()
 
@@ -336,6 +338,8 @@ class PathCalculation:
         world_vx = vx_local  - vy_local
         world_vy = vx_local  + vy_local
         world_vz = vz_local
+
+        self.flight_distance += float(math.sqrt((world_vx * last_callback) ** 2 + (world_vy * last_callback) ** 2 + (world_vz * last_callback) ** 2))
  
         # Integrate acceleration for accuracy
         ax_m_s2 = (state.agx / 1000.0) * 9.8

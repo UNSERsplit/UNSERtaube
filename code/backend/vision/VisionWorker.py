@@ -1,5 +1,8 @@
 import numpy as np
 import cv2
+import threading
+import time
+from dronemaster.connection import log
 
 class VisionWorker:
     def __init__(self) -> None:
@@ -14,11 +17,27 @@ class VisionWorker:
         self.saturation_upper = 255
         self.saturation_lower = 80
 
+        self.processing_frame = None
+        self.processed_frame = None
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+        self.last_process_start = None
+    
+    def _run(self):
+        while True:
+            if self.processing_frame is not None:
+                frame = self.processing_frame
+                self.last_process_start = time.time()
+                self.processed_frame = self._process_frame(frame)
+                log("FPS", 1 / (time.time() - self.last_process_start))
+                self.processing_frame = None
+
     def on_frame(self, frame):
-        processed_frame = self._process_frame(frame)
+        if self.processing_frame is None:
+            self.processing_frame = frame
 
         if self.show_filtered_frame:
-            return processed_frame
+            return self.processed_frame or frame
         else:
             return frame
     
