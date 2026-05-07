@@ -10,7 +10,7 @@ import {LedEditorComponent} from '../../components/led-editor/led-editor.compone
 
 
 @Component({
-  selector: 'app-dektop-flugmenu',
+    selector: 'app-dektop-flugmenu',
     imports: [
         TitelComponent,
         ConnectedDroneComponent,
@@ -19,8 +19,9 @@ import {LedEditorComponent} from '../../components/led-editor/led-editor.compone
         LedControlComponent,
         PathlistComponent
     ],
-  templateUrl: './dektop-flugmenu.component.html',
-  styleUrl: './dektop-flugmenu.component.css'
+    templateUrl: './dektop-flugmenu.component.html',
+    standalone: true,
+    styleUrl: './dektop-flugmenu.component.css'
 })
 export class DektopFlugmenuComponent {
 

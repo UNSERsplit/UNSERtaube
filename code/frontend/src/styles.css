@@ -26,6 +26,14 @@ body {
     margin: 0;
 }
 
+.mat-mdc-dialog-container .mdc-dialog__surface {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 

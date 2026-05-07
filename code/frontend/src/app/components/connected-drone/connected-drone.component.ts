@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import {Component, computed, effect, inject, Input, WritableSignal} from '@angular/core';
 import {StatusComponent} from '../status/status.component';
 import {Drone} from '../../../objects/drone';
 import {ButtonComponent, } from '../button/button.component';
@@ -6,6 +6,7 @@ import {ButtonVariants} from '../button/button.variants';
 import {CardComponent} from '../card/card.component';
 import {CardVariants} from '../card/card.variants';
 import { ControllerApiService } from '../../service/controller-api.service';
+import {DeviceService} from '../../service/device.service';
 
 @Component({
   selector: 'app-connected-drone',
@@ -20,6 +21,7 @@ import { ControllerApiService } from '../../service/controller-api.service';
 })
 export class ConnectedDroneComponent {
     private controller = inject(ControllerApiService);
+    isMobile: WritableSignal<boolean> = inject(DeviceService).isMobile;
 
     drone = computed(() => this.controller.drone()!)
 
@@ -29,7 +31,22 @@ export class ConnectedDroneComponent {
     protected  ButtonVariant = ButtonVariants.red;
     buttonContent: string = "Trennen";
     buttonWidth: string = '60rem';
+    buttonHeight: string = '';
 
+    ngOnInit() {
+        this.checkDevice();
+    }
+
+    checkDevice() {
+        if (this.isMobile()) {
+            this.buttonWidth = '25rem';
+        } else {
+            this.buttonWidth = '60rem';
+        }
+    }
+
+    @Input() setButtonWidth: string = '';
+    @Input() setButtonheight: string='';
     constructor() {
         effect(() => {
             if (this.isDroneConnected()) {
@@ -54,4 +71,5 @@ export class ConnectedDroneComponent {
     }
     flexdirection: string = 'row';
     protected readonly CardVariants = CardVariants;
+
 }
