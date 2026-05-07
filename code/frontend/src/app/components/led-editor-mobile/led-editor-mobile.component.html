@@ -1,0 +1,47 @@
+<div class="popup-panel" role="dialog" aria-label="LED Steuerung">
+
+    <div class="popup-header">
+        <span class="popup-title">LED STEUERUNG</span>
+        <button class="close-btn" (click)="close()" aria-label="Schließen">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <div class="popup-body">
+        <!-- LED Grid und Controls bleiben gleich... -->
+        <!-- LED Grid -->
+        <div class="grid-section">
+            <div class="led-grid">
+                <ng-container *ngFor="let row of leds; let rowIndex = index">
+                    <div
+                        *ngFor="let led of row; let colIndex = index"
+                        class="led"
+                        [class.active]="led.ledstatus !== 0"
+                        [style.background-color]="getLedColor(led.ledstatus)"
+                        [style.--glow-color]="getLedColor(led.ledstatus)"
+                        (click)="setLedColor(rowIndex, colIndex)">
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+
+        <!-- Sidebar: Farbe + Clear -->
+        <div class="controls-section">
+            <p class="label">FARBE</p>
+            <div class="color-row">
+                <div
+                    *ngFor="let c of colorCodes; let i = index"
+                    class="swatch"
+                    [class.selected]="selectedColor === i"
+                    [style.background]="c"
+                    (click)="selectedColor = i">
+                </div>
+            </div>
+
+            <button class="clear-btn" (click)="clearLeds()">
+                <mat-icon>layers_clear</mat-icon>
+                <span>Clear</span>
+            </button>
+        </div>
+    </div>
+</div>

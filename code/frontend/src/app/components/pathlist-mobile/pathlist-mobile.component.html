@@ -1,0 +1,33 @@
+<div class="dialog-header">
+    <h2>Flugprotokolle</h2>
+    <button class="close-btn" (click)="close()" aria-label="Schließen">✕</button>
+</div>
+
+<div class="flight-grid scrollbar-minimal" mat-dialog-content>
+    <div
+        class="flight-card"
+        *ngFor="let flight of droneFlights; let i = index"
+        (click)="replay(flight.id)">
+
+        <div class="flight-top">
+            <span class="index-badge">{{ i + 1 }}</span>
+            <div class="flight-name">
+                <h3>{{ flight.flugName }}</h3>
+                <p>{{ flight.name }} · {{ flight.ip }}</p>
+            </div>
+        </div>
+
+        <div class="flight-stats">
+            <div class="stat-item">
+                <span class="label">Dauer</span>
+                <span class="value">{{ flight.flugZeit }} s</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="label">Distanz</span>
+                <span class="value">{{ flight.flugDistanz }} m</span>
+            </div>
+        </div>
+
+    </div>
+</div>

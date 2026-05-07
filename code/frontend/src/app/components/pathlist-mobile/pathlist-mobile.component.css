@@ -1,0 +1,170 @@
+/* ── Host: füllt den MatDialog-Container ─────────────── */
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: #0f172a;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    flex-shrink: 0;
+
+    h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        color: #f8fafc;
+    }
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 50%;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+
+    &:active {
+        background: rgba(255, 255, 255, 0.16);
+        color: #f8fafc;
+    }
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+/* mat-dialog-content setzt margin/padding zurück */
+[mat-dialog-content] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* 2 Spalten im Landscape */
+    gap: 8px;
+    padding: 10px 12px !important;
+    margin: 0 !important;
+    max-height: unset !important;     /* MatDialog-Default überschreiben */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+}
+
+/* Portrait: 1 Spalte */
+@media screen and (orientation: portrait) {
+    [mat-dialog-content] {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Karte ────────────────────────────────────────────── */
+.flight-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 72px;
+
+    &:active {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+}
+
+.flight-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.index-badge {
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+.flight-name {
+    overflow: hidden;
+
+    h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    p {
+        margin: 2px 0 0;
+        color: #64748b;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.flight-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+
+    .label {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #475569;
+    }
+
+    .value {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #f8fafc;
+    }
+}
+
+.stat-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+.scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+
+    &::-webkit-scrollbar        { width: 4px; }
+    &::-webkit-scrollbar-track  { background: transparent; }
+    &::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.15); border-radius: 4px; }
+}
