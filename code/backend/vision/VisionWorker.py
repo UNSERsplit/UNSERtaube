@@ -66,10 +66,9 @@ class VisionWorker:
                 continue
             ellipselist.append(ellipse)
 
-        # while i in range(len(ellipselist)):
+        merged_ellipselist = self._check_mergeable_ellipses(ellipselist, original_frame.shape)
 
-
-        for ellipse in ellipselist:
+        for ellipse in merged_ellipselist:
             center, axes, angle = ellipse
             center = list(map(lambda x: int(x),list(center)))
             final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
@@ -138,33 +137,39 @@ class VisionWorker:
 
         return frame, raw_mask, ctns
 
-    def _check_mergeable_ellipses(self, ellipselist):
+    def _check_mergeable_ellipses(self, ellipselist, canvas_shape):
         new_ellipses = []
-        merged_ellipses = []
-        for ellipse1 in ellipselist:
-            for ellipse2 in ellipselist:
-                if ellipse1 == ellipse2:
+        used_ellipses = []
+        width, height, _ = canvas_shape
+        for i in range(len(ellipselist)):
+            if i in used_ellipses:
+                continue
+
+            found_merge = False
+            for j in range(i + 1, len(ellipselist)):
+                if j in used_ellipses:
                     continue
-                (x1, y1), (w1, h1), angle1 = ellipse1
-                (x2, y2), (w2, h2), angle2 = ellipse2
-                if x1 < x2:
-                    left = ellipse1
-                    right = ellipse2
-                else:
-                    left = ellipse2
-                    right = ellipse1
 
-                if abs(y1-y2)<40 and abs(angle1 + angle2 - 180) < 30:
-                    new_ellipse = self._merge_ellipses(ellipse1, ellipse2)
-                    if new_ellipse is not None:
-                        new_ellipses.append(new_ellipse)
-                        merged_ellipses.append(ellipse1)
-                        merged_ellipses.append(ellipse2)
+                e1 = ellipselist[i]
+                e2 = ellipselist[j]
 
-        for ellipse in merged_ellipses:
-            ellipselist.remove(ellipse)
-        for ellipse in ellipselist:
-            new_ellipses.append(ellipse)
+                (x1, y1), (w1, h1), angle1 = e1
+                (x2, y2), (w2, h2), angle2 = e2
+
+
+                if abs(y1 - y2) < 40 and abs(angle1 + angle2 - 180) < 30:
+                    merged = self._merge_ellipses(e1, e2, (width, height))
+
+                    if merged is not None:
+                        new_ellipses.append(merged)
+                        used_ellipses.append(i)
+                        used_ellipses.append(j)
+                        found_merge = True
+                        break # diesen schleifendurchgang beenden, da ja mit ellipse schon gemerged wurde
+
+
+            if not found_merge: # keine Merges gefunden:
+                new_ellipses.append(ellipselist[i])
 
         return new_ellipses
 
