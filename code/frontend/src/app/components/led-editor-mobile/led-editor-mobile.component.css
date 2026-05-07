@@ -1,0 +1,250 @@
+/* ── Overlay ── */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+/* ── Panel ── */
+.popup-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(96vw, 640px);
+    max-height: 90dvh;
+    background: var(--grey-card-color, #161b22);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Header ── */
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    flex-shrink: 0;
+}
+
+.popup-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #c9d1d9;
+    text-transform: uppercase;
+}
+
+.close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #8b949e;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #c9d1d9;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.close-btn mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* ── Body ── */
+.popup-body {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    gap: 12px;
+    padding: 12px 14px;
+    overflow: hidden;
+    flex: 1;
+}
+
+/* ── LED Grid ── */
+.grid-section {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.led-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+.led {
+    width: 28px;
+    height: 28px;
+    background: #21262d;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.led.active {
+    background-color: var(--glow-color);
+    box-shadow: 0 0 10px var(--glow-color), 0 0 4px var(--glow-color);
+}
+
+/* ── Controls ── */
+.controls-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 80px;
+}
+
+.label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #8b949e;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.color-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.swatch.selected {
+    border-color: rgba(255, 255, 255, 0.85);
+    transform: scale(1.15);
+}
+
+.clear-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(88, 166, 255, 0.12);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    color: #58a6ff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+
+.clear-btn:hover,
+.clear-btn:active {
+    background: rgba(88, 166, 255, 0.22);
+    border-color: rgba(88, 166, 255, 0.6);
+}
+
+.clear-btn mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+}
+
+/* ── Landscape Mobile (primary target) ── */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .popup-panel {
+        width: min(98vw, 580px);
+        max-height: 96dvh;
+        border-radius: 10px;
+    }
+
+    .popup-header {
+        padding: 5px 10px 5px 14px;
+    }
+
+    .popup-title {
+        font-size: 0.7rem;
+    }
+
+    .popup-body {
+        padding: 8px 12px;
+        gap: 10px;
+    }
+
+    .led-grid {
+        gap: 6px;
+        padding: 4px;
+    }
+
+    .led {
+        width: 24px;
+        height: 24px;
+    }
+
+    .swatch {
+        width: 24px;
+        height: 24px;
+    }
+
+    .color-row {
+        gap: 6px;
+    }
+
+    .clear-btn {
+        font-size: 0.65rem;
+        padding: 5px 8px;
+    }
+}
+
+/* ── Portrait fallback (Warnung / graceful degradation) ── */
+@media screen and (orientation: portrait) {
+    .popup-body {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .color-row {
+        flex-direction: row;
+    }
+
+    .controls-section {
+        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+}

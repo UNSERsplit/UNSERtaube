@@ -1,0 +1,16 @@
+<div class="container">
+    <app-titel class="titel" [fontsize]="titleFontSize" [margin]="titleMargin" ></app-titel>
+    <app-connected-drone-mobile  class="connectedDrone"></app-connected-drone-mobile>
+    <app-start-card class="start-card"></app-start-card>
+    <app-flypath class="flypath"></app-flypath>
+    <app-led-control class="led-control" (click)="openPopup()"></app-led-control>
+    <app-card class="pathlist" [width]="cwitdh" [flexdirection]="flexdirection" [variant]="CardVariants.lightGrey" [height]="cheight" (click)="openPathlist()">
+        <div class="content" >
+            <div class="miGfreitsKoaneNomenMeaAussuachn">
+                <span class="ledControl">Pathlist</span>
+            </div>
+        </div>
+    </app-card>
+
+</div>
+
