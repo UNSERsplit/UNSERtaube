@@ -8,13 +8,14 @@ import { Router } from '@angular/router';
 
 
 @Component({
-  selector: 'app-pathlist',
+    selector: 'app-pathlist',
     imports: [
         CardComponent,
         NgForOf
     ],
-  templateUrl: './pathlist.component.html',
-  styleUrl: './pathlist.component.css'
+    templateUrl: './pathlist.component.html',
+    standalone: true,
+    styleUrl: './pathlist.component.css'
 })
 export class PathlistComponent {
 

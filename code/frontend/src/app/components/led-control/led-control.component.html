@@ -1,8 +1,8 @@
-<app-card class="card" [width]="buttonWidth" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="buttonHeight" (click)="openPopup()">
+<app-card class="card" [width]="checkDeviceWitdh()" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="checkDeviceHeight()" (click)="openPopup()">
     <div class="content" >
         <div class="miGfreitsKoaneNomenMeaAussuachn">
             <span class="ledControl">LED-Control</span>
-            <span class="chooseMode">Choose Mode</span>
+            <span class="chooseMode">{{zweiterText}}</span>
         </div>
         <img src="led.png" alt="">
     </div>
