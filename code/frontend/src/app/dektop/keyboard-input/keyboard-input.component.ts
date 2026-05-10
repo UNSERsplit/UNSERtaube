@@ -34,10 +34,10 @@ export class KeyboardInputComponent implements OnInit, OnDestroy{
       const throttle = (this.keys()["Shift"] ? 100 : 0) + (this.keys()["Control"] ? -100 : 0)
       const roll = (this.keys()["a"] ? 100 : 0) + (this.keys()["d"] ? -100 : 0)
       const pitch = (this.keys()["w"] ? 100 : 0) + (this.keys()["s"] ? -100 : 0)
-      const yaw = (this.keys()["q"] ? 100 : 0) + (this.keys()["e"] ? -100 : 0)
+      const yaw = (this.keys()["q"] ? -100 : 0) + (this.keys()["e"] ? 100 : 0)
 
       this.controllerApi.send_rc(
-        yaw/2, pitch/2, roll/2, throttle/2
+        yaw, pitch, roll, throttle
       )
     })
   }

@@ -6,6 +6,7 @@ import threading
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 from video_writer import VideoWriter
 from vision.VisionWorker import VisionWorker
+from vision.VisionController import VisionController
 from dronemaster.connection import PathCalculation, CanvasWaypoints
 from websocket.ws_messages import *
 from websocket.webrtc import offer
@@ -112,6 +113,8 @@ class WsConnection:
         self.pathcalculation = PathCalculation()
         self.video_writer = VideoWriter()
         self.vision_worker = VisionWorker()
+        self.vision_controller = VisionController()
+        self.vision_enabled = True
         self.reader = None
 
     async def connect(self):
@@ -377,6 +380,11 @@ class WsConnection:
                         await self.send(DebugCommandAnswer(answer=response))
                     else:
                         self.drone.connection.send_message_noanswer(data.command)
+                
+                case SetRingMode():
+                    self.assertDrone()
+                    self.vision_enabled = data.enabled
+                    
 
 
         except TimeoutError as e:
@@ -389,6 +397,12 @@ class WsConnection:
             await self.send(Error(context=list(e.args), traceback=tr))
         finally:
             session.close()
+
+    def on_position(self, framex, framey, frame_shape, width, height):
+        log("POS", framex, framey, width, height)
+        if self.vision_enabled:
+            self.vision_controller.updateTarget(framex, framey, frame_shape, width, height)
+            self.vision_controller.tickMove()
 
     def assertDrone(self):
         if not self.drone:

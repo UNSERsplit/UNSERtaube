@@ -56,6 +56,10 @@ class DebugFineTuneVision(ServerBoundMessage):
 class ServerBoundKeepAlive(ServerBoundMessage):
     type: Literal["keepalive"]
 
+class SetRingMode(ServerBoundMessage):
+    type: Literal["setringmode"]
+    enabled: bool
+
 class FunkiMessage(ServerBoundMessage):
     type: Literal["rc"]
     yaw: float

@@ -20,8 +20,11 @@ class VisionWorker:
         self.processing_frame = None
         self.processed_frame = None
         self.thread = threading.Thread(target=self._run, daemon=True)
-        self.thread.start()
+        #self.thread.start()
         self.last_process_start = None
+
+    def on_position(self, framex, framey, frame_shape, width, height):
+        pass
     
     def _run(self):
         while True:
