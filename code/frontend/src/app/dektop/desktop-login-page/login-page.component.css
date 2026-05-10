@@ -51,4 +51,5 @@ app-status{
     display: flex;
     justify-content: start;
     align-items: start;
+    font-size: 16px;
 }

@@ -1,7 +1,9 @@
 <div class="container">
-    <app-status ></app-status>
-    <app-titel class="header" [margin]="5"></app-titel>
-    <div></div>
+    <div class="top-bar">
+        <app-status [fontsize]="16"></app-status>
+        <app-titel class="header" [fontsize]=48 [margin]="3"></app-titel>
+    </div>
+
     <app-card class="card" [width]="buttonWidth" [height]="buttonHeight">
         <h2 class="title">Verbindung</h2>
         <app-input-header headerText="NAME DER DROHNE" placeHolderText1="Hons" icon1="#" [(value)]="name"></app-input-header>
@@ -10,5 +12,4 @@
     </app-card>
 
     <app-drone-carousel class="carousel-container"></app-drone-carousel>
-
 </div>

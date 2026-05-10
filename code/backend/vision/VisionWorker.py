@@ -4,6 +4,8 @@ import threading
 import time
 from dronemaster.connection import log
 
+#showDebugHud.set(true)
+
 class VisionWorker:
     def __init__(self) -> None:
         self.show_filtered_frame = False
@@ -40,7 +42,9 @@ class VisionWorker:
             self.processing_frame = frame
 
         if self.show_filtered_frame:
-            return self.processed_frame or frame
+            if self.processed_frame is not None:
+                return self.processed_frame
+            return np.zeros_like(frame)
         else:
             return frame
     
@@ -51,10 +55,11 @@ class VisionWorker:
         #mask = self._canny(mask)
         #return cv2.bitwise_and(original_frame, original_frame, mask=mask)
         frame, mask, contours = self._find_contours(frame, mask)
-        
+
         final = original_frame
         original_frame = original_frame.copy()
 
+        ellipselist = []
         for contour in contours:
             if len(contour) < 5:
                 continue
@@ -62,6 +67,11 @@ class VisionWorker:
             area = cv2.contourArea(contour)
             if area < 2000:
                 continue
+            ellipselist.append(ellipse)
+
+        merged_ellipselist = self._check_mergeable_ellipses(ellipselist, original_frame.shape)
+
+        for ellipse in merged_ellipselist:
             center, axes, angle = ellipse
             center = list(map(lambda x: int(x),list(center)))
             final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
@@ -129,24 +139,60 @@ class VisionWorker:
         ctns = cv2.findContours(raw_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]  # Find contours
 
         return frame, raw_mask, ctns
-    
-    def _merge_ellipses(self, e1, e2, final):
-        mask = np.zeros((500, 500), dtype=np.uint8)
-        cv2.ellipse(mask, e1, 255, -1) # type: ignore
+
+    def _check_mergeable_ellipses(self, ellipselist, canvas_shape):
+        new_ellipses = []
+        used_ellipses = []
+        width, height, _ = canvas_shape
+        for i in range(len(ellipselist)):
+            if i in used_ellipses:
+                continue
+
+            found_merge = False
+            for j in range(i + 1, len(ellipselist)):
+                if j in used_ellipses:
+                    continue
+
+                e1 = ellipselist[i]
+                e2 = ellipselist[j]
+
+                (x1, y1), (w1, h1), angle1 = e1
+                (x2, y2), (w2, h2), angle2 = e2
+
+
+                if abs(y1 - y2) < 40 and abs(angle1 + angle2 - 180) < 30:
+                    merged = self._merge_ellipses(e1, e2, (width, height))
+
+                    if merged is not None:
+                        new_ellipses.append(merged)
+                        used_ellipses.append(i)
+                        used_ellipses.append(j)
+                        found_merge = True
+                        break # diesen schleifendurchgang beenden, da ja mit ellipse schon gemerged wurde
+
+
+            if not found_merge: # keine Merges gefunden:
+                new_ellipses.append(ellipselist[i])
+
+        return new_ellipses
+
+
+    def _merge_ellipses(self, e1, e2, canvas_shape):
+
+        mask = np.zeros(canvas_shape, dtype=np.uint8)
+
+        cv2.ellipse(mask, e1, 255, -1)
         cv2.ellipse(mask, e2, 255, -1)
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) # Konturen der beiden Ellipsen herausfiltern
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 5. Fit a new ellipse to the combined contours
-        if len(contours) > 0:
-            # Combine all points from all contours found
+        if contours:
+            # Alle Konturpunkte aller gefundenen Inseln zusammenfassen
             all_points = np.vstack(contours)
-            if len(all_points) >= 5: # Need at least 5 points to fit an ellipse
-                new_ellipse = cv2.fitEllipse(all_points)
-                
-                # 6. Draw the new combined ellipse
-                combined = cv2.ellipse(final, new_ellipse, (0, 255, 0), 2)
-                cv2.ellipse(img, e1, (255,0,0),2)
-                cv2.ellipse(img, e2, (255,0,0),2)
 
-        return
+            # 4. FitEllipse benötigt mindestens 5 Punkte
+            if len(all_points) >= 5:
+                new_ellipse = cv2.fitEllipse(all_points)
+                return new_ellipse
+
+        return None

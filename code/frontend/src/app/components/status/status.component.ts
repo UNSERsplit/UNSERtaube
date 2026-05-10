@@ -11,12 +11,13 @@ const LOOKUP = {
 }
 
 @Component({
-  selector: 'app-status',
+    selector: 'app-status',
     imports: [
         FormsModule
     ],
-  templateUrl: './status.component.html',
-  styleUrl: './status.component.css', standalone: true
+    templateUrl: './status.component.html',
+    standalone: true,
+    styleUrl: './status.component.css'
 })
 export class StatusComponent {
   controllerApi = inject(ControllerApiService)

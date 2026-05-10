@@ -1,9 +1,9 @@
-<app-card class="card" [width]="buttonWidth" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="buttonHeight">
+<app-card class="card" [width]="checkDeviceWitdh()" [flexdirection]="flexdirection" [shadow]="shadow" [variant]="CardVariants.grey" [height]="checkDeviceHeight()">
     <div class="content">
         <img src="droneList/droneIcon.png" alt="miGfreitsKoaneNomenMeaAussuachn">
         <div class="miGfreitsKoaneNomenMeaAussuachn">
-            <span class="autonomesfliegen">Autonomesfliegen</span>
-            <span class="ringeerkennen">Ringe erkennen</span>
+            <span class="autonomesfliegen">Autonomes-Fliegen</span>
+            <span class="ringeerkennen">{{ zweiterText }}</span>
         </div>
 
     </div>

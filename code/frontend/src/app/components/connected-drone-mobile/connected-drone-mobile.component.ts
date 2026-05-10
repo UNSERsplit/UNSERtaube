@@ -1,27 +1,25 @@
 import {Component, computed, effect, inject, Input, WritableSignal} from '@angular/core';
-import {StatusComponent} from '../status/status.component';
-import {Drone} from '../../../objects/drone';
-import {ButtonComponent, } from '../button/button.component';
-import {ButtonVariants} from '../button/button.variants';
-import {CardComponent} from '../card/card.component';
-import {CardVariants} from '../card/card.variants';
-import { ControllerApiService } from '../../service/controller-api.service';
+import {ControllerApiService} from '../../service/controller-api.service';
 import {DeviceService} from '../../service/device.service';
+import {ButtonVariants} from '../button/button.variants';
+import {ButtonComponent} from '../button/button.component';
+import {CardComponent} from '../card/card.component';
+import {StatusComponent} from '../status/status.component';
+import {CardVariants} from '../card/card.variants';
 
 @Component({
-  selector: 'app-connected-drone',
+    selector: 'app-connected-drone-mobile',
     imports: [
-        StatusComponent,
         ButtonComponent,
         CardComponent,
+        StatusComponent
     ],
-  templateUrl: './connected-drone.component.html',
-  styleUrl: './connected-drone.component.css',
-    standalone:true
+    templateUrl: './connected-drone-mobile.component.html',
+    standalone: true,
+    styleUrl: './connected-drone-mobile.component.css'
 })
-export class ConnectedDroneComponent {
+export class ConnectedDroneMobileComponent {
     private controller = inject(ControllerApiService);
-    isMobile: WritableSignal<boolean> = inject(DeviceService).isMobile;
 
     drone = computed(() => this.controller.drone()!)
 
@@ -30,20 +28,8 @@ export class ConnectedDroneComponent {
 
     protected  ButtonVariant = ButtonVariants.red;
     buttonContent: string = "Trennen";
-    buttonWidth: string = '60rem';
-    buttonHeight: string = '';
-
-    ngOnInit() {
-        this.checkDevice();
-    }
-
-    checkDevice() {
-        if (this.isMobile()) {
-            this.buttonWidth = '25rem';
-        } else {
-            this.buttonWidth = '60rem';
-        }
-    }
+    buttonWidth: string = '15rem';
+    buttonHeight: string = '3rem';
 
     @Input() setButtonWidth: string = '';
     @Input() setButtonheight: string='';
@@ -71,5 +57,4 @@ export class ConnectedDroneComponent {
     }
     flexdirection: string = 'row';
     protected readonly CardVariants = CardVariants;
-
 }
