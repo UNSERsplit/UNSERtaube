@@ -1,74 +1,48 @@
+import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from websocket_mgr import WebsocketManager
-from routes.drone import drone_router
-from routes.route import routes_router
-from database import create_tables
-from pydantic import ValidationError
-from websocket.ws_messages import IncommingMessage
-from websocket.openapi_messages import MsgServerDef, MsgClientDef
-import os
+import time
+
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 
 import dronemaster
+from async_thread import AsyncThread
+
+import routes.live as live
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(f"using network {os.environ['EXTERNAL_IP']}")
-    dronemaster.start()
+    await dronemaster.start()
+    background_task = AsyncThread(target=keepalive)
+    background_task.start()
     yield
-    dronemaster.stop()
-    manager.stop()
+    background_task.close()
+    await dronemaster.stop()
+
+async def keepalive():
+    while True:
+        if live.drone:
+            try:
+                await live.drone.keepalive()
+            except TimeoutError:
+                print("Drone died")
+                live.drone = None
+        await asyncio.sleep(10)
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(drone_router)
-app.include_router(routes_router)
+app.include_router(live.live_router)
 
-manager = WebsocketManager()
+@app.middleware("http")
+async def ensure_drone(request: Request, call_next):
+    if request.method == "POST" and request.url.path != "/live/connect" and request.url.path.startswith("/live"):
+        if live.drone is None:
+            return PlainTextResponse(status_code=404, content="Drone not connected")
 
-@app.websocket("/ws")
-async def websocket(ws: WebSocket):
-    await ws.accept()
-    await manager.connnect(ws)
-    
+    start_time = time.perf_counter()
     try:
-        while True:
-            data = await ws.receive_text()
-            try:
-                message = IncommingMessage.validate_json(data)
-            except ValidationError as e:
-                await ws.send_json({"type":"validation_error", "context": e.errors()})
-                continue
-            
-            await manager.on_message(ws, message)
-    except WebSocketDisconnect as e:
-        await manager.disconnect(ws)
-
-def append_ws_schemas():
-  from fastapi.openapi.utils import get_openapi
-  from fastapi.openapi.constants import REF_TEMPLATE
-
-  if app.openapi_schema:
-    return app.openapi_schema
-  
-  openapi_schema = get_openapi(
-    title=app.title,
-    version=app.version,
-    summary=app.summary,
-    description=app.description,
-    routes=app.routes,
-    servers=app.servers
-  )
-  
-  extras = {
-      "serverbound": {**MsgClientDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All serverbound websocket messages, look under $defs"},
-      "clientbound": {**MsgServerDef.model_json_schema(ref_template=REF_TEMPLATE, by_alias=False), "description": "All clientbound websocket messages, look under $defs"}
-  }
-
-  openapi_schema["components"]["schemas"].update(extras)
-  app.openapi_schema = openapi_schema
-
-  return app.openapi_schema
-
-app.openapi = append_ws_schemas
-
-create_tables()
+        response = await call_next(request)
+    except Exception as e:
+        response = PlainTextResponse(status_code=500, content=str(e))
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
