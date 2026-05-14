@@ -5,10 +5,13 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 import subprocess
 import os
+from time import time
 
 from models.recording import Recording
 
 from database import DB
+
+from . import live
 
 def to_path(uuid: uuid.UUID) -> str:
     return os.path.join(f"videos/{uuid.hex}.mp4")
@@ -18,12 +21,16 @@ class Recorder:
         self.uuid = uuid
         self.filename = to_path(uuid)
         self.process = None
+        self.start_time = 0
+        self.stop_time = 0
 
     def start(self):
+        self.start_time = time()
         self.process = subprocess.Popen(["ffmpeg", "-i", "rtsp://localhost:8554/camera", "-c", "copy", "-map", "0", self.filename], stdin=subprocess.PIPE)
 
     def stop(self):
         if self.process:
+            self.stop_time = time()
             try:
                 self.process.communicate(input=b'q', timeout=5)
             except subprocess.TimeoutExpired:
@@ -49,6 +56,8 @@ def start() -> uuid.UUID:
     recorder = Recorder(uuid.uuid4())
     recorder.start()
 
+    live.drone.record_commands()
+
     return recorder.uuid
 
 @recording_router.post("/save")
@@ -59,13 +68,17 @@ def save(db: DB, name: str):
     
     recorder.stop()
 
+    commands = live.drone.stop_recording_commands()
+    print("Commands:", len(commands)) # TODO save
+
     recording = Recording(
         id=recorder.uuid,
         name=name,
-        drone_id=None,
-        duration=999,
-        distance=100
+        drone_id=None, # TODO use real
+        duration=recorder.stop_time - recorder.start_time,
+        distance=live.state_computation.distance
     )
+
     recorder = None
     
     
@@ -81,6 +94,8 @@ def stop() -> str:
     if recorder is not None:
         recorder.stop()
     
+    live.drone.stop_recording_commands()
+    
     return "ok"
 
 @recording_router.post("/discard")
@@ -88,6 +103,8 @@ def discard() -> str:
     global recorder
     if recorder is not None:
         recorder.discard()
+    
+    live.drone.stop_recording_commands()
     
     return "ok"
 

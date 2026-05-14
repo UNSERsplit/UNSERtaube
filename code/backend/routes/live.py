@@ -4,36 +4,27 @@ from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 import asyncio
 
 import dronemaster
+from state_computation import StateComputation
 
 drone: dronemaster.Drone = None # type: ignore
+state_computation: StateComputation = None # type: ignore
 
 live_router = APIRouter(prefix="/live")
 
 @live_router.post("/connect")
 async def connect(request: Request, ip: str = "10.242.206.235"):
-    global drone
+    global drone, state_computation
     drone = dronemaster.Drone(ip)
     await drone.initialize()
     await drone.streamon()
     drone.on_state = on_state
+    state_computation = StateComputation()
     return "OK"
 
 @live_router.post("/command")
 async def command(command: str, wait: bool):
     global drone
     return await drone.debug_command(command, wait_for_answer=wait)
-
-@live_router.post("/start_command_recoding")
-async def start_command_recoding():
-    global drone
-    drone.record_commands()
-    return "OK"
-
-@live_router.post("/stop_command_recoding")
-async def stop_command_recoding():
-    global drone
-    return drone.stop_recording_commands()
-
 
 @live_router.post("/replay")
 async def replay_commands(data: List[Tuple[float, str, List[Any], Dict[str, Any]]]):
@@ -177,11 +168,14 @@ async def status(ws: WebSocket):
 
 async def on_state(state: dict):
     remove = []
+
+    state = state_computation.on_state(state) # type: ignore
+
     for ws in websockets:
         try:
             await ws.send_json(state)
         except Exception as e:
-            print(e)
+            #print(e)
             remove.append(ws)
 
     for ws in remove:

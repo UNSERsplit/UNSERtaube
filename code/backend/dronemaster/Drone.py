@@ -9,12 +9,15 @@ def limit(v: float, min: float, max: float):
         raise ValueError(f"{v} must be in range of [{min},{max}]")
 
 class CommandRecorder:
+    allowed_commands = []
+
     def __init__(self):
+        print(CommandRecorder.allowed_commands)
         self.commands = []
         self.enabled = False
         self.last_command_time = None
 
-    def command(self, command: str, args: List[str], kwargs: Dict[str, Any]):
+    def command(self, command: str, args: Sequence[Any], kwargs: Dict[str, Any]):
         if not self.enabled:
             return
 
@@ -28,11 +31,13 @@ class CommandRecorder:
         self.commands.append((delay, command, args, kwargs))
 
 class record:
-    def __init__(self):
+    def __init__(self, id: int):
         pass
 
     def __call__(self, func):
-        def f(self2, *args, **kwargs):
+        CommandRecorder.allowed_commands.append(func.__name__)
+
+        def f(self2: Module, *args, **kwargs):
             self2.drone.command_recorder.command(func.__name__, args, kwargs)
             return func(self2, *args)
 
@@ -44,7 +49,7 @@ class Drone:
         self.flight = Flight(self)
         self.rgb = RGBLed(self)
         self.matrix = Matrix(self)
-        self.last_state = {}
+        self.last_state: Dict[str, Any] = {}
         self.command_recorder: CommandRecorder = CommandRecorder()
 
     def record_commands(self):
@@ -59,7 +64,12 @@ class Drone:
         return await l.protocol.send_action(action, self.ip)
 
     async def _on_state(self, state: dict):
-        self.last_state = state.update({"last_update": time()})
+        if "last_update" in self.last_state:
+            delta = time() - self.last_state["last_update"]
+        else:
+            delta = 0
+        state.update({"last_update": time(), "delta": delta})
+        self.last_state = state
         await self.on_state(state)
 
     async def on_state(self, state: dict):
@@ -176,7 +186,9 @@ class Module:
         return await self.drone.action(action)
 
 class Flight(Module):
-    @record()
+    @record(
+            id=0x1
+    )
     async def takeoff(self):
         await self.action(RepeatAction(
             command="takeoff",
@@ -185,7 +197,6 @@ class Flight(Module):
             timeout=20
         ))
 
-    @record()
     async def forward(self, dist: int, timeout: float = 5):
         """dist forward in cm [20-500]"""
         limit(dist, 20, 500)
@@ -196,7 +207,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def back(self, dist: int, timeout: float = 5):
         """dist backwards in cm [20-500]"""
         limit(dist, 20, 500)
@@ -207,7 +217,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def up(self, dist: int, timeout: float = 5):
         """dist upwards in cm [20-500]"""
         limit(dist, 20, 500)
@@ -218,7 +227,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def down(self, dist: int, timeout: float = 5):
         """dist downwards in cm [20-500]"""
         limit(dist, 20, 500)
@@ -229,7 +237,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def left(self, dist: int, timeout: float = 5):
         """dist left in cm [20-500]"""
         limit(dist, 20, 500)
@@ -240,7 +247,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def right(self, dist: int, timeout: float = 5):
         """dist right in cm [20-500]"""
         limit(dist, 20, 500)
@@ -251,7 +257,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def clockwise(self, angle: int, timeout: float = 5):
         """rotate angle degrees clockwise [1-360]"""
         limit(angle, 1, 360)
@@ -262,7 +267,6 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
     async def counterclockwise(self, angle: int, timeout: float = 5):
         """rotate angle degrees counterclockwise [1-360]"""
         limit(angle, 1, 360)
@@ -273,7 +277,9 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
+    @record(
+            id=0x2
+    )
     async def land(self):
         await self.action(RepeatAction(
             command="land",
@@ -282,7 +288,9 @@ class Flight(Module):
             timeout=20
         ))
 
-    @record()
+    @record(
+            id=0x3
+    )
     async def stop(self):
         await self.action(RepeatAction(
             command="stop",
@@ -291,7 +299,9 @@ class Flight(Module):
             timeout=5
         ))
 
-    @record()
+    @record(
+            id=0x4
+    )
     async def emergency(self):
         await self.action(RetryAction(
             command="emergency",
@@ -319,7 +329,9 @@ class Flight(Module):
             timeout=1
         ))
 
-    @record()
+    @record(
+            id=0x5
+    )
     async def flip(self, direction: str, timeout: float = 5):
         """flip in direction l r f b"""
         if direction not in ("l", "r", "f", "b"):
@@ -332,7 +344,9 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record()
+    @record(
+            id=0x6
+    )
     def rc(self, roll: int, pitch: int, throttle: int, yaw: int):
         limit(roll, -100, 100)
         limit(pitch, -100, 100)
