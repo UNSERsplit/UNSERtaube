@@ -2,3 +2,5 @@ taube_rsa
 .env
 videos
 __pycache__
+
+*.db

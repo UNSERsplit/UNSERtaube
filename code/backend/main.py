@@ -4,14 +4,19 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 import dronemaster
 from async_thread import AsyncThread
 
 import routes.live as live
+import routes.recording as recording
+import routes.drone as drone
+from database import create_tables, DB
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    create_tables()
     await dronemaster.start()
     background_task = AsyncThread(target=keepalive)
     background_task.start()
@@ -30,7 +35,14 @@ async def keepalive():
         await asyncio.sleep(10)
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(live.live_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.middleware("http")
 async def ensure_drone(request: Request, call_next):
@@ -46,3 +58,7 @@ async def ensure_drone(request: Request, call_next):
     process_time = time.perf_counter() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+app.include_router(live.live_router)
+app.include_router(recording.recording_router)
+app.include_router(drone.drone_router)

@@ -36,15 +36,15 @@
 
         <div class="popup-actions">
             <!-- Aufnahme verwerfen → stoppt ohne zu speichern -->
-            <button class="popup-btn discard" (click)="discardRecording()">
+            <button class="popup-btn cancel" (click)="closePopups()">
                 <span class="btn-icon">✕</span>
-                Abbrechen
+                Zurück
             </button>
 
             <!-- Weiter zu Popup 2 (Speichern + Videovorschau) -->
             <button class="popup-btn save" (click)="openSavePopup()">
                 <span class="btn-icon">↓</span>
-                Speichern
+                Beenden
             </button>
         </div>
 
@@ -83,7 +83,7 @@
 
         <div class="popup-actions">
             <!-- Zurück ohne zu speichern -->
-            <button class="popup-btn discard" (click)="closePopups()">Abbrechen</button>
+            <button class="popup-btn discard" (click)="discardRecording()">Verwerfen</button>
 
             <!-- Speichern – deaktiviert solange kein Name eingegeben wurde -->
             <button class="popup-btn save" (click)="saveRecording()" [disabled]="!recordingName.trim()">

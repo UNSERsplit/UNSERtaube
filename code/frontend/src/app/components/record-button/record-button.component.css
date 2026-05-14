@@ -282,13 +282,13 @@
     transform: scale(0.97);
 }
 
-.popup-btn.discard {
+.popup-btn.cancel {
     background: rgba(255, 255, 255, 0.07);
     color: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.popup-btn.discard:hover {
+.popup-btn.cancel:hover {
     background: rgba(255, 255, 255, 0.12);
 }
 
@@ -305,6 +305,16 @@
     opacity: 0.35;
     cursor: not-allowed;
 }
+
+.popup-btn.discard {
+    background: var(--red-button-color);
+    color: #fff;
+}
+
+.popup-btn.discard:hover {
+    filter: brightness(1.1);
+}
+
 
 .btn-icon {
     font-size: 12px;
