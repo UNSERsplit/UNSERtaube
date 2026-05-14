@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional
 import uuid
 
@@ -8,18 +9,21 @@ import os
 from time import time
 
 from models.recording import Recording
-
 from database import DB
+from BinaryRecorder import BinaryRecorder
 
 from . import live
 
-def to_path(uuid: uuid.UUID) -> str:
+def to_video_path(uuid: uuid.UUID) -> str:
     return os.path.join(f"videos/{uuid.hex}.mp4")
+
+def to_flight_path(uuid: uuid.UUID) -> str:
+    return os.path.join(f"paths/{uuid.hex}.path")
 
 class Recorder:
     def __init__(self, uuid: uuid.UUID) -> None:
         self.uuid = uuid
-        self.filename = to_path(uuid)
+        self.filename = to_video_path(uuid)
         self.process = None
         self.start_time = 0
         self.stop_time = 0
@@ -56,7 +60,7 @@ def start() -> uuid.UUID:
     recorder = Recorder(uuid.uuid4())
     recorder.start()
 
-    live.drone.record_commands()
+    live.drone.record_commands(BinaryRecorder())
 
     return recorder.uuid
 
@@ -69,7 +73,9 @@ def save(db: DB, name: str):
     recorder.stop()
 
     commands = live.drone.stop_recording_commands()
-    print("Commands:", len(commands)) # TODO save
+
+    with open(to_flight_path(recorder.uuid), "wb") as f:
+        f.write(commands)
 
     recording = Recording(
         id=recorder.uuid,
@@ -108,6 +114,34 @@ def discard() -> str:
     
     return "ok"
 
+@recording_router.post("/replay/{id}")
+async def replay(db: DB, id: uuid.UUID):
+    obj = db.scalar(select(Recording).where(Recording.id == id))
+    if obj is None:
+        raise HTTPException(status_code=404, detail="Recording not found")
+    
+    path = to_flight_path(id)
+
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Flight path not found")
+    
+    data = None
+
+    with open(path, "rb") as f:
+        data = f.read()
+    
+    if not live.drone:
+        raise HTTPException(status_code=404, detail="Drone not connected")
+    
+    for delay, cmd, args in BinaryRecorder.decode_commands(data):
+        await asyncio.sleep(delay)
+        func = live.drone.flight.__getattribute__(cmd)
+        ret = func(*args)
+        if ret is not None:
+            await ret
+    
+    return "OK"
+
 @recording_router.get("/")
 def get_all(db: DB):
     return db.scalars(select(Recording)).all()
@@ -126,7 +160,11 @@ def delete_by_id(db: DB, id: uuid.UUID):
     db.delete(obj)
     db.commit()
 
-    path = to_path(id)
+    path = to_video_path(id)
+    if os.path.exists(path):
+        os.remove(path)
+    
+    path = to_flight_path(id)
     if os.path.exists(path):
         os.remove(path)
 

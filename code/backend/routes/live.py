@@ -26,18 +26,6 @@ async def command(command: str, wait: bool):
     global drone
     return await drone.debug_command(command, wait_for_answer=wait)
 
-@live_router.post("/replay")
-async def replay_commands(data: List[Tuple[float, str, List[Any], Dict[str, Any]]]):
-    global drone
-    for entry in data:
-        delay, cmd, args, kwargs = entry
-        print(delay, cmd, args, kwargs)
-        await asyncio.sleep(delay)
-        func = drone.flight.__getattribute__(cmd)
-        ret = func(*args, **kwargs)
-        if ret is not None:
-            await ret
-
 flight_router = APIRouter(prefix="/flight")
 
 @flight_router.post("/takeoff")

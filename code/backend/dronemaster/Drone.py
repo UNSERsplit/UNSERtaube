@@ -12,12 +12,10 @@ class CommandRecorder:
     allowed_commands = []
 
     def __init__(self):
-        print(CommandRecorder.allowed_commands)
-        self.commands = []
         self.enabled = False
         self.last_command_time = None
 
-    def command(self, command: str, args: Sequence[Any], kwargs: Dict[str, Any]):
+    def _command(self, command: str, args: Sequence[Any], kwargs: Dict[str, Any]):
         if not self.enabled:
             return
 
@@ -28,17 +26,24 @@ class CommandRecorder:
         else:
             delay = 0
         self.last_command_time = now
-        self.commands.append((delay, command, args, kwargs))
+
+        self.command(delay, command, args, kwargs)
+    
+    def command(self, delay: float, command: str, args: Sequence[Any], kwargs: Dict[str, Any]):
+        pass
+
+    def stop_and_return(self) -> Any:
+        pass
 
 class record:
-    def __init__(self, id: int):
+    def __init__(self):
         pass
 
     def __call__(self, func):
         CommandRecorder.allowed_commands.append(func.__name__)
 
         def f(self2: Module, *args, **kwargs):
-            self2.drone.command_recorder.command(func.__name__, args, kwargs)
+            self2.drone.command_recorder._command(func.__name__, args, kwargs)
             return func(self2, *args)
 
         return f
@@ -52,13 +57,13 @@ class Drone:
         self.last_state: Dict[str, Any] = {}
         self.command_recorder: CommandRecorder = CommandRecorder()
 
-    def record_commands(self):
-        self.command_recorder = CommandRecorder()
+    def record_commands(self, recorder: CommandRecorder):
+        self.command_recorder = recorder
         self.command_recorder.enabled = True
 
     def stop_recording_commands(self):
         self.command_recorder.enabled = False
-        return self.command_recorder.commands
+        return self.command_recorder.stop_and_return()
 
     async def action(self, action: Action):
         return await l.protocol.send_action(action, self.ip)
@@ -186,9 +191,7 @@ class Module:
         return await self.drone.action(action)
 
 class Flight(Module):
-    @record(
-            id=0x1
-    )
+    @record()
     async def takeoff(self):
         await self.action(RepeatAction(
             command="takeoff",
@@ -277,9 +280,7 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record(
-            id=0x2
-    )
+    @record()
     async def land(self):
         await self.action(RepeatAction(
             command="land",
@@ -288,9 +289,7 @@ class Flight(Module):
             timeout=20
         ))
 
-    @record(
-            id=0x3
-    )
+    @record()
     async def stop(self):
         await self.action(RepeatAction(
             command="stop",
@@ -299,9 +298,7 @@ class Flight(Module):
             timeout=5
         ))
 
-    @record(
-            id=0x4
-    )
+    @record()
     async def emergency(self):
         await self.action(RetryAction(
             command="emergency",
@@ -329,9 +326,7 @@ class Flight(Module):
             timeout=1
         ))
 
-    @record(
-            id=0x5
-    )
+    @record()
     async def flip(self, direction: str, timeout: float = 5):
         """flip in direction l r f b"""
         if direction not in ("l", "r", "f", "b"):
@@ -344,9 +339,7 @@ class Flight(Module):
             timeout=timeout
         ))
 
-    @record(
-            id=0x6
-    )
+    @record()
     def rc(self, roll: int, pitch: int, throttle: int, yaw: int):
         limit(roll, -100, 100)
         limit(pitch, -100, 100)
