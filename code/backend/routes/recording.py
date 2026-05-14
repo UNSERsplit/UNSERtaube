@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional
+from typing import Iterable, Optional
 import uuid
 
 from fastapi import APIRouter, HTTPException
@@ -9,6 +9,7 @@ import os
 from time import time
 
 from models.recording import Recording
+from schemas.recording import Recording as RecordingDTO
 from database import DB
 from BinaryRecorder import BinaryRecorder
 
@@ -51,8 +52,10 @@ recording_router = APIRouter(prefix="/recording")
 
 recorder: Optional[Recorder] = None
 
-@recording_router.post("/start")
+@recording_router.post("/start", responses={404: {"model": str}})
 def start() -> uuid.UUID:
+    if not live.drone:
+        raise HTTPException(status_code=404, detail="Drone not connected")
     global recorder
     if recorder is not None:
         recorder.discard()
@@ -64,11 +67,11 @@ def start() -> uuid.UUID:
 
     return recorder.uuid
 
-@recording_router.post("/save")
-def save(db: DB, name: str):
+@recording_router.post("/save", responses={404: {"model": str}})
+def save(db: DB, name: str) -> RecordingDTO:
     global recorder
-    if recorder is None:
-        return None
+    if not live.drone or recorder is None:
+        raise HTTPException(status_code=404, detail="Drone not connected or not recording")
     
     recorder.stop()
 
@@ -80,7 +83,7 @@ def save(db: DB, name: str):
     recording = Recording(
         id=recorder.uuid,
         name=name,
-        drone_id=None, # TODO use real
+        drone_id=live.db_drone.id,
         duration=recorder.stop_time - recorder.start_time,
         distance=live.state_computation.distance
     )
@@ -92,9 +95,9 @@ def save(db: DB, name: str):
     db.commit()
     db.refresh(recording)
 
-    return recording
+    return recording # type: ignore
 
-@recording_router.post("/stop")
+@recording_router.post("/stop", responses={404: {"model": str}})
 def stop() -> str:
     global recorder
     if recorder is not None:
@@ -104,7 +107,7 @@ def stop() -> str:
     
     return "ok"
 
-@recording_router.post("/discard")
+@recording_router.post("/discard", responses={404: {"model": str}})
 def discard() -> str:
     global recorder
     if recorder is not None:
@@ -116,8 +119,8 @@ def discard() -> str:
 
 replay_allowed = True
 
-@recording_router.post("/replay/stop")
-async def stop_replay():
+@recording_router.post("/replay/stop", responses={404: {"model": str}})
+async def stop_replay() -> str:
     global replay_allowed
     replay_allowed = False
 
@@ -125,8 +128,8 @@ async def stop_replay():
 
     return "Stopped"
 
-@recording_router.post("/replay/{id}")
-async def replay(db: DB, id: uuid.UUID):
+@recording_router.post("/replay/{id}", responses={404: {"model": str}})
+async def replay(db: DB, id: uuid.UUID) -> str:
     global replay_allowed
     obj = db.scalar(select(Recording).where(Recording.id == id))
     if obj is None:
@@ -158,16 +161,19 @@ async def replay(db: DB, id: uuid.UUID):
     return "OK"
 
 @recording_router.get("/")
-def get_all(db: DB):
-    return db.scalars(select(Recording)).all()
+def get_all(db: DB) -> Iterable[RecordingDTO]:
+    return db.scalars(select(Recording)).all() # type: ignore
 
 
-@recording_router.get("/{id}")
-def get_by_id(db: DB, id: uuid.UUID):
-    return db.scalar(select(Recording).where(Recording.id == id))
+@recording_router.get("/{id}", responses={404: {"model": str}})
+def get_by_id(db: DB, id: uuid.UUID) -> RecordingDTO:
+    obj = db.scalar(select(Recording).where(Recording.id == id))
+    if not obj:
+        raise HTTPException(status_code=404, detail="Recording not found")
+    return obj # type: ignore
 
-@recording_router.delete("/{id}")
-def delete_by_id(db: DB, id: uuid.UUID):
+@recording_router.delete("/{id}", responses={404: {"model": str}})
+def delete_by_id(db: DB, id: uuid.UUID) -> str:
     obj = db.scalar(select(Recording).where(Recording.id == id))
     if obj is None:
         raise HTTPException(status_code=404, detail="Recording not found")

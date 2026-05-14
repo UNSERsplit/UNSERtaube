@@ -1,20 +1,37 @@
 from typing import Any, Dict, List, Tuple
 
-from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
-import asyncio
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
+import uuid
 
 import dronemaster
+from database import DB
+from models.drone import Drone
+from schemas.drone import Drone as DroneDTO
 from state_computation import StateComputation
 
 drone: dronemaster.Drone = None # type: ignore
+db_drone: Drone = None # type: ignore
 state_computation: StateComputation = None # type: ignore
 
 live_router = APIRouter(prefix="/live")
 
-@live_router.post("/connect")
-async def connect(request: Request, ip: str = "10.242.206.235"):
-    global drone, state_computation
-    drone = dronemaster.Drone(ip)
+@live_router.get("/connected")
+async def get_drone() -> DroneDTO:
+    return db_drone # type: ignore
+
+@live_router.post("/connect", responses={404: {"model": str}})
+async def connect(db: DB, drone_id: uuid.UUID) -> str:
+    global drone, state_computation, db_drone
+
+    obj = db.scalar(select(Drone).where(Drone.id == drone_id))
+
+    if not obj:
+        raise HTTPException(status_code=404, detail="Drone not found")
+    
+    db_drone = obj
+
+    drone = dronemaster.Drone(obj.ip) # type: ignore
     await drone.initialize()
     await drone.streamon()
     drone.on_state = on_state
