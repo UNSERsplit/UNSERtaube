@@ -114,8 +114,20 @@ def discard() -> str:
     
     return "ok"
 
+replay_allowed = True
+
+@recording_router.post("/replay/stop")
+async def stop_replay():
+    global replay_allowed
+    replay_allowed = False
+
+    await live.drone.flight.stop()
+
+    return "Stopped"
+
 @recording_router.post("/replay/{id}")
 async def replay(db: DB, id: uuid.UUID):
+    global replay_allowed
     obj = db.scalar(select(Recording).where(Recording.id == id))
     if obj is None:
         raise HTTPException(status_code=404, detail="Recording not found")
@@ -135,6 +147,9 @@ async def replay(db: DB, id: uuid.UUID):
     
     for delay, cmd, args in BinaryRecorder.decode_commands(data):
         await asyncio.sleep(delay)
+        if not replay_allowed:
+            replay_allowed = True
+            return "STOPPED"
         func = live.drone.flight.__getattribute__(cmd)
         ret = func(*args)
         if ret is not None:

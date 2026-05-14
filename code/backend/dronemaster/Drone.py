@@ -1,3 +1,5 @@
+import inspect
+
 from .low_level import ProtocolError, RepeatAction, RetryAction, RobomasterProtocol, Action, OK, ANY
 from . import low_level as l
 from time import time
@@ -45,6 +47,9 @@ class record:
         def f(self2: Module, *args, **kwargs):
             self2.drone.command_recorder._command(func.__name__, args, kwargs)
             return func(self2, *args)
+    
+        f.__name__ = func.__name__
+        f.__signature__ = inspect.signature(func) # type: ignore
 
         return f
 

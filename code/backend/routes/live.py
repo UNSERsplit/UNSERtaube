@@ -152,7 +152,7 @@ async def status(ws: WebSocket):
             else:
                 print(data)
     except WebSocketDisconnect:
-        print("Disconnect")
+        pass
 
 async def on_state(state: dict):
     remove = []
