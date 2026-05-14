@@ -30,6 +30,9 @@ async def keepalive():
             try:
                 await live.drone.keepalive()
             except TimeoutError:
+                state = live.drone.last_state
+                state["connected"] = False
+                await live.on_state(state)
                 print("Drone died")
                 live.drone = None
         await asyncio.sleep(10)

@@ -3,6 +3,7 @@ from typing import TypedDict, Dict
 import math
 
 class TelemetryData(TypedDict):
+    connected: bool
     pitch: int
     roll: int
     yaw: int

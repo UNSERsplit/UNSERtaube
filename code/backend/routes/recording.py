@@ -53,7 +53,7 @@ recording_router = APIRouter(prefix="/recording")
 recorder: Optional[Recorder] = None
 
 @recording_router.post("/start", responses={404: {"model": str}})
-def start() -> uuid.UUID:
+async def start() -> uuid.UUID:
     if not live.drone:
         raise HTTPException(status_code=404, detail="Drone not connected")
     global recorder
@@ -65,10 +65,12 @@ def start() -> uuid.UUID:
 
     live.drone.record_commands(BinaryRecorder())
 
+    await live.drone.rgb.pulse((255,0,220), 0.6)
+
     return recorder.uuid
 
 @recording_router.post("/save", responses={404: {"model": str}})
-def save(db: DB, name: str) -> RecordingDTO:
+async def save(db: DB, name: str) -> RecordingDTO:
     global recorder
     if not live.drone or recorder is None:
         raise HTTPException(status_code=404, detail="Drone not connected or not recording")
@@ -76,6 +78,7 @@ def save(db: DB, name: str) -> RecordingDTO:
     recorder.stop()
 
     commands = live.drone.stop_recording_commands()
+    await live.drone.rgb.set((0,255,0))
 
     with open(to_flight_path(recorder.uuid), "wb") as f:
         f.write(commands)
@@ -98,22 +101,24 @@ def save(db: DB, name: str) -> RecordingDTO:
     return recording # type: ignore
 
 @recording_router.post("/stop", responses={404: {"model": str}})
-def stop() -> str:
+async def stop() -> str:
     global recorder
     if recorder is not None:
         recorder.stop()
     
     live.drone.stop_recording_commands()
+    await live.drone.rgb.set((0,255,0))
     
     return "ok"
 
 @recording_router.post("/discard", responses={404: {"model": str}})
-def discard() -> str:
+async def discard() -> str:
     global recorder
     if recorder is not None:
         recorder.discard()
     
     live.drone.stop_recording_commands()
+    await live.drone.rgb.set((0,255,0))
     
     return "ok"
 
@@ -148,10 +153,13 @@ async def replay(db: DB, id: uuid.UUID) -> str:
     if not live.drone:
         raise HTTPException(status_code=404, detail="Drone not connected")
     
+    await live.drone.rgb.pulse((255,0,0), 2.5)
+    
     for delay, cmd, args in BinaryRecorder.decode_commands(data):
         await asyncio.sleep(delay)
         if not replay_allowed:
             replay_allowed = True
+            await live.drone.rgb.set((0,255,0))
             return "STOPPED"
         func = live.drone.flight.__getattribute__(cmd)
         ret = func(*args)

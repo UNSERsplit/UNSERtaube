@@ -78,7 +78,7 @@ class Drone:
             delta = time() - self.last_state["last_update"]
         else:
             delta = 0
-        state.update({"last_update": time(), "delta": delta})
+        state.update({"last_update": time(), "delta": delta, "connected": True})
         self.last_state = state
         await self.on_state(state)
 
