@@ -2,14 +2,16 @@ import asyncio
 import re
 from asyncio import Future, InvalidStateError
 from typing import List, Optional, Any
+from fastapi import HTTPException
 
 OK = [r"^ok$"]
 ERROR = [r"^error$"]
 ANY = [r"^.*?$"]
 
-class ProtocolError(BaseException):
+class ProtocolError(HTTPException):
     def __init__(self, response: str):
         self.response = response
+        super().__init__(status_code=418, detail=str(self))
 
     def __str__(self):
         return f"ProtocolError({self.response})"

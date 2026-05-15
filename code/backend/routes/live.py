@@ -49,8 +49,6 @@ flight_router = APIRouter(prefix="/flight")
 @flight_router.post("/takeoff")
 async def takeoff():
     global drone
-    if drone.last_state["templ"] >= 80:
-        raise HTTPException(status_code=502, detail="Drone overheating >80°C")
     await drone.flight.takeoff()
     return "OK"
 
@@ -136,6 +134,9 @@ async def status(ws: WebSocket):
 
 async def on_state(state: dict, compute: bool=True):
     remove = []
+
+    if drone is None:
+        return
 
     if compute:
         state = state_computation.on_state(state) # type: ignore

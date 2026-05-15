@@ -114,7 +114,7 @@ export class ControllerApiService {
   }
 
   start(callback: any){
-    this.ws = new WebSocket("ws://127.0.0.1:8000/live/ws");
+    this.ws = new WebSocket(`ws://${location.hostname}:8000/live/ws`);
     this.ws.addEventListener("open", e => {
         this.status.set("ws_connected");
     });
@@ -149,6 +149,11 @@ export class ControllerApiService {
     if(!resp.ok) {
       const text = await resp.text();
       console.error(method, url, body, text);
+
+      if (resp.status == 418) {
+        alert("Protocol error: " + text)
+      }
+
       throw Error(text);
     }
 

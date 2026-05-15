@@ -23,15 +23,15 @@ export class KeyboardInputComponent implements OnInit, OnDestroy{
     "d": false,
     "q": false,
     "e": false,
-    "Control": false,
-    "Shift": false
+    "ArrowUp": false,
+    "ArrowDown": false
   })
 
   private controllerApi = inject(ControllerApiService);
 
   constructor() {
     effect(() => {
-      const throttle = (this.keys()["Shift"] ? 100 : 0) + (this.keys()["Control"] ? -100 : 0)
+      const throttle = (this.keys()["ArrowUp"] ? 100 : 0) + (this.keys()["ArrowDown"] ? -100 : 0)
       const roll = (this.keys()["a"] ? -100 : 0) + (this.keys()["d"] ? 100 : 0)
       const pitch = (this.keys()["w"] ? 100 : 0) + (this.keys()["s"] ? -100 : 0)
       const yaw = (this.keys()["q"] ? -100 : 0) + (this.keys()["e"] ? 100 : 0)
