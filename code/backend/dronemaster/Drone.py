@@ -400,6 +400,17 @@ class RGBLed(Module):
         ))
 
 class Matrix(Module):
+    def __init__(self, drone: Drone):
+        super().__init__(drone)
+        self.pattern = "ppppp000"\
+                       "00p00000"\
+                       "00pbbbbb"\
+                       "00p00b00"\
+                       "00p00b00"\
+                       "00000b00"\
+                       "00000b00"\
+                       "rrrrpppp"
+
     async def set_brightness(self, brightness: int):
         limit(brightness, 0, 255)
         await self.action(RetryAction(
@@ -413,6 +424,7 @@ class Matrix(Module):
     async def set_pattern(self, pattern: str):
         limit(len(pattern.replace("r","").replace("b","").replace("p","").replace("0","")), 0, 0)
         limit(len(pattern), 1, 64)
+
         await self.action(RetryAction(
             command=f"EXT mled g {pattern}",
             positive_answers=[r"^matrix ok$"],
@@ -420,3 +432,5 @@ class Matrix(Module):
             timeout=0.5,
             retry_count=5
         ))
+
+        self.pattern = pattern

@@ -219,6 +219,10 @@ export class ControllerApiService {
     await this.action("POST", "live/matrix/pattern?pattern=" + data, undefined);
   }
 
+  async get_matrix() {
+    return await this.action("GET", "live/matrix/pattern", undefined);
+  }
+
   async flash(r1: number, r2: number, g1: number, g2: number, b1: number, b2: number, freq: number) {
     await this.action("POST", "live/rgb/flash?frequency=" + freq, {
       rgb1: [

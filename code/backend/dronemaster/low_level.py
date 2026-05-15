@@ -57,6 +57,9 @@ class RetryAction(Action):
     def on_receive(self, data: bytes, addr):
         if data.startswith(b"Re"):
             return
+        if self.future.done():
+            print("?D?", data)
+            return
         for pattern in self.positive_answers:
             if re.match(pattern, data.decode()):
                 self.future.set_result(data.decode())
@@ -106,6 +109,9 @@ class RepeatAction(Action):
         self.handle(data[7:])
 
     def handle(self, data: bytes):
+        if self.future.done():
+            print("?D?", data)
+            return
         for pattern in self.positive_answers:
             if re.match(pattern, data.decode()):
                 self.future.set_result(data.decode())

@@ -1,4 +1,4 @@
-import {Component, inject, Input} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {
     MatDialogModule,
 } from '@angular/material/dialog';
@@ -41,7 +41,7 @@ enum LedStatus {
     styleUrl: './led-editor.component.css'
 })
 
-export class LedEditorComponent {
+export class LedEditorComponent implements OnInit {
     private controllerApi = inject(ControllerApiService);
 
     readonly CardVariants = CardVariants;
@@ -91,6 +91,23 @@ export class LedEditorComponent {
 
         const data = this.leds.flat().map((v) => MAPPING[v.ledstatus]).join("")
         this.controllerApi.matrix(data);
+    }
+
+    ngOnInit(): void {
+        const MAPPING: {[index: string]: LedStatus} = {
+            "0": 0,
+            "b": 1,
+            "p": 2,
+            "r": 3
+        }
+
+        this.controllerApi.get_matrix().then((pattern: string) => {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    this.leds[i][j] = { ledstatus: MAPPING[pattern[i * 8 + j]] };
+                }
+            }
+        })
     }
 
     // Hilfsfunktion für das Template, um den Hex-Code zu bekommen

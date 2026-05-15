@@ -66,55 +66,6 @@ async def land():
     await drone.flight.land()
     return "OK"
 
-@flight_router.post("/forward")
-async def forward(dist: int):
-    global drone
-    await drone.flight.forward(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/backwards")
-async def backwards(dist: int):
-    global drone
-    await drone.flight.back(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/left")
-async def left(dist: int):
-    global drone
-    await drone.flight.left(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/right")
-async def right(dist: int):
-    global drone
-    await drone.flight.right(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/up")
-async def up(dist: int):
-    global drone
-    await drone.flight.up(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/down")
-async def down(dist: int):
-    global drone
-    await drone.flight.down(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/clockwise")
-async def clockwise(dist: int):
-    global drone
-    await drone.flight.clockwise(dist, timeout=dist/4)
-    return "OK"
-
-@flight_router.post("/counterclockwise")
-async def counterclockwise(dist: int):
-    global drone
-    await drone.flight.counterclockwise(dist, timeout=dist/4)
-    return "OK"
-
-
 led_router = APIRouter(prefix="/rgb")
 
 @led_router.post("/set")
@@ -149,6 +100,11 @@ async def matrix_pattern(pattern: str):
     global drone
     await drone.matrix.set_pattern(pattern)
     return "OK"
+
+@matrix_router.get("/pattern")
+async def matrix_get_pattern():
+    global drone
+    return drone.matrix.pattern
 
 live_router.include_router(flight_router)
 live_router.include_router(led_router)
