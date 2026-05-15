@@ -1,46 +1,72 @@
 import { Injectable, signal } from '@angular/core';
 
+declare var MediaMTXWebRTCReader: any;
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideoApiService {
-  private element: HTMLCanvasElement | undefined;
-  private ctx: CanvasRenderingContext2D | null = null;
+  private element: HTMLVideoElement | undefined;
+  private stream: any;
+  private reader: any;
+
+
+  setMessage(msg: any) {
+    console.warn(msg)
+  }
+
 
   constructor() {
-    
+    var scriptTag = document.createElement('script');
+    scriptTag.src = `http://${location.hostname}:8889/camera/reader.js`;
+
+    scriptTag.onload = () => {
+      console.log("FDSAFDSFDSAFDSFA")
+      this.reader = new MediaMTXWebRTCReader({ // @ts-ignore
+        url: new URL(`http://${location.hostname}:8889/camera/whep`),
+        onError: (err: any) => {
+          this.setMessage(err);
+        },
+        onTrack: (evt: any) => {
+          this.setMessage('');
+          this.stream = evt.streams[0];
+          if (this.element) {
+            this.element!.srcObject = evt.streams[0];
+          }
+        },
+        onDataChannel: (evt: any) => {
+          evt.channel.binaryType = 'arraybuffer';
+          evt.channel.onmessage = (evt: any) => {
+            console.log('data channel message', evt.data);
+          };
+        },
+      });
+
+
+    window.addEventListener('beforeunload', () => {
+      
+    });
+  };
+
+    document.body.appendChild(scriptTag);
   }
 
 
   initVideo(playbackId: string) {
-    this.element = document.getElementById(playbackId) as HTMLCanvasElement;
+    this.element = document.getElementById(playbackId) as HTMLVideoElement;
+    this.element.controls = false;
+    this.element.muted = true;
+    this.element.autoplay = true;
+    this.element.playsInline = true;
 
-    this.ctx = this.element.getContext("2d");
+    if(this.stream) {
+      this.element!.srcObject = this.stream;
+    }
   }
 
-  set_frame(buf: ArrayBuffer) {
-    if(!this.ctx) return;
-    const view = new DataView(buf);
-
-    const width = view.getUint32(0, true);
-    const height = view.getUint32(4, true);
-
-    this.ctx.canvas.width  = width;
-    this.ctx.canvas.height = height;
-
-    const src = new Uint8Array(buf, 12); // RGB data
-    const dst = new Uint8ClampedArray(width * height * 4);
-
-    let j = 0;
-    for (let i = 0; i < src.length; i += 3) {
-      dst[j++] = src[i]; // R
-      dst[j++] = src[i + 1]; // G
-      dst[j++] = src[i + 2];     // B
-      dst[j++] = 255;        // A
-    }
-
-    const imageData = new ImageData(dst, width, height);
-    this.ctx.putImageData(imageData, 0, 0);
+  removeVideo() {
+    /*if (this.reader !== null) {
+      this.reader.close();
+    }*/
   }
 }

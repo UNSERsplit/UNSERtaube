@@ -50,9 +50,33 @@ export interface State {
 
   /** height above sea level by barometer */
   baro: number;
+
+  /** is the drone connected */
+  connected: boolean;
+
+  /** timestamp of the last update */
+  last_update: number
+
+  /** delta since this an the previous state */
+  delta: number
+
+  /** position x in cm */
+  posx: number;
+
+  /** position y in cm */
+  posy: number;
+
+  /** position z in cm */
+  posz: number;
+
+  /** distance in dm */
+  distance: number;
+
+  /** speed in dm/s */
+  speed: number
 }
 
-export type Status = "offline" | "ws_connected" | "drone_connected" | "error" | "connecting";
+export type Status = "offline" | "ws_connected" | "drone_connected" | "replaying" | "error" | "connecting";
 
 
 @Injectable({
@@ -60,38 +84,19 @@ export type Status = "offline" | "ws_connected" | "drone_connected" | "error" | 
 })
 export class ControllerApiService {
   public status = signal<Status>("offline");
-  public drone = signal<Drone | undefined>(undefined);
-  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN, h: NaN, time: NaN, tof: NaN, baro: NaN})
+  public drone = signal<Drone>(new Drone("","",""));
+  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN, h: NaN, time: NaN, tof: NaN, baro: NaN, connected: false, last_update: NaN, delta: NaN, posx: NaN, posy: NaN, posz: NaN, distance: NaN, speed: NaN})
   private videoApi = inject(VideoApiService);
   private waiting_messages: {
     [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void, string[]]
   } = {}
-  public pathmapsignal = signal<[number, number, number][]>([]);
-  public flightDistance = signal<number>(0);
 
-  private ws: WebSocket;
+  private ws!: WebSocket;
 
   constructor() {
-    this.ws = new WebSocket(`wss://${location.hostname}:${location.port}/api/ws`);
-    this.ws.binaryType = 'arraybuffer';
-    this.ws.addEventListener("open", ev => {
-      console.log(ev)
-      this.status.set("ws_connected");
-    });
+    
 
-    this.ws.addEventListener("error", ev => {
-      console.error(ev)
-
-      this.status.set("error")
-    });
-
-    this.ws.addEventListener("message", ev => {
-      if(ev.data instanceof ArrayBuffer) {
-        this.videoApi.set_frame(ev.data)
-      } else {
-        this.handle_message(ev)
-      }
-    });
+    this.start((d: any) => this.handle_message(d))
 
 
     // Für debug zwecke die raw commands exposen
@@ -99,98 +104,110 @@ export class ControllerApiService {
     window.control = this
     // @ts-ignore
     window.send_command = (command, timeout) => {
-      this.send_debug_command(command, timeout).then((v) => {
+      /*this.send_debug_command(command, timeout).then((v) => {
         console.log("ANSWER:", v)
       }).catch(e => {
         console.error(e)
-      });
+      });*/ 
+      // TODO
     };
   }
 
-  async get_drones() {
-    let resp = await fetch("/api/drone/");
-    let json = await resp.json();
+  start(callback: any){
+    this.ws = new WebSocket("ws://127.0.0.1:8000/live/ws");
+    this.ws.addEventListener("open", e => {
+        this.status.set("ws_connected");
+    });
+    this.ws.addEventListener("error", e => {
+        this.status.set("error")
+    });
+    this.ws.addEventListener("close", e => {
+      this.status.set("offline");
+        setTimeout(() => this.start(callback), 1000);
+    });
+    this.ws.addEventListener("message", e => {
+        callback(e.data);
+    });
+  }
 
-    return json;
+
+  async action(method: string, url: string, body: any) {
+    if (body) {
+      body = JSON.stringify(body);
+    }
+
+
+    let resp = await fetch(`http://${location.hostname}:8000/` + url, {
+      method: method,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: body
+    });
+
+    if(!resp.ok) {
+      const text = await resp.text();
+      console.error(method, url, body, text);
+      throw Error(text);
+    }
+
+    const json = await resp.json()
+
+    console.log(method, url, body, json)
+
+    return json
+  }
+
+  async get_drones() {
+    return await this.action("GET", "drone", undefined);
   }
 
   async get_paths() {
-    let resp = await fetch("/api/route/");
-    let json = await resp.json();
-
-    return json;
+    return await this.action("GET", "recording", undefined);
   }
 
-  private handle_message(ev: any) {
-    const data = JSON.parse(ev.data);
-    if (data.type === "validation_error") {
-      alert("Validation error, fix the ws message format");
-      console.error(data.context);
+  private handle_message(d: any) {
+    if (d instanceof Blob) {
+      return;
     }
-
-    switch(data.type) {
-      case "state": {
-        const newState:State = data.state
-        console.log(data.state.vgx, data.state.vgy, data.state.vgz)
-        this.state.set(newState);
-        break;
+    const data = JSON.parse(d);
+    if (!data.connected) {
+      this.status.set("ws_connected");
+    } else {
+      if(this.status() != "drone_connected") {
+        this.status.set("drone_connected");
+        this.action("GET", "live/connected", undefined).then(drone => {
+          this.drone.set(new Drone(drone.name, drone.ip, drone.id))
+        });
       }
-      case "waypoints": {
-        this.pathmapsignal.set(data.context);
-        this.flightDistance.set(data.distance);
-        break;
-      }
-      case "drone_disconnected": {
-        console.error(data.reason);
-        alert(data.reason);
-        break;
-      }
+    
     }
-
-    const waiting_message = this.waiting_messages[data.type];
-    if (waiting_message) {
-      waiting_message[0](data); // resolve promise
-      this.clear_waiting_message(data.type)
-    }
+    this.state.set(data);
   }
 
-  private clear_waiting_message(type: string) {
-    if (!this.waiting_messages[type]) return;
-
-    const reject_types = this.waiting_messages[type][2];
-    delete this.waiting_messages[type]
-    reject_types.forEach(reject => {
-      this.clear_waiting_message(reject);
-    })
+  async takeoff() {
+    await this.action("POST", "live/flight/takeoff", undefined)
   }
 
-  wait_for_response(required_type: string, timeout:number, reject_types: string[] = []): Promise<object> {
-    const promise = new Promise((resolve, reject) => {
-      const auto_reject = setTimeout(() => {
-        if(this.waiting_messages[required_type]) {
-          reject({"type": "timeout", "required_message": required_type, timeout})
-          this.clear_waiting_message(required_type)
-        }
-      }, timeout)
-      this.waiting_messages[required_type] = [resolve, reject, reject_types]
-      reject_types.forEach(type => {
-        this.waiting_messages[type] = [reject, resolve, [...reject_types, required_type]]
-      })
-    }) as Promise<object>
-
-    return promise;
+  async land() {
+    await this.action("POST", "live/flight/land", undefined)
   }
 
-  takeoff() {
-    this.ws.send(JSON.stringify({"type":"takeoff"}))
+  async start_recording() {
+    await this.action("POST", "recording/start", undefined)
   }
 
-  land() {
-    this.ws.send(JSON.stringify({"type":"land"}))
+  async stop_recording() {
+    await this.action("POST", "recording/stop", undefined)
   }
 
-  start_recording() {
-    this.ws.send(JSON.stringify({"type":"record_start"}))
+  async discard_recording() {
+    await this.action("POST", "recording/discard", undefined)
+  }
+
+  async save_recording(name: string) {
+    await this.action("POST", "recording/save?name=" + name, undefined)
   }
 
   send_rc(yaw: number, pitch: number, roll: number, throttle: number) { // alle Zahlen von -100 bis 100
@@ -198,70 +215,69 @@ export class ControllerApiService {
     this.ws.send(JSON.stringify({"type":"rc", yaw, pitch, roll, throttle}))
   }
 
-  matrix(type: "set_matrix" | "set_init_matrix", data: string) {
-    this.ws.send(JSON.stringify({"type":type, "data": data}))
+  async matrix(data: string) {
+    await this.action("POST", "live/matrix/pattern?pattern=" + data, undefined);
   }
 
-  flash(r1: number, r2: number, g1: number, g2: number, b1: number, b2: number, freq: number) {
-    this.ws.send(JSON.stringify({
-      "type": "flashing_led",
-      red1: r1,
-      red2: r2,
-      green1: g1,
-      green2: g2,
-      blue1: b1,
-      blue2: b2,
-      freq
-    }))
-  }
-
-  send_debug_finetune(data: {show_processed_output: boolean, hue_lower: number, hue_upper: number, saturation_lower: number, saturation_upper: number, value_lower: number, value_upper: number}) {
-    this.ws.send(JSON.stringify({"type": "finetune_vision", ...data}))
-  }
-
-  async send_debug_command(command: string, timeout: number) {
-    this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": true, "timeout":timeout}))
-    const data: any = await this.wait_for_response("rawanswer", timeout * 1000 + 500);
-    return data.answer;
-  }
-
-  send_debug_command_noanswer(command: string) {
-    this.ws.send(JSON.stringify({"type": "rawcommand", "command": command, "wait_for_response": false, "timeout":-1}))
-  }
-
-  async stop_recording(route_name: string) {
-    this.ws.send(JSON.stringify({"type":"record_stop", "route_name": route_name}))
-    const data: any = await this.wait_for_response("recording_name", 5_000);
-    return data.name;
+  async flash(r1: number, r2: number, g1: number, g2: number, b1: number, b2: number, freq: number) {
+    await this.action("POST", "live/rgb/flash?frequency=" + freq, {
+      rgb1: [
+        r1,
+        g1,
+        b1
+      ],
+      rgb2: [
+        r2,
+        g2,
+        b2
+      ]
+    })
   }
 
   async replay_path(id: string) {
-    this.ws.send(JSON.stringify({"type":"replay_recording", "id": id}))
-    await this.wait_for_response("accepted", 5_000);
+    this.status.set("replaying");
+    this.action("POST", "recording/replay/" + id, undefined).catch(console.error).then(v => {
+      alert(v)
+    }).finally(() => {
+      this.status.set("drone_connected");
+    })
   }
 
-  emergency() {
-    this.ws.send(JSON.stringify({"type":"emergency"}))
+  async emergency() {
+    await this.action("POST", "live/flight/stop", undefined);
   }
 
-  async connect(name: string, ip: string) {
+  async connect(id: string) {
     this.status.set("connecting");
-    this.ws.send(JSON.stringify({"type":"select_drone", "ip": ip, "name": name}))
+    
     try {
-      await this.wait_for_response("drone_connected",10_000, ["drone_disconnected"]);
-    } catch (e: any) {
+      let resp = await this.action("POST", "live/connect?drone_id=" + id, undefined)
+    } catch(e) {
       this.status.set("ws_connected");
-      if(e.type == "drone_disconnected") {
-        return;
-      }
-      console.error(e.reason || e)
-      alert(e.reason || e)
-      return;
+      return
     }
+    let drone = await this.action("GET", "live/connected", undefined);
 
-    this.drone.set(new Drone(name, ip))
+    this.drone.set(new Drone(drone.name, drone.ip, drone.id))
 
     this.status.set("drone_connected");
+  }
+
+  async createAndConnect(name: string, ip: string) {
+    let drones = await this.get_drones();
+
+    for (const drone of drones) {
+      if(drone.ip == ip) {
+        return await this.connect(drone.id);
+      }
+    }
+
+    const drone = await this.action("POST", "drone/", {
+      "name": name,
+      "ip": ip
+    });
+
+    return await this.connect(drone.id);
   }
 
   disconnect() {

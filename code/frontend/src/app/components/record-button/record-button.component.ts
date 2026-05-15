@@ -35,6 +35,7 @@ export class RecordButtonComponent implements OnDestroy {
 
     /** Aufnahme starten oder Popup 1 öffnen falls bereits aufgenommen wird */
     toggleRecording(): void {
+        document.querySelector(".video-placeholder")!.innerHTML = ""
         if (this.isRecording) {
             this.showStopPopup = true;
         } else {
@@ -47,7 +48,7 @@ export class RecordButtonComponent implements OnDestroy {
     async discardRecording(): Promise<void> {
         this.closePopups();
         this.isRecording = false;
-        await this.controllerApi.stop_recording("")
+        await this.controllerApi.discard_recording()
         this.stopRecording('Aufnahme abgebrochen');
     }
 
@@ -56,6 +57,9 @@ export class RecordButtonComponent implements OnDestroy {
         this.showStopPopup = false;
         this.showSavePopup = true;
         this.recordingName = '';
+        this.controllerApi.stop_recording();
+
+        document.querySelector(".video-placeholder")!.innerHTML = `<video src="http://localhost:8000/recording/video" style="width: 100%;height: 100%;" autoplay=""></video>`
     }
 
     /** Popup 2 → "Speichern": Aufnahme speichern und Status kurz anzeigen */
@@ -63,8 +67,7 @@ export class RecordButtonComponent implements OnDestroy {
         if (!this.recordingName.trim()) return; // Zusätzliche Absicherung zum disabled-Attribut
         this.closePopups();
         this.isRecording = false;
-        const videoName = await this.controllerApi.stop_recording(this.recordingName.trim())
-        window.open("/video/" + videoName, "_blank")
+        const videoName = await this.controllerApi.save_recording(this.recordingName.trim())
         this.stopRecording(`"${this.recordingName}" gespeichert`);
     }
 

@@ -1,5 +1,5 @@
 <div class="video-container">
-    <canvas id="video"></canvas>
+    <video id="video"></video>
 </div>
 
 <div class="overlay">
@@ -28,8 +28,7 @@
             <app-led-control-button class="ihossNomenSuachn"></app-led-control-button>
         </div>
         <div class="rightContainer">
-            <canvas id="myCanvas">
-            </canvas>
+            <app-path-map></app-path-map>
             <app-record-button></app-record-button>
         </div>
     </div>
@@ -37,7 +36,7 @@
     <div class="bottom">
         <div class="heightSpeed">
             <p id="height">{{ state().tof }}cm AGL</p>
-            <p id="speed">{{ speed() }}dm/s</p>
+            <p id="speed">{{ state().speed }}dm/s</p>
         </div>
 
         <div class="buttonContainer">
@@ -48,7 +47,7 @@
 
         <div class="timeDist">
             <p id="flight-time">{{ state().time }}s</p>
-            <p id="flight-distance">{{ distance() }}dm</p>
+            <p id="flight-distance">{{ state().distance }}dm</p>
         </div>
     </div>
 

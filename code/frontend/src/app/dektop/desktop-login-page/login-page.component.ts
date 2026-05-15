@@ -28,16 +28,7 @@ export class LoginPageComponentx {
     buttonWidth: string = '65rem';
     buttonHeight: string = '4rem';
 
-    private async createAndConnect(name: string, ip: string) {
-        //create
-        await this.connect(name, ip)
-    }
-
-    private async connect(name: string, ip: string) {
-        await this.controllerApi.connect(name, ip);
-    }
-
     handleConnect() { //TODO validation
-        this.createAndConnect(this.name(), this.ip())
+        this.controllerApi.createAndConnect(this.name(), this.ip());
     }
 }

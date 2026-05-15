@@ -72,7 +72,7 @@ export class LedEditorMobileComponent {
     private pushToApi(): void {
         const MAPPING: Record<number, string> = { 0: '0', 1: 'b', 2: 'p', 3: 'r' };
         const data = this.leds.flat().map(v => MAPPING[v.ledstatus]).join('');
-        this.controllerApi.matrix('set_matrix', data);
+        this.controllerApi.matrix(data);
     }
 
     // ── Popup-Steuerung ──────────────────────────────────────────────────

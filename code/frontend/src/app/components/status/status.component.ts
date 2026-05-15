@@ -7,7 +7,8 @@ const LOOKUP = {
   "ws_connected": "Not Connected",
   "drone_connected": "Connected",
   "error": "Websocket Error",
-  "connecting": "Connecting"
+  "connecting": "Connecting",
+  "replaying": "Replaying"
 }
 
 @Component({

@@ -1,4 +1,4 @@
-import { Component, computed, effect, HostListener, inject, model, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
 import { VideoApiService } from '../../service/video-api.service';
 import { ControllerApiService } from '../../service/controller-api.service';
 import { KeyboardInputComponent } from '../keyboard-input/keyboard-input.component';
@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import {RecordButtonComponent} from '../../components/record-button/record-button.component';
 import {LedControlButtonComponent} from '../../components/led-control-button/led-control-button.component';
 import {HomeButtonComponent} from '../../components/home-button/home-button.component';
+import { PathMapComponent } from '../../components/path-map/path-map.component';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -30,12 +31,13 @@ const toString = {
         FormsModule,
         RecordButtonComponent,
         LedControlButtonComponent,
-        HomeButtonComponent
+        HomeButtonComponent,
+        PathMapComponent
     ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'
 })
-export class DesktopFlugComponent implements OnInit{
+export class DesktopFlugComponent implements OnInit, OnDestroy{
   private videoApi = inject(VideoApiService);
   private controllerApi = inject(ControllerApiService);
   private gamepadService = inject(GamepadService);
@@ -53,7 +55,6 @@ export class DesktopFlugComponent implements OnInit{
   protected showDebugHud = signal(false);
 
   protected state = this.controllerApi.state.asReadonly()
-  protected distance = this.controllerApi.flightDistance.asReadonly();
 
   protected speedInDMS = computed<{"x":number, "y":number, "z":number}>(() => {
     return {
@@ -62,7 +63,6 @@ export class DesktopFlugComponent implements OnInit{
       "z": this.state().vgz,
     }
   })
-  protected speed = computed(() => Math.floor(Math.sqrt(Math.pow(this.speedInDMS().z, 2) + Math.pow(this.speedInDMS().y, 2) + Math.pow(this.speedInDMS().z, 2))))
 
   protected drone = computed(() => this.controllerApi.drone()!)
   protected modeName = computed(() => toString[this.mode()])
@@ -85,7 +85,7 @@ export class DesktopFlugComponent implements OnInit{
     })
 
 
-    effect(() => {
+    /*effect(() => {
       this.controllerApi.send_debug_finetune({
         show_processed_output: this.showProcessed(),
         hue_lower: this.hue_lower(),
@@ -95,7 +95,7 @@ export class DesktopFlugComponent implements OnInit{
         value_lower: this.value_lower(),
         value_upper: this.value_upper()
       })
-    })
+    })*/
 
     // @ts-ignore
     window.showDebugHud = this.showDebugHud;
@@ -103,6 +103,10 @@ export class DesktopFlugComponent implements OnInit{
 
   ngOnInit(): void {
     this.videoApi.initVideo("video")
+  }
+
+  ngOnDestroy(): void {
+    this.videoApi.removeVideo()
   }
 
   takeoff() {
@@ -115,16 +119,6 @@ export class DesktopFlugComponent implements OnInit{
 
   emergency(){
     this.controllerApi.emergency()
-  }
-
-  record() {
-    this.controllerApi.start_recording()
-  }
-
-  async stop() {
-    const name = await this.controllerApi.stop_recording("")
-    window.open("/video/" + name, "_blank")
-    alert(name)
   }
 }
 

@@ -22,7 +22,7 @@ export class GamepadService {
 
   public gamepadConnected = signal(false);
   
-  public mappedData: WritableSignal<MappedData> = signal({throttle: NaN, roll: NaN, pitch: NaN, yaw: NaN});
+  public mappedData: WritableSignal<MappedData> = signal({throttle: 0, roll: 0, pitch: 0, yaw: 0});
   public unmappedAxisData = signal<number[]>([]);
   public currentMapping: GamepadMapping = {throttle_axis_id: 0, roll_axis_id: 1, pitch_axis_id: 2, yaw_axis_id: 3};
 
@@ -41,6 +41,7 @@ export class GamepadService {
   public tick() {
     if (!this.gamepad) return;
     const gp = navigator.getGamepads()[this.gamepad.index]!;
+    if(!gp) return;
 
     this.unmappedAxisData.update(data => {
       if(data.toString() != gp.axes.toString()) {

@@ -33,13 +33,12 @@ export class PathlistComponent {
     constructor() {
         this.controllerApi.get_paths().then(paths => {
             paths.forEach((path: any) => {
-                console.log(path)
                 this.droneFlights.push(new flypath(
                     path.name,
-                    path.drone_name,
-                    path.ip,
-                    path.duration + "",
-                    path.distance + "",
+                    path.drone.name,
+                    path.drone.ip,
+                    parseInt(path.duration) + "",
+                    parseInt(path.distance) + "",
                     path.id
                 ))
             })

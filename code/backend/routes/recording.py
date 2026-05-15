@@ -3,10 +3,13 @@ from typing import Iterable, Optional
 import uuid
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 import subprocess
 import os
 from time import time
+from contextlib import asynccontextmanager
+
 
 from models.recording import Recording
 from schemas.recording import Recording as RecordingDTO
@@ -48,7 +51,14 @@ class Recorder:
             self.stop()
         os.remove(self.filename)
 
-recording_router = APIRouter(prefix="/recording")
+@asynccontextmanager
+async def lifespan(app):
+    pass
+    yield
+    if recorder:
+        recorder.discard()
+
+recording_router = APIRouter(prefix="/recording", lifespan=lifespan)
 
 recorder: Optional[Recorder] = None
 
@@ -116,6 +126,7 @@ async def discard() -> str:
     global recorder
     if recorder is not None:
         recorder.discard()
+        recorder = None
     
     live.drone.stop_recording_commands()
     await live.drone.rgb.set((0,255,0))
@@ -124,10 +135,25 @@ async def discard() -> str:
 
 replay_allowed = True
 
+@recording_router.get("/video", responses={404: {"model": str}})
+async def get_video_recording() -> FileResponse:
+    global recorder
+    if recorder is None:
+        raise HTTPException(status_code=404, detail="Nothing recording")
+    
+    path = to_video_path(recorder.uuid)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Recording video file not found")
+    
+    return FileResponse(path=path)
+
 @recording_router.post("/replay/stop", responses={404: {"model": str}})
 async def stop_replay() -> str:
     global replay_allowed
     replay_allowed = False
+
+    if not live.drone:
+        raise HTTPException(status_code=404, detail="Drone not connected")
 
     await live.drone.flight.stop()
 
@@ -165,7 +191,8 @@ async def replay(db: DB, id: uuid.UUID) -> str:
         ret = func(*args)
         if ret is not None:
             await ret
-    
+            
+    await live.drone.rgb.set((0,255,0))
     return "OK"
 
 @recording_router.get("/")
@@ -179,6 +206,17 @@ def get_by_id(db: DB, id: uuid.UUID) -> RecordingDTO:
     if not obj:
         raise HTTPException(status_code=404, detail="Recording not found")
     return obj # type: ignore
+
+@recording_router.get("/{id}/video", responses={404: {"model": str}})
+async def get_video_by_id(db: DB, id: uuid.UUID) -> FileResponse:
+    obj = db.scalar(select(Recording).where(Recording.id == id))
+    if not obj:
+        raise HTTPException(status_code=404, detail="Recording not found")
+    path = to_video_path(id)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Recording video file not found")
+    
+    return FileResponse(path=path)
 
 @recording_router.delete("/{id}", responses={404: {"model": str}})
 def delete_by_id(db: DB, id: uuid.UUID) -> str:
@@ -198,4 +236,3 @@ def delete_by_id(db: DB, id: uuid.UUID) -> str:
         os.remove(path)
 
     return "OK"
-

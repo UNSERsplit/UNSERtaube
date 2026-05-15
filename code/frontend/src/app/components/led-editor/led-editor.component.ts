@@ -90,7 +90,7 @@ export class LedEditorComponent {
         }
 
         const data = this.leds.flat().map((v) => MAPPING[v.ledstatus]).join("")
-        this.controllerApi.matrix("set_matrix", data);
+        this.controllerApi.matrix(data);
     }
 
     // Hilfsfunktion für das Template, um den Hex-Code zu bekommen

@@ -31,7 +31,6 @@ export class DroneCarouselComponent {
         this.items = []
         this.controller.get_drones().then(drones => {
             drones.forEach((v: any) => {
-                console.log(v.id)
                 const hash = BigInt("0x" + v.id.replaceAll("-",""))
                 const color = COLORS[Number(hash % BigInt(COLORS.length))]
 
@@ -67,6 +66,6 @@ export class DroneCarouselComponent {
     }
 
     selectDrone(drone: any){
-        this.controller.connect(drone.name, drone.ip);
+        this.controller.connect(drone.id);
     }
 }

@@ -32,24 +32,16 @@ async def keepalive():
             except TimeoutError:
                 state = live.drone.last_state
                 state["connected"] = False
-                await live.on_state(state)
+                await live.on_state(state, compute=False)
                 print("Drone died")
                 live.drone = None
         await asyncio.sleep(10)
 
 app = FastAPI(lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.middleware("http")
 async def ensure_drone(request: Request, call_next):
-    if request.method == "POST" and request.url.path != "/live/connect" and request.url.path.startswith("/live"):
+    if request.url.path != "/live/connect" and request.url.path.startswith("/live"):
         if live.drone is None:
             return PlainTextResponse(status_code=404, content="Drone not connected")
 
@@ -61,6 +53,14 @@ async def ensure_drone(request: Request, call_next):
     process_time = time.perf_counter() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(live.live_router)
 app.include_router(recording.recording_router)

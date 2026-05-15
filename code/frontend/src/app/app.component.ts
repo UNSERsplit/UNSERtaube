@@ -2,8 +2,6 @@ import {Component, effect, inject} from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {buildApplication} from '@angular-devkit/build-angular';
-import { VideoStreamComponent } from '../video-stream/video-stream.component';
-import {PathmapComponent} from '../pathmap/pathmap.component';
 import {ControllerApiService} from './service/controller-api.service';
 import {LoginPageComponentx} from './dektop/desktop-login-page/login-page.component';
 import {DektopFlugmenuComponent} from './dektop/dektop-flugmenu/dektop-flugmenu.component';
@@ -33,21 +31,5 @@ export class AppComponent {
         this.router.navigate(["/home"])
       }
     })
-  }
-
-  loadTestData() {
-    console.log("Sende Testdaten an Service...");
-
-    const mockList: [number, number, number][] =
-      [
-        [50, 50, 0],
-        [100, 150, 20],
-        [200, 100, 50],
-        [300, 200, 100]
-      ]
-    ;
-
-    // Das Signal im Service aktualisieren
-    this.controllerApi.pathmapsignal.set(mockList);
   }
 }

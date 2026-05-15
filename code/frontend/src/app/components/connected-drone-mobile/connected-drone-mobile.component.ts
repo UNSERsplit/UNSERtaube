@@ -50,8 +50,7 @@ export class ConnectedDroneMobileComponent {
             this.controller.disconnect()
         } else if(this.isDisconnected()) {
             this.controller.connect(
-                this.controller.drone()!.getName,
-                this.controller.drone()!.getIp
+                this.controller.drone()!.getId
             )
         }
     }
