@@ -114,7 +114,7 @@ export class ControllerApiService {
   }
 
   start(callback: any){
-    this.ws = new WebSocket(`ws://${location.hostname}:8000/live/ws`);
+    this.ws = new WebSocket(`wss://${location.hostname}:8000/live/ws`);
     this.ws.addEventListener("open", e => {
         this.status.set("ws_connected");
     });
@@ -137,7 +137,7 @@ export class ControllerApiService {
     }
 
 
-    let resp = await fetch(`http://${location.hostname}:8000/` + url, {
+    let resp = await fetch(`https://${location.hostname}:8000/` + url, {
       method: method,
       headers: {
         "Accept": "application/json",

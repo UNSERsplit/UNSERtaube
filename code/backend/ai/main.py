@@ -222,6 +222,7 @@ def _find_contours(frame, raw_mask):
     for contour in ctns:
         if len(contour) < 5:
             continue
+        rect = cv2.minAreaRect(contour)
         ellipse = cv2.fitEllipse(contour)
         area = cv2.contourArea(contour)
         if area < 2000:
@@ -236,6 +237,8 @@ def _find_contours(frame, raw_mask):
         move(ratio, dx, dy)
 
         center = list(map(lambda x: int(x),list(center)))
+        box = np.intp(cv2.boxPoints(rect))
+        cv2.drawContours(final, [box], 0, (36,255,12), 3) # OR
         final = cv2.ellipse(final, ellipse, (0,0,255), 3) #type: ignore
         final = cv2.circle(final, center, 3, (0,255,0), -1)
         final = cv2.putText(final, str(ratio), center, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)

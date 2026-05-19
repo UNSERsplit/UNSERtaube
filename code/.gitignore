@@ -4,6 +4,7 @@ videos
 __pycache__
 
 *.db
+*.pem
 paths
 
 mediamtx

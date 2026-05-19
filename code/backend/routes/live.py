@@ -32,7 +32,14 @@ async def connect(db: DB, drone_id: uuid.UUID) -> str:
     db_drone = obj
 
     drone = dronemaster.Drone(obj.ip) # type: ignore
-    await drone.initialize()
+    try:
+        await drone.initialize()
+    except dronemaster.ProtocolError:
+        drone = None # type: ignore
+        raise
+    except TimeoutError:
+        drone = None # type: ignore
+        raise
     await drone.rgb.set((0,255,0))
     await drone.streamon()
     drone.on_state = on_state

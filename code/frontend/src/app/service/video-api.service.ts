@@ -18,12 +18,11 @@ export class VideoApiService {
 
   constructor() {
     var scriptTag = document.createElement('script');
-    scriptTag.src = `http://${location.hostname}:8889/camera/reader.js`;
+    scriptTag.src = `https://${location.hostname}:8889/camera/reader.js`;
 
     scriptTag.onload = () => {
-      console.log("FDSAFDSFDSAFDSFA")
       this.reader = new MediaMTXWebRTCReader({ // @ts-ignore
-        url: new URL(`http://${location.hostname}:8889/camera/whep`),
+        url: new URL(`https://${location.hostname}:8889/camera/whep`),
         onError: (err: any) => {
           this.setMessage(err);
         },

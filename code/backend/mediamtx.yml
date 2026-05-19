@@ -386,14 +386,14 @@ webrtcAddress: :8889
 # Enable HTTPS on the WebRTC server.
 # This covers only the WebRTC handshake and does not influence the encryption of WebRTC streams
 # which are always encrypted, with a key that is exchanged during the WebRTC handshake.
-webrtcEncryption: false
+webrtcEncryption: true
 # Path to the server key.
 # This can be generated with:
 # openssl genrsa -out server.key 2048
 # openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
-webrtcServerKey: server.key
+webrtcServerKey: ../privkey.pem
 # Path to the server certificate.
-webrtcServerCert: server.crt
+webrtcServerCert: ../fullchain.pem
 # Allowed CORS origins.
 # Supports wildcards: ['http://*.example.com']
 webrtcAllowOrigins: ['*']
