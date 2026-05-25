@@ -9,10 +9,12 @@ from database import DB
 from models.drone import Drone
 from schemas.drone import Drone as DroneDTO
 from state_computation import StateComputation
+from ai.ai import AI_Module
 
 drone: dronemaster.Drone = None # type: ignore
 db_drone: Drone = None # type: ignore
 state_computation: StateComputation = None # type: ignore
+ai_module: AI_Module = None # type: ignore
 
 live_router = APIRouter(prefix="/live")
 
@@ -20,9 +22,21 @@ live_router = APIRouter(prefix="/live")
 async def get_drone() -> DroneDTO:
     return db_drone # type: ignore
 
+@live_router.post("/disconnect")
+async def disconnect() -> str:
+    global drone, state_computation, db_drone, ai_module
+    drone.reboot()
+    ai_module.on_disconnect()
+    ai_module = None # type: ignore
+    state_computation = None # type: ignore
+    drone.stop_recording_commands()
+    drone = None # type: ignore
+    db_drone = None # type: ignore
+    return "OK"
+
 @live_router.post("/connect", responses={404: {"model": str}})
 async def connect(db: DB, drone_id: uuid.UUID) -> str:
-    global drone, state_computation, db_drone
+    global drone, state_computation, db_drone, ai_module
 
     obj = db.scalar(select(Drone).where(Drone.id == drone_id))
 
@@ -44,12 +58,31 @@ async def connect(db: DB, drone_id: uuid.UUID) -> str:
     await drone.streamon()
     drone.on_state = on_state
     state_computation = StateComputation()
+    ai_module = AI_Module()
     return "OK"
 
 @live_router.post("/command")
 async def command(command: str, wait: bool):
     global drone
     return await drone.debug_command(command, wait_for_answer=wait)
+
+@live_router.post("/people_detection")
+async def people_detection(on: bool):
+    global ai_module
+    ai_module.set_people_detection(on)
+    return "OK"
+
+@live_router.post("/ring_detection")
+async def ring_detection(on: bool):
+    global ai_module
+    ai_module.set_ring_detection(on)
+    return "OK"
+
+@live_router.post("/downvision")
+async def downvision(on: bool):
+    global drone
+    await drone.downvision(on)
+    return "OK"
 
 flight_router = APIRouter(prefix="/flight")
 
@@ -143,10 +176,12 @@ async def on_state(state: dict, compute: bool=True):
     remove = []
 
     if drone is None:
-        return
+        compute = False
+        state = {"connected":False}
 
     if compute:
         state = state_computation.on_state(state) # type: ignore
+        state["detections"] = ai_module.get_detections()
 
     for ws in websockets:
         try:

@@ -34,7 +34,7 @@ async def keepalive():
                 state["connected"] = False
                 await live.on_state(state, compute=False)
                 print("Drone died")
-                live.drone = None
+                await live.disconnect()
         await asyncio.sleep(10)
 
 app = FastAPI(lifespan=lifespan)

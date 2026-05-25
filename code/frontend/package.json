@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --host 0.0.0.0 --watch --port 4000 --ssl --ssl-cert ../fullchain.pem --ssl-key ../privkey.pem",
+    "start": "ng serve --host 0.0.0.0 --watch --port 4000 --disable-host-check --ssl --ssl-cert ../fullchain.pem --ssl-key ../privkey.pem",
     "build": "ng build --external-dependencies jmuxer.js",
     "watch": "ng serve --host 127.0.0.1 --watch --configuration development",
     "test": "ng test"

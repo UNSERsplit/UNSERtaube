@@ -7,10 +7,16 @@
 
 #video {
     background-color: rgba(0, 0, 0, 0.192);
-    /*width: 100%;
+    width: 100%; /* 960x720*/
     height: 100%;
 
-    object-fit: contain;*/
+    --scale-x: calc(100vw / 960);
+    --scale-y: calc(100vh / 720);
+    --scale: min(var(--scale-x), var(--scale-y));
+
+    scale: var(--scale);
+
+    object-fit: contain;
 }
 
 .top{

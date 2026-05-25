@@ -28,6 +28,7 @@ export class RecordButtonComponent implements OnDestroy {
 
     private seconds = 0;      // Vergangene Sekunden seit Aufnahmestart
     private interval: ReturnType<typeof setInterval> | null = null; // Timer-Referenz
+    private video_interval: ReturnType<typeof setInterval> | null = null;
 
     // ─── Template-Methoden ─────────────────────────────────────────────────────
 
@@ -59,7 +60,18 @@ export class RecordButtonComponent implements OnDestroy {
         this.recordingName = '';
         this.controllerApi.stop_recording();
 
-        document.querySelector(".video-placeholder")!.innerHTML = `<video src="http://localhost:8000/recording/video" style="width: 100%;height: 100%;" autoplay=""></video>`
+        if(this.video_interval !== null) {
+            clearInterval(this.video_interval)
+        }
+
+        this.video_interval = setInterval(() => {
+            console.log("Interval")
+            const video = document.querySelector(".video-placeholder > video") as HTMLVideoElement | null;
+            console.log(video, video?.currentTime, video?.paused, video?.ended, video?.readyState)
+            if (!video || !(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
+                document.querySelector(".video-placeholder")!.innerHTML = `<video src="https://${location.hostname}:8000/recording/video" style="width: 100%;height: 100%;" autoplay=""></video>`
+            }
+        }, 1000)
     }
 
     /** Popup 2 → "Speichern": Aufnahme speichern und Status kurz anzeigen */

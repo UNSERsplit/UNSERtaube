@@ -131,6 +131,15 @@ class Drone:
             retry_count=5,
             timeout=1
         ))
+    
+    async def downvision(self, on: bool):
+        await self.action(RetryAction(
+            command=f"downvision {1 if on else 0}",
+            positive_answers=OK,
+            negative_answers=ANY,
+            retry_count=5,
+            timeout=1
+        ))
 
     async def ext_tof(self):
         raw = await self.action(RetryAction(

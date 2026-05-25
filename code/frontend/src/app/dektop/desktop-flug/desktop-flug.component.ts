@@ -103,10 +103,14 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
 
   ngOnInit(): void {
     this.videoApi.initVideo("video")
+    document.body.requestFullscreen({navigationUI: "hide"})
   }
 
   ngOnDestroy(): void {
     this.videoApi.removeVideo()
+    if(document.fullscreenElement) {
+      document.exitFullscreen()
+    }
   }
 
   takeoff() {
