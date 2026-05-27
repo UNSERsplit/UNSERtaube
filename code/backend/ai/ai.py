@@ -7,17 +7,17 @@ import threading
 import time
 import os
 
-# 1. FIX THE STARTUP HANG: Force instant connection
-os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
-    "rtsp_transport;udp|"
-    "fflags;nobuffer|"
-    "flags;low_delay|"
-    "probesize;32|"         # Stop analyzing massive chunks of data
-    "analyzeduration;0"     # Stop waiting to figure out the framerate
-)
-
 class FastStream: # danke gemini
     def __init__(self, url):
+        # 1. FIX THE STARTUP HANG: Force instant connection
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
+            "rtsp_transport;udp|"
+            "fflags;nobuffer|"
+            "flags;low_delay|"
+            "probesize;32|"         # Stop analyzing massive chunks of data
+            "analyzeduration;0"     # Stop waiting to figure out the framerate
+        )
+
         self.cap = cv2.VideoCapture(url, cv2.CAP_FFMPEG)
         self.frame = None
         self.new_frame_ready = False  # Track if we have fresh data
@@ -41,10 +41,11 @@ class FastStream: # danke gemini
         self.cap.release()
 
 class Module(ABC):
-    def __init__(self, frame_func) -> None:
+    def __init__(self, frame_func, *extra_args) -> None:
         self.enabled = False
         self.detections = []
         self.frame_func = frame_func
+        self.extra_args = extra_args
         self.process: Process = None # type: ignore
         self.pipe: Connection = None # type: ignore
 
@@ -56,7 +57,7 @@ class Module(ABC):
         parent, child = Pipe()
         self.process = Process(
             target=self._target,
-            args=(self.frame_func, child)
+            args=(self.frame_func, child, self.extra_args)
         )
         self.pipe = parent
         self.process.start()
@@ -71,30 +72,33 @@ class Module(ABC):
         self.pipe.send("exit")
         self.pipe.close()
 
-        print(f"waiting on child to exit {self.__qualname__}")
+        print(f"waiting on child to exit")
         self.process.join(3)
         print("Exited")
         
     
     @staticmethod
-    def _target(frame_func, pipe: Connection) -> None:
+    def _target(frame_func, pipe: Connection, extra_args: list) -> None:
+        print("Connecting to stream")
         stream = FastStream("rtsp://127.0.0.1:8554/camera")
+        print("Connected to stream")
         while not pipe.poll() and not pipe.closed:
             if stream.new_frame_ready and stream.frame is not None:
                 stream.new_frame_ready = False
 
                 frame = stream.frame
 
-                detections = frame_func(frame)
+                detections = frame_func(frame, *extra_args)
 
-                pipe.send(detections)
+                if not pipe.closed:
+                    pipe.send(detections)
+                time.sleep(1/30)
         pipe.close()
 
     def get_detections(self) -> list:
         if self.enabled:
             if self.pipe.poll():
                 self.detections = self.pipe.recv()
-                print("Detected")
         return self.detections
     
 from .people_detection import People_Module
