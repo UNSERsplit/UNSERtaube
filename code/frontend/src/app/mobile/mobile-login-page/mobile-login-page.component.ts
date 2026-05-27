@@ -9,6 +9,7 @@ import { ButtonVariants } from '../../components/button/button.variants';
 import { CardComponent } from '../../components/card/card.component';
 import { Router } from '@angular/router';
 import { ControllerApiService } from '../../service/controller-api.service';
+import {DroneCarouselMobileComponent} from '../../components/drone-carousel-mobile/drone-carousel-mobile.component';
 
 @Component({
     selector: 'app-mobile-login-page',
@@ -18,7 +19,7 @@ import { ControllerApiService } from '../../service/controller-api.service';
         CardComponent,
         InputHeaderComponent,
         ButtonComponent,
-        DroneCarouselComponent
+        DroneCarouselMobileComponent
     ],
     templateUrl: './mobile-login-page.component.html',
     standalone: true,
@@ -32,7 +33,7 @@ export class MobileLoginPageComponent {
     protected readonly ButtonVariant = ButtonVariants;
 
     buttonWidth: string = '100%';
-    buttonHeight: string = '1rem';
+    buttonHeight: string = '0.8rem';
 
 
     handleConnect() { //TODO validation
