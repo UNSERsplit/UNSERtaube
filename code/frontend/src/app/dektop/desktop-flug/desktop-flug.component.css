@@ -3,20 +3,28 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 #video {
     background-color: rgba(0, 0, 0, 0.192);
-    width: 100%; /* 960x720*/
-    height: 100%;
-
-    --scale-x: calc(100vw / 960);
-    --scale-y: calc(100vh / 720);
-    --scale: min(var(--scale-x), var(--scale-y));
-
-    scale: var(--scale);
+    width: 960px; /* 960x720*/
+    height: 720px;
 
     object-fit: contain;
+}
+
+#detection-overlay {
+    position: absolute;
+    left: auto;
+    top: auto;
+    bottom: auto;
+    right: auto;
+    width: 960px;
+    height: 720px;
+
+
+    background-color: rgba(255,0,0,0);
 }
 
 .top{

@@ -74,6 +74,8 @@ export interface State {
 
   /** speed in dm/s */
   speed: number
+
+  detections: {type:string, cords:[number, number, number, number]}[]
 }
 
 export type Status = "offline" | "ws_connected" | "drone_connected" | "replaying" | "error" | "connecting";
@@ -85,7 +87,7 @@ export type Status = "offline" | "ws_connected" | "drone_connected" | "replaying
 export class ControllerApiService {
   public status = signal<Status>("offline");
   public drone = signal<Drone>(new Drone("","",""));
-  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN, h: NaN, time: NaN, tof: NaN, baro: NaN, connected: false, last_update: NaN, delta: NaN, posx: NaN, posy: NaN, posz: NaN, distance: NaN, speed: NaN})
+  public state = signal<State>({pitch: NaN, roll: NaN, yaw: NaN, vgx: NaN, vgy: NaN, vgz: NaN, bat: NaN, templ: NaN, temph: NaN, agx: NaN, agy: NaN, agz: NaN, h: NaN, time: NaN, tof: NaN, baro: NaN, connected: false, last_update: NaN, delta: NaN, posx: NaN, posy: NaN, posz: NaN, distance: NaN, speed: NaN, detections: [{type:"person", cords:[10,20,950,710]}]})
   private videoApi = inject(VideoApiService);
   private waiting_messages: {
     [index: string]: [(value: object | PromiseLike<object>) => void, (reason?: any) => void, string[]]
@@ -254,6 +256,14 @@ export class ControllerApiService {
 
   async emergency() {
     await this.action("POST", "live/flight/stop", undefined);
+  }
+
+  async detect_people(enable: boolean) {
+    await this.action("POST", `live/people_detection?on=${enable}`, undefined)
+  }
+
+  async detect_rings(enable: boolean) {
+    await this.action("POST", `live/ring_detection?on=${enable}`, undefined)
   }
 
   async connect(id: string) {

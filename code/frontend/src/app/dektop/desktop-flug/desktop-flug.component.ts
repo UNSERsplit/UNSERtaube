@@ -88,6 +88,26 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
       }
     })
 
+    effect(() => {
+      const detections = this.state().detections;
+      const element = document.querySelector("canvas#detection-overlay") as HTMLCanvasElement;
+      const ctx = element.getContext("2d")!;
+
+      detections.forEach((v) => {
+        const [x1,y1,x2,y2] = v.cords
+
+        const color = v.type == "person" ? "red" : "lime"
+
+        ctx.clearRect(0,0,960,720);
+        ctx.strokeStyle = color
+        ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+        ctx.fillStyle = color
+        
+        const metrics = ctx.measureText(v.type)
+        ctx.fillText(v.type, x1 + 2, y1 + metrics.fontBoundingBoxAscent)
+      })
+    })
+
 
     /*effect(() => {
       this.controllerApi.send_debug_finetune({
