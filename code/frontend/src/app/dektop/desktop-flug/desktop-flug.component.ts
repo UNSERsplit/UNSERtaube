@@ -11,6 +11,9 @@ import {RecordButtonComponent} from '../../components/record-button/record-butto
 import {LedControlButtonComponent} from '../../components/led-control-button/led-control-button.component';
 import {HomeButtonComponent} from '../../components/home-button/home-button.component';
 import { PathMapComponent } from '../../components/path-map/path-map.component';
+import {
+    PersonDetectionButtonComponent
+} from '../../components/person-detection-button/person-detection-button.component';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -32,7 +35,8 @@ const toString = {
         RecordButtonComponent,
         LedControlButtonComponent,
         HomeButtonComponent,
-        PathMapComponent
+        PathMapComponent,
+        PersonDetectionButtonComponent
     ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'

@@ -15,6 +15,10 @@ import {MobileHomeButtonComponent} from '../../components/mobile-home-button/mob
 import {
     MobileLedControlButtonComponent
 } from '../../components/mobile-led-control-button/mobile-led-control-button.component';
+import {
+    PersonDetectionButtonMobileComponent
+} from '../../components/person-detection-button-mobile/person-detection-button-mobile.component';
+import {RecordButtonMobileComponent} from '../../components/record-button-mobile/record-button-mobile.component';
 
 
 export type Mode = "PATH" | "AUTONOMOUS" | "TOUCH"
@@ -30,11 +34,12 @@ const toString = {
     imports: [
         ButtonComponent,
         FormsModule,
-        RecordButtonComponent,
         MobilePathMapComponent,
         JoystickComponent,
         MobileHomeButtonComponent,
-        MobileLedControlButtonComponent
+        MobileLedControlButtonComponent,
+        PersonDetectionButtonMobileComponent,
+        RecordButtonMobileComponent
     ],
   templateUrl: './mobile-flug.component.html',
   styleUrl: './mobile-flug.component.css'

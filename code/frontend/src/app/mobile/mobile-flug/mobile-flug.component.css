@@ -300,19 +300,26 @@ goackLedBtn{
 }
 
 .joystick-layer {
-    position: absolute;
+    position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 5;
+    z-index: 5000;
 
     .joystick {
         position: absolute;
-        bottom: 4.5rem; // über der Bottom-Leiste
-    pointer-events: auto;
+        bottom: 4.5rem; /* über der Bottom-Leiste*/
+        pointer-events: auto;
     }
 
     .joystick-left  { left: 1rem; }
     .joystick-right { right: 1rem; }
+}
+
+.joystick-base {
+    touch-action: none; /* <-- muss da sein*/
+    pointer-events: auto;   /* Explizit auch hier setzen */
+    position: relative;     /* Für korrekte Stacking-Kontext-Bildung */
+    z-index: 1001;
 }
 
 .absadasd{

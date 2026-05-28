@@ -12,13 +12,11 @@
     position: relative;
     width: 160px;
     height: 64px;
-    margin: 9px;
 }
 
 .record-btn {
-    margin: 2px;
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     min-width: 48px;
     min-height: 48px;
     border-radius: 50%;
