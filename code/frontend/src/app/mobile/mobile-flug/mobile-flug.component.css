@@ -1,0 +1,322 @@
+.video-container {
+    grid-column:2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#video {
+    background-color: rgba(0, 0, 0, 0.192);
+    width: 100%; /* 960x720*/
+    height: 100%;
+
+    --scale-x: calc(100vw / 960);
+    --scale-y: calc(100vh / 720);
+    --scale: min(var(--scale-x), var(--scale-y));
+
+    scale: var(--scale);
+
+    object-fit: contain;
+}
+
+.top{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+    width: calc(100% - 1rem);
+    color: white;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    grid-column: 1;
+}
+
+.bottom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+    width: calc(100% - 1rem);
+    color: white;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+}
+
+.leftContainer{
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding-left: 0.7rem;
+}
+
+.center{
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 1fr 4fr 1fr;
+}
+
+.rightContainer{
+    grid-column: 3;
+    padding: 10px;
+}
+
+.left, .right {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    color: white;
+}
+
+.overlay{
+    display: grid;
+    grid-template-rows: 1fr 10fr 1fr;
+}
+
+.overlay p {
+    display: flex;
+    align-items: center;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    font-size: small;
+}
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+}
+
+.right {
+    position: absolute;
+    right: 0;
+}
+
+.left {
+    position: absolute;
+    left: 0;
+}
+
+.seperator {
+    flex-grow: 1;
+}
+
+:host {
+    position: relative;
+}
+
+:host > * {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.landStartbtn{
+    margin: 3px;
+    height: 3rem;
+    width: 7rem;
+    padding-bottom: 20px;
+}
+
+.modeSepa{
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+}
+
+.buttonContainer{
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+}
+
+.tempBatCon{
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+}
+
+.heightSpeed{
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+
+}
+
+.PRY{
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.timeDist{
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+}
+
+.danger {
+    color: rgb(255, 174, 0);
+}
+
+.critical {
+    color: red;
+    animation: critical 0.5s infinite;
+}
+
+@keyframes critical {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+
+#myCanvas{
+    width:400px;
+    height:300px;
+    background-color:white;
+}
+
+.record-btn {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #e24b4a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, transform 0.1s;
+    outline: none;
+}
+
+.record-btn:hover {
+    border-color: #c03030;
+    transform: scale(1.04);
+}
+
+.record-btn:active {
+    transform: scale(0.97);
+}
+
+.inner-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e24b4a;
+    transition: border-radius 0.3s cubic-bezier(.4,0,.2,1),
+    width 0.3s cubic-bezier(.4,0,.2,1),
+    height 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Aufnahme aktiv: Kreis wird zum Quadrat */
+.record-btn.recording .inner-circle {
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    background: #a32d2d;
+}
+
+/* Pulsieren während der Aufnahme */
+.record-btn.recording {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0px rgba(226,75,74,0.35); }
+    60%  { box-shadow: 0 0 0 14px rgba(226,75,74,0); }
+    100% { box-shadow: 0 0 0 0px rgba(226,75,74,0); }
+}
+
+.label { font-size: 14px; color: #888; }
+.label.active { color: #e24b4a; font-weight: 600; }
+.timer { font-family: monospace; font-size: 13px; color: #aaa; min-height: 1.2em; }
+
+.record-btn-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background: #fff;
+    font-family: sans-serif;
+    gap: 1.5rem;
+}
+
+goackLedBtn{
+    width: 64px;   /* oder größer, z.B. 20px */
+    height: 64px;
+    border-radius: 50%; /* rund wie eine LED */
+    padding: 0;
+    background-color: var(--orange-button-color);
+    border: none;
+    cursor: pointer;
+
+}
+
+.ledBtn{
+    width: 72px;   /* oder größer, z.B. 20px */
+    height: 72px;
+    border-radius: 50%; /* rund wie eine LED */
+    padding: 0;
+    background-color: rgb(244, 3, 252, 0.1);
+    border-color: var(--pink-button-color);
+    border: 3px solid var(--pink-button-color);
+    cursor: pointer;
+}
+
+.ihossNomenSuachn{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 15px;
+}
+
+@media (max-width: 900px) {
+    .joystick-layer {
+        .joystick-left  { left: 0.75rem;  bottom: 0.75rem; }
+        .joystick-right { right: 0.75rem; bottom: 0.75rem; }
+    }
+}
+
+.joystick-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+
+    .joystick {
+        position: absolute;
+        bottom: 4.5rem; // über der Bottom-Leiste
+    pointer-events: auto;
+    }
+
+    .joystick-left  { left: 1rem; }
+    .joystick-right { right: 1rem; }
+}
+
+.absadasd{
+    margin: 3px;
+}
+
+

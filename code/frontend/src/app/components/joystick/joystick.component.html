@@ -1,0 +1,28 @@
+<div class="joystick-wrapper">
+    <div class="joystick-label" *ngIf="label">{{ label }}</div>
+
+    <div
+        #base
+        class="joystick-base"
+        [style.width.px]="size"
+        [style.height.px]="size"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+    >
+        <div class="crosshair-h"></div>
+        <div class="crosshair-v"></div>
+
+        <div
+            class="joystick-stick"
+            [class.active]="isActive"
+            [style.transform]="'translate(' + stickX + 'px, ' + stickY + 'px)'"
+        ></div>
+    </div>
+
+    <div class="joystick-values">
+        <span>{{ xLabel }}: {{ xValue }}</span>
+        <span>{{ yLabel }}: {{ yValue }}</span>
+    </div>
+</div>
