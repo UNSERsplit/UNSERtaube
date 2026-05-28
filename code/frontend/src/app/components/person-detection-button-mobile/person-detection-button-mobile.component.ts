@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
+import {ControllerApiService} from '../../service/controller-api.service';
 
 @Component({
   selector: 'app-person-detection-button-mobile',
@@ -7,5 +8,14 @@ import { Component } from '@angular/core';
   styleUrl: './person-detection-button-mobile.component.css'
 })
 export class PersonDetectionButtonMobileComponent {
+    enabled: boolean = false;
+    private controllerApi = inject(ControllerApiService);
+
+    protected toogle(){
+        this.enabled = !this.enabled;
+        if (this.enabled) {
+            this.controllerApi.detect_people;
+        }
+    }
 
 }

@@ -11,10 +11,10 @@ export class PersonDetectionButtonComponent {
     enabled: boolean = false;
     private controllerApi = inject(ControllerApiService);
 
-    private toogle(){
+    protected toogle(){
         this.enabled = !this.enabled;
         if (this.enabled) {
-            //this.controllerApi.detect_people;
+            this.controllerApi.detect_people;
         }
     }
 }
