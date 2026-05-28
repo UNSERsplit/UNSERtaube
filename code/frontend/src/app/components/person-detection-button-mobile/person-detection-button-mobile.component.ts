@@ -13,9 +13,7 @@ export class PersonDetectionButtonMobileComponent {
 
     protected toogle(){
         this.enabled = !this.enabled;
-        if (this.enabled) {
-            this.controllerApi.detect_people;
-        }
+        this.controllerApi.detect_people(this.enabled);
     }
 
 }
