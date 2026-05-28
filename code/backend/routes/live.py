@@ -58,7 +58,7 @@ async def connect(db: DB, drone_id: uuid.UUID) -> str:
     await drone.streamon()
     drone.on_state = on_state
     state_computation = StateComputation()
-    ai_module = AI_Module()
+    ai_module = AI_Module(drone)
     return "OK"
 
 @live_router.post("/command")
@@ -69,13 +69,13 @@ async def command(command: str, wait: bool):
 @live_router.post("/people_detection")
 async def people_detection(on: bool):
     global ai_module
-    ai_module.set_people_detection(on)
+    await ai_module.set_people_detection(on)
     return "OK"
 
 @live_router.post("/ring_detection")
 async def ring_detection(on: bool):
     global ai_module
-    ai_module.set_ring_detection(on)
+    await ai_module.set_ring_detection(on)
     return "OK"
 
 @live_router.post("/downvision")
@@ -181,7 +181,7 @@ async def on_state(state: dict, compute: bool=True):
 
     if compute:
         state = state_computation.on_state(state) # type: ignore
-        state["detections"] = ai_module.get_detections()
+        state["detections"] = await ai_module.get_detections()
 
     for ws in websockets:
         try:

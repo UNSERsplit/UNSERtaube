@@ -75,7 +75,7 @@ export interface State {
   /** speed in dm/s */
   speed: number
 
-  detections: {type:string, cords:[number, number, number, number]}[]
+  detections: any[]
 }
 
 export type Status = "offline" | "ws_connected" | "drone_connected" | "replaying" | "error" | "connecting";

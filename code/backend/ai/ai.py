@@ -1,6 +1,7 @@
 from multiprocessing import Process, Queue, Pipe
 from multiprocessing.connection import Connection
 from abc import ABC, abstractmethod
+from dronemaster import Drone
 
 import cv2
 import threading
@@ -88,7 +89,9 @@ class Module(ABC):
 
                 frame = stream.frame
 
+                t = time.time()
                 detections = frame_func(frame, *extra_args)
+                print(f"T:{time.time() - t}")
 
                 if not pipe.closed:
                     pipe.send(detections)
@@ -97,17 +100,19 @@ class Module(ABC):
 
     def get_detections(self) -> list:
         if self.enabled:
-            if self.pipe.poll():
+            while self.pipe.poll():
                 self.detections = self.pipe.recv()
         return self.detections
     
 from .people_detection import People_Module
 from .ring_detection import Ring_Module
+from .ring_follower import Ring_Follower
 
 class AI_Module:
-    def __init__(self) -> None:
+    def __init__(self, drone: Drone) -> None:
         self.people = People_Module()
         self.ring = Ring_Module()
+        self.follower = Ring_Follower(drone)
     
     def on_disconnect(self):
         if self.ring.enabled:
@@ -115,17 +120,22 @@ class AI_Module:
         if self.people.enabled:
             self.people.disable()
 
-    def set_people_detection(self, on: bool):
+    async def set_people_detection(self, on: bool):
         if on:
             self.people.enable()
         else:
             self.people.disable()
 
-    def set_ring_detection(self, on: bool):
+    async def set_ring_detection(self, on: bool):
         if on:
             self.ring.enable()
+            await self.follower.enable()
         else:
             self.ring.disable()
+            await self.follower.disable()
 
-    def get_detections(self):
-        return self.ring.get_detections() + self.people.get_detections()
+    async def get_detections(self):
+        ring = self.ring.get_detections()
+        if self.ring.enabled:
+            await self.follower.on_new_pos(ring)
+        return ring + self.people.get_detections()

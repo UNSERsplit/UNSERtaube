@@ -44,18 +44,18 @@ export class KeyboardInputComponent implements OnInit, OnDestroy{
 
   @HostListener("window:keydown", ['$event'])
   onKeyDown(event: KeyboardEvent) {
-    if(!(event.key in this.keys())) return
+    if(!(event.key.toLowerCase() in this.keys())) return
     this.keys.update((v) => {
-      v[event.key] = true;
+      v[event.key.toLowerCase()] = true;
       return structuredClone(v);
     });
   }
 
   @HostListener("window:keyup", ['$event'])
   onKeyUp(event: KeyboardEvent) {
-    if(!(event.key in this.keys())) return
+    if(!(event.key.toLowerCase() in this.keys())) return
     this.keys.update((v) => {
-      v[event.key] = false;
+      v[event.key.toLowerCase()] = false;
       return structuredClone(v);
     });
   }

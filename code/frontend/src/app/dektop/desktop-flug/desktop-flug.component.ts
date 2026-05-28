@@ -89,18 +89,41 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
       const element = document.querySelector("canvas#detection-overlay") as HTMLCanvasElement;
       const ctx = element.getContext("2d")!;
 
+      ctx.clearRect(0,0,960,720);
+
       detections.forEach((v) => {
-        const [x1,y1,x2,y2] = v.cords
+        if (v.type === "person") {
+          const [x1,y1,x2,y2] = v.cords
 
-        const color = v.type == "person" ? "red" : "lime"
+          const color = "red"
 
-        ctx.clearRect(0,0,960,720);
-        ctx.strokeStyle = color
-        ctx.strokeRect(x1, y1, x2-x1, y2-y1);
-        ctx.fillStyle = color
-        
-        const metrics = ctx.measureText(v.type)
-        ctx.fillText(v.type, x1 + 2, y1 + metrics.fontBoundingBoxAscent)
+          ctx.strokeStyle = color
+          ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+          ctx.fillStyle = color
+          
+          const metrics = ctx.measureText(v.type)
+          ctx.fillText(v.type, x1 + 2, y1 + metrics.fontBoundingBoxAscent)
+        } else if (v.type === "ring") {
+          const accuracy = v.accuracy;
+          const center = v.center;
+          const axis = v.axis;
+          const tilt = v.tilt;
+
+          let text = `${accuracy}/${parseInt((axis[0] / axis[1]) * 1000 + "")}`
+
+          ctx.fillStyle = "lime"
+          
+          ctx.beginPath();
+          ctx.arc(center[0], center[1], 5, 0, 2 * Math.PI);
+          ctx.fill();
+
+          const metrics = ctx.measureText(text)
+          ctx.fillText(text, center[0] + 2, center[1] + metrics.fontBoundingBoxAscent)
+
+          if(this.mode() == "AUTONOMOUS") {
+            
+          }
+        }
       })
     })
 
