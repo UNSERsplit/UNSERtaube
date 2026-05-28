@@ -1,0 +1,31 @@
+.detection-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2.5px solid #ffb800;
+    background: transparent;
+    color: #ffb800;
+    cursor: pointer;
+    margin: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 184, 0, 0.15);
+        box-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+    }
+
+    &:active {
+        background: rgba(255, 184, 0, 0.25);
+    }
+
+    .icon {
+        width: 22px;
+        height: 22px;
+    }
+}

@@ -1,0 +1,114 @@
+<div class="video-container">
+    <video id="video"></video>
+</div>
+
+<div class="overlay">
+    <div class="top">
+        <div class="modeSepa">
+            <p id="mode">Mode: {{ modeName() }}</p>
+            <div class="seperator"></div>
+        </div>
+
+        <div class="PRY">
+            <p id="pitch">{{ state().pitch }}°</p>
+            <p id="roll">{{ state().roll }}°</p>
+            <p id="yaw">{{ state().yaw }}°</p>
+        </div>
+
+        <div class="tempBatCon">
+            <p id="temp" [class.critical]="temp() >= 100" [class.danger]="temp() > 80">{{ temp() }}°C</p>
+            <p id="battery">{{ state().bat }}%</p>
+            <p id="drone-connection">{{ drone().getName }} ({{ drone().getIp }})</p>
+        </div>
+    </div>
+
+    <div class="center">
+        <div class="leftContainer">
+
+            <div class="ihossNomenSuachn">
+                <app-mobile-home-button class="absadasd"></app-mobile-home-button>
+                <app-mobile-led-control-button class="absadasd"></app-mobile-led-control-button>
+                <app-person-detection-button-mobile class="absadasd"></app-person-detection-button-mobile>
+            </div>
+            <app-record-button-mobile class=""></app-record-button-mobile>
+        </div>
+        <div class="rightContainer">
+            <app-mobile-path-map></app-mobile-path-map>
+        </div>
+    </div>
+
+    <div class="bottom">
+        <div class="heightSpeed">
+            <p id="height">{{ state().tof }}cm AGL</p>
+            <p id="speed">{{ state().speed }}dm/s</p>
+        </div>
+
+        <div class="buttonContainer">
+            <app-button class="landStartbtn" text="Takeoff" (click)="takeoff()" [variant]="ButtonVariant.green"></app-button>
+            <app-button class="landStartbtn" text="Land" (click)="land()" [variant]="ButtonVariant.orange"></app-button>
+            <app-button class="landStartbtn" text="Emergency" (click)="emergency()" [variant]="ButtonVariant.red"></app-button>
+        </div>
+
+        <div class="timeDist">
+            <p id="flight-time">{{ state().time }}s</p>
+            <p id="flight-distance">{{ state().distance }}dm</p>
+        </div>
+    </div>
+
+    @if (mode() === 'TOUCH') {
+        <div class="joystick-layer">
+            <app-joystick
+                class="joystick joystick-left"
+                xLabel="Yaw"
+                yLabel="Thr"
+                [size]="90"
+                [springBackY]="false"
+                [initialY]="1"
+                (valueChange)="onLeftStick($event)">
+            </app-joystick>
+
+            <app-joystick
+                class="joystick joystick-right"
+                xLabel="Roll"
+                yLabel="Pit"
+                [size]="90"
+                (valueChange)="onRightStick($event)">
+            </app-joystick>
+        </div>
+    }
+
+    @if (showDebugHud()) {
+        <div class="left">
+            <div style="display: flex;">
+                <p>Show Processed Frame: </p>
+                <input type="checkbox" [(ngModel)]="showProcessed">
+            </div>
+        </div>
+        <div class="right">
+            <div style="display: flex; justify-content:space-between">
+                <p>Hue Lower ({{ hue_lower() }}): </p>
+                <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_lower">
+            </div>
+            <div style="display: flex; justify-content:space-between">
+                <p>Hue Upper ({{ hue_upper() }}): </p>
+                <input type="range" min="0" max="180" step="1" [(ngModel)]="hue_upper">
+            </div>
+            <div style="display: flex; justify-content:space-between">
+                <p>Saturation Lower ({{ saturation_lower() }}): </p>
+                <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_lower">
+            </div>
+            <div style="display: flex; justify-content:space-between">
+                <p>Saturation Upper ({{ saturation_upper() }}): </p>
+                <input type="range" min="0" max="255" step="1" [(ngModel)]="saturation_upper">
+            </div>
+            <div style="display: flex; justify-content:space-between">
+                <p>Value Lower ({{ value_lower() }}): </p>
+                <input type="range" min="0" max="255" step="1" [(ngModel)]="value_lower">
+            </div>
+            <div style="display: flex; justify-content:space-between">
+                <p>Value Upper ({{ value_upper() }}): </p>
+                <input type="range" min="0" max="255" step="1" [(ngModel)]="value_upper">
+            </div>
+        </div>
+    }
+</div>

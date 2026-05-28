@@ -1,0 +1,69 @@
+import {Component, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {ControllerApiService} from '../../service/controller-api.service';
+
+const COLORS = [
+    '#ffadad',
+    '#ffd6a5',
+    '#fdffb6',
+    '#caffbf',
+    '#9bf6ff',
+    '#a0c4ff'
+]
+
+@Component({
+  selector: 'app-drone-carousel-mobile',
+  imports: [],
+  templateUrl: './drone-carousel-mobile.component.html',
+  styleUrl: './drone-carousel-mobile.component.css'
+})
+export class DroneCarouselMobileComponent {
+    private router = inject(Router);
+    private controller = inject(ControllerApiService);
+
+    items: {name: string, ip: string, id: string, color: string}[] = [];
+
+    currentIndex = 0;
+
+    constructor() {
+        this.items = []
+        this.controller.get_drones().then(drones => {
+            drones.forEach((v: any) => {
+                const hash = BigInt("0x" + v.id.replaceAll("-",""))
+                const color = COLORS[Number(hash % BigInt(COLORS.length))]
+
+                this.items.push(
+                    {
+                        name: v.name,
+                        ip: v.ip,
+                        id: v.id,
+                        color: color
+                    }
+                )
+            })
+        })
+    }
+
+    next() {
+        console.log(this.items.length);
+        // Verhindert das Überlaufen (zeigt immer 3 an)
+        if (this.currentIndex < this.items.length - 3) {
+            this.currentIndex++;
+        } else {
+            this.currentIndex = 0; // Loop zurück zum Anfang
+        }
+    }
+
+    prev() {
+        console.log(this.items.length);
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+        } else {
+            this.currentIndex = this.items.length - 3; // Loop zum Ende
+        }
+    }
+
+    selectDrone(drone: any){
+        this.controller.connect(drone.id);
+    }
+}
