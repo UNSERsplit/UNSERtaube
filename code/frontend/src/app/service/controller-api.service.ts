@@ -190,6 +190,8 @@ export class ControllerApiService {
       }
     
     }
+    data.speed = Math.round(data.speed);
+    data.distance = Math.round(data.distance);
     this.state.set(data);
   }
 

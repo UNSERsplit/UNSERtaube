@@ -32,7 +32,7 @@ const toString = {
 @Component({
   selector: 'app-mobile-flug',
     imports: [
-        ButtonComponent,
+        //ButtonComponent,
         FormsModule,
         MobilePathMapComponent,
         JoystickComponent,
@@ -52,6 +52,8 @@ export class MobileFlugComponent {
     public currentmode = signal<Mode>("TOUCH")
 
     public mode = input<string | undefined>();
+
+    private armed = signal(false);
 
 
     protected showProcessed = model(false);
@@ -204,7 +206,20 @@ export class MobileFlugComponent {
     }
 
     private sendRc(): void {
-        this.controllerApi.send_rc(this.yaw, this.pitch, this.roll, this.throttle)
+        if(this.throttle == 0 && this.yaw == 0 && this.roll == 0 && this.pitch == 0) {
+            this.armed.set(false);
+        }
+        if(!this.armed() && this.throttle < -50 && this.yaw > 50 && this.roll < -50 && this.pitch < -50) {
+            this.armed.set(true);
+            this.controllerApi.send_rc(0, 0, 0, 0)
+            setTimeout(() => {
+                this.takeoff()
+            }, 500);
+            
+        }
+        if(!this.armed()) {
+            this.controllerApi.send_rc(this.yaw, this.pitch, this.roll, this.throttle)
+        }
     }
 
 }

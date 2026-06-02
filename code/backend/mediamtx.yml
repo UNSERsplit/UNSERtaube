@@ -805,6 +805,28 @@ paths:
     source: publisher
     sourceProtocol: udp
 
+    runOnInit: >
+      ffmpeg 
+      -fflags nobuffer
+      -hide_banner 
+      -loglevel error
+      -nostats
+      -probesize 32 
+      -analyzeduration 1 
+      -flags low_delay 
+      -timeout 2000 
+      -i udp://0.0.0.0:11111 
+      -c:v libx264 
+      -preset ultrafast 
+      -tune zerolatency 
+      -b:v 2M 
+      -c:a aac 
+      -b:a 128k 
+      -f rtsp 
+      -rtsp_transport tcp 
+      rtsp://localhost:$RTSP_PORT/$MTX_PATH
+    runOnInitRestart: yes
+
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.
   all_others:
