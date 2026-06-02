@@ -89,10 +89,10 @@
     }
 </div>
 
-@if (mode() == "KEYBOARD") {
+@if (currentmode() == "KEYBOARD") {
     <app-keyboard-input></app-keyboard-input>
 }
 
-@if (mode() == "CONTROLLER") {
+@if (currentmode() == "CONTROLLER") {
     <app-controller-input></app-controller-input>
 }

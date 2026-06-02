@@ -2,12 +2,14 @@ import {Component, inject, Input, WritableSignal} from '@angular/core';
 import {CardComponent} from '../card/card.component';
 import {CardVariants} from '../card/card.variants';
 import {DeviceService} from '../../service/device.service';
+import { RouterLink } from "@angular/router";
 
 @Component({
     selector: 'app-flypath',
     imports: [
-        CardComponent
-    ],
+    CardComponent,
+    RouterLink
+],
     templateUrl: './flypath.component.html',
     standalone: true,
     styleUrl: './flypath.component.css'

@@ -68,12 +68,14 @@ export class JoystickComponent implements OnInit {
 
     get xValue(): number {
         // -1..1  ->  1..100
-        return Math.round(((this.normX + 1) / 2) * 99 + 1);
+        return Math.round(this.normX * 100)
+        //return Math.round(((this.normX + 1) / 2) * 99 + 1);
     }
 
     get yValue(): number {
         // Y wird invertiert: oben = hoher Wert
-        return Math.round(((-this.normY + 1) / 2) * 99 + 1);
+        return Math.round(this.normY * -100)
+        //return Math.round(((-this.normY + 1) / 2) * 99 + 1);
     }
 
     get currentValue(): JoystickValue {

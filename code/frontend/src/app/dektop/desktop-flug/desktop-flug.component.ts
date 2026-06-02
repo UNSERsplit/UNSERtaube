@@ -1,4 +1,4 @@
-import { Component, computed, effect, HostListener, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, input, model, OnDestroy, OnInit, signal } from '@angular/core';
 import { VideoApiService } from '../../service/video-api.service';
 import { ControllerApiService } from '../../service/controller-api.service';
 import { KeyboardInputComponent } from '../keyboard-input/keyboard-input.component';
@@ -14,6 +14,7 @@ import { PathMapComponent } from '../../components/path-map/path-map.component';
 import {
     PersonDetectionButtonComponent
 } from '../../components/person-detection-button/person-detection-button.component';
+import { Router, RouterModule } from '@angular/router';
 
 export type Mode = "CONTROLLER" | "KEYBOARD" | "PATH" | "AUTONOMOUS"
 
@@ -36,7 +37,8 @@ const toString = {
         LedControlButtonComponent,
         HomeButtonComponent,
         PathMapComponent,
-        PersonDetectionButtonComponent
+        PersonDetectionButtonComponent,
+        RouterModule
     ],
   templateUrl: './desktop-flug.component.html',
   styleUrl: './desktop-flug.component.css'
@@ -46,7 +48,9 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
   private controllerApi = inject(ControllerApiService);
   private gamepadService = inject(GamepadService);
 
-  public mode = signal<Mode>("KEYBOARD")
+  public currentmode = signal<Mode>("KEYBOARD")
+  public mode = input<string | undefined>();
+
 
   protected showProcessed = model(false);
   protected hue_lower = model(5)
@@ -69,7 +73,7 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
   })
 
   protected drone = computed(() => this.controllerApi.drone()!)
-  protected modeName = computed(() => toString[this.mode()])
+  protected modeName = computed(() => toString[this.currentmode()])
 
   protected readonly ButtonVariant = ButtonVariants;
   buttonHeight: string = "3rem";
@@ -79,12 +83,12 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
 
   constructor() {
     effect(() => {
-      if(this.mode() == "PATH" || this.mode() == "AUTONOMOUS") return
+      if(this.currentmode() == "PATH" || this.currentmode() == "AUTONOMOUS") return
 
       if(this.gamepadService.gamepadConnected()) {
-        this.mode.set("CONTROLLER")
+        this.currentmode.set("CONTROLLER")
       } else {
-        this.mode.set("KEYBOARD")
+        this.currentmode.set("KEYBOARD")
       }
     })
 
@@ -124,7 +128,7 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
           const metrics = ctx.measureText(text)
           ctx.fillText(text, center[0] + 2, center[1] + metrics.fontBoundingBoxAscent)
 
-          if(this.mode() == "AUTONOMOUS") {
+          if(this.currentmode() == "AUTONOMOUS") {
             
           }
         }
@@ -149,6 +153,11 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
   }
 
   ngOnInit(): void {
+    if(this.mode() == "ring") {
+      this.currentmode.set("AUTONOMOUS");
+    }else if(this.mode() == "replay") {
+      this.currentmode.set("PATH");
+    }
     this.videoApi.initVideo("video")
     document.body.requestFullscreen({navigationUI: "hide"})
   }

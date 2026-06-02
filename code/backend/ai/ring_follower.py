@@ -51,10 +51,15 @@ class Ring_Follower:
         self.drone = drone
         self.state = "SEARCH"
 
-        self.roll = PID(0.15, 0.01, 0.05)
-        self.throttle = PID(0.20, 0.01, 0.06)
-        self.pitch = PID(0.10, 0, 0.04)
-        self.yaw = PID(0.12, 0, 0.03)
+        #self.roll = PID(0.15, 0.01, 0.05)
+        #self.throttle = PID(0.20, 0.01, 0.06)
+        #self.pitch = PID(0.10, 0, 0.04)
+        #self.yaw = PID(0.12, 0, 0.03)
+
+        self.roll =     PID(0.05, 0.00, 0.00)
+        self.throttle = PID(0.05, 0.00, 0.00)
+        self.pitch =    PID(0.10, 0.00, 0.00)
+        self.yaw =      PID(0.12, 0.00, 0.00)
 
         self.last_seen_frame = None
         self.centre_hold_start = None
@@ -81,6 +86,8 @@ class Ring_Follower:
     async def on_new_pos(self, detections):
         if detections:
             self.last_seen_frame = time.time()
+            if detections[0]["accuracy"] < 500:
+                detections = []
         
         TARGET_RADIUS_RATIO = 0.35
         TILT_YAW_GAIN       = 0.5
@@ -146,14 +153,14 @@ class Ring_Follower:
                     centred = (abs(err_x) < CENTRE_THRESHOLD_PX
                                and abs(err_y) < CENTRE_THRESHOLD_PX)
 
-                    if centred:
-                        if self.centre_hold_start is None:
-                            self.centre_hold_start = time.time()
-                        elif time.time() - self.centre_hold_start >= CENTRE_HOLD_TIME:
-                            self.fly_through_start = time.time()
-                            self.state = "FLY"
-                    else:
-                        self.centre_hold_start = None
+                    #if centred:
+                    #    if self.centre_hold_start is None:
+                    #        self.centre_hold_start = time.time()
+                    #    elif time.time() - self.centre_hold_start >= CENTRE_HOLD_TIME:
+                    #        self.fly_through_start = time.time()
+                    #        self.state = "FLY"
+                    #else:
+                    #    self.centre_hold_start = None
             case "FLY":
                 assert self.fly_through_start is not None
                 elapsed = time.time() - self.fly_through_start

@@ -42,7 +42,7 @@ export class PathlistMobileComponent {
     protected async replay(pathid: string): Promise<void> {
         this.dialogRef.close();
         await this.controllerApi.replay_path(pathid);
-        await this.router.navigate(['flyyy']);
+        await this.router.navigate(['flyyy'], {queryParams:{mode:"replay"}});
     }
 
 }

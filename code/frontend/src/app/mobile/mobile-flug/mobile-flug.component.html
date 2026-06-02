@@ -1,4 +1,5 @@
 <div class="video-container">
+    <canvas id="detection-overlay" width="960" height="720"></canvas>
     <video id="video"></video>
 </div>
 
@@ -55,17 +56,18 @@
         </div>
     </div>
 
-    @if (mode() === 'TOUCH') {
+    @if (currentmode() === 'TOUCH') {
         <div class="joystick-layer">
             <app-joystick
                 class="joystick joystick-left"
                 xLabel="Yaw"
                 yLabel="Thr"
                 [size]="90"
-                [springBackY]="false"
-                [initialY]="1"
                 (valueChange)="onLeftStick($event)">
             </app-joystick>
+
+            <!--[springBackY]="false"
+                [initialY]="1"-->
 
             <app-joystick
                 class="joystick joystick-right"

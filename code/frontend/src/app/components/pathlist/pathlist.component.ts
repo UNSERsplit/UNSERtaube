@@ -47,6 +47,6 @@ export class PathlistComponent {
 
     protected async replay(pathid: string) {
         await this.controllerApi.replay_path(pathid);
-        await this.router.navigate(["flyyy"])
+        await this.router.navigate(["flyyy"], {queryParams:{mode:"replay"}})
     }
 }

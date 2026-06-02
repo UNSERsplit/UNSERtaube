@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, model, signal} from '@angular/core';
+import {Component, computed, effect, inject, input, model, signal} from '@angular/core';
 import {ButtonComponent} from "../../components/button/button.component";
 import {FormsModule} from "@angular/forms";
 import {HomeButtonComponent} from "../../components/home-button/home-button.component";
@@ -49,7 +49,10 @@ export class MobileFlugComponent {
     private controllerApi = inject(ControllerApiService);
     private gamepadService = inject(GamepadService);
 
-    public mode = signal<Mode>("TOUCH")
+    public currentmode = signal<Mode>("TOUCH")
+
+    public mode = input<string | undefined>();
+
 
     protected showProcessed = model(false);
     protected hue_lower = model(5)
@@ -72,7 +75,7 @@ export class MobileFlugComponent {
     })
 
     protected drone = computed(() => this.controllerApi.drone()!)
-    protected modeName = computed(() => toString[this.mode()])
+    protected modeName = computed(() => toString[this.currentmode()])
 
     protected readonly ButtonVariant = ButtonVariants;
     buttonHeight: string = "3rem";
@@ -82,14 +85,57 @@ export class MobileFlugComponent {
 
     constructor() {
         effect(() => {
-            if(this.mode() == "PATH" || this.mode() == "AUTONOMOUS") return
+            if(this.currentmode() == "PATH" || this.currentmode() == "AUTONOMOUS") return
 
             if(this.gamepadService.gamepadConnected()) {
-                this.mode.set("TOUCH")
+                this.currentmode.set("TOUCH")
             } else {
-                this.mode.set("TOUCH")
+                this.currentmode.set("TOUCH")
             }
         })
+
+        effect(() => {
+      const detections = this.state().detections;
+      const element = document.querySelector("canvas#detection-overlay") as HTMLCanvasElement;
+      const ctx = element.getContext("2d")!;
+
+      ctx.clearRect(0,0,960,720);
+
+      detections.forEach((v) => {
+        if (v.type === "person") {
+          const [x1,y1,x2,y2] = v.cords
+
+          const color = "red"
+
+          ctx.strokeStyle = color
+          ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+          ctx.fillStyle = color
+          
+          const metrics = ctx.measureText(v.type)
+          ctx.fillText(v.type, x1 + 2, y1 + metrics.fontBoundingBoxAscent)
+        } else if (v.type === "ring") {
+          const accuracy = v.accuracy;
+          const center = v.center;
+          const axis = v.axis;
+          const tilt = v.tilt;
+
+          let text = `${accuracy}/${parseInt((axis[0] / axis[1]) * 1000 + "")}`
+
+          ctx.fillStyle = "lime"
+          
+          ctx.beginPath();
+          ctx.arc(center[0], center[1], 5, 0, 2 * Math.PI);
+          ctx.fill();
+
+          const metrics = ctx.measureText(text)
+          ctx.fillText(text, center[0] + 2, center[1] + metrics.fontBoundingBoxAscent)
+
+          if(this.currentmode() == "AUTONOMOUS") {
+            
+          }
+        }
+      })
+    })
 
 
         /*effect(() => {
@@ -109,6 +155,11 @@ export class MobileFlugComponent {
     }
 
     ngOnInit(): void {
+        if(this.mode() == "ring") {
+            this.currentmode.set("AUTONOMOUS");
+        }else if(this.mode() == "replay") {
+            this.currentmode.set("PATH");
+        }
         this.videoApi.initVideo("video")
         document.body.requestFullscreen({navigationUI: "hide"})
     }
@@ -153,10 +204,7 @@ export class MobileFlugComponent {
     }
 
     private sendRc(): void {
-        // Hier z. B. an deinen Drone-Service übergeben:
-        // this.drone().sendRc(this.roll, this.pitch, this.throttle, this.yaw);
-        // Werte sind 1..100, mappe sie ggf. auf -100..100 falls dein Backend das erwartet:
-        // const map = (v: number) => Math.round(((v - 1) / 99) * 200 - 100);
+        this.controllerApi.send_rc(this.yaw, this.pitch, this.roll, this.throttle)
     }
 
 }

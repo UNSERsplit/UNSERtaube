@@ -1,6 +1,6 @@
 @if (isMobile()) {
-    <app-mobile-flug />
+    <app-mobile-flug [mode]="mode()" />
 } @else {
-    <app-desktop-flug />
+    <app-desktop-flug [mode]="mode()" />
 }
 

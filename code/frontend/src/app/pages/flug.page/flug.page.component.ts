@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, input} from '@angular/core';
 import {DeviceService} from '../../service/device.service';
 import {DesktopFlugComponent} from '../../dektop/desktop-flug/desktop-flug.component';
 import {MobileFlugComponent} from '../../mobile/mobile-flug/mobile-flug.component';
@@ -14,4 +14,6 @@ import {MobileFlugComponent} from '../../mobile/mobile-flug/mobile-flug.componen
 })
 export class FlugPageComponent {
     isMobile = inject(DeviceService).isMobile;
+    mode = input<string>();
+
 }
