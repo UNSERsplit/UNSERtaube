@@ -10,7 +10,7 @@ import { GamepadService } from '../../service/gamepad.service';
 })
 export class ControllerInputComponent implements OnInit, OnDestroy{
   ngOnInit(): void {
-    this.gamepadService.currentMapping = {throttle_axis_id: 1, roll_axis_id: 0, pitch_axis_id: 4, yaw_axis_id: 2}
+    this.gamepadService.currentMapping = {throttle_axis_id: 1, roll_axis_id: 0, pitch_axis_id: 6, yaw_axis_id: 2}
 
     setInterval(() => {
       this.gamepadService.tick()
@@ -28,6 +28,7 @@ export class ControllerInputComponent implements OnInit, OnDestroy{
   constructor() {
     effect(() => {
       if (this.gamepadEnabled()) {
+        console.log(this.gamepadService.mappedData())
         this.controllerApi.send_rc(
           this.gamepadService.mappedData().yaw,
           this.gamepadService.mappedData().pitch,

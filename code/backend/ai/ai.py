@@ -94,9 +94,18 @@ class Module(ABC):
                 print(f"T:{time.time() - t}")
 
                 if not pipe.closed:
-                    pipe.send(detections)
+                    try:
+                        pipe.send(detections)
+                    except BrokenPipeError:
+                        print("Pipe closed")
+                        break
                 time.sleep(1/30)
-        pipe.close()
+        stream.stop()
+        try:
+            pipe.close()
+        except BrokenPipeError:
+            pass
+        
 
     def get_detections(self) -> list:
         if self.enabled:
@@ -134,8 +143,8 @@ class AI_Module:
             self.ring.disable()
             await self.follower.disable()
 
-    async def get_detections(self):
+    async def get_detections(self, state: dict):
         ring = self.ring.get_detections()
         if self.ring.enabled:
-            await self.follower.on_new_pos(ring)
+            await self.follower.on_new_pos(ring, state)
         return ring + self.people.get_detections()

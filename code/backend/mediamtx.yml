@@ -820,12 +820,14 @@ paths:
       -preset ultrafast 
       -tune zerolatency 
       -b:v 2M 
-      -c:a aac 
-      -b:a 128k 
       -f rtsp 
       -rtsp_transport tcp 
       rtsp://localhost:$RTSP_PORT/$MTX_PATH
     runOnInitRestart: yes
+
+    alwaysAvailable: true
+    alwaysAvailableTracks:
+      - codec: H264
 
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.

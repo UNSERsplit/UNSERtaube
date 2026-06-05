@@ -24,7 +24,7 @@ export class GamepadService {
   
   public mappedData: WritableSignal<MappedData> = signal({throttle: 0, roll: 0, pitch: 0, yaw: 0});
   public unmappedAxisData = signal<number[]>([]);
-  public currentMapping: GamepadMapping = {throttle_axis_id: 0, roll_axis_id: 1, pitch_axis_id: 2, yaw_axis_id: 3};
+  public currentMapping: GamepadMapping = {throttle_axis_id: NaN, roll_axis_id: NaN, pitch_axis_id: NaN, yaw_axis_id: NaN};
 
   constructor() {
     window.addEventListener("gamepadconnected", (e) => {
@@ -42,6 +42,8 @@ export class GamepadService {
     if (!this.gamepad) return;
     const gp = navigator.getGamepads()[this.gamepad.index]!;
     if(!gp) return;
+
+    //console.log(gp.mapping, gp.axes, gp.buttons.map(b => b.value))
 
     this.unmappedAxisData.update(data => {
       if(data.toString() != gp.axes.toString()) {
@@ -63,8 +65,14 @@ export class GamepadService {
 
       const pitch = [
         mappedData.pitch,
-        Math.floor(gp.axes[this.currentMapping.pitch_axis_id] * 100)
+        Math.floor((gp.buttons[this.currentMapping.pitch_axis_id].value - 0.5) * 200)
+        //Math.floor(gp.axes[this.currentMapping.pitch_axis_id] * 100)
       ]
+
+      if(!gp.buttons[this.currentMapping.pitch_axis_id].touched) {
+        pitch[1] = pitch[0]
+      }
+
 
       const yaw = [
         mappedData.yaw,

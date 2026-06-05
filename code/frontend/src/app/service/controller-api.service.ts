@@ -256,6 +256,11 @@ export class ControllerApiService {
     })
   }
 
+  async cancel_replay() {
+    this.status.set("drone_connected");
+    await this.action("POST", "recording/replay/stop", undefined);
+  }
+
   async emergency() {
     await this.action("POST", "live/flight/stop", undefined);
   }

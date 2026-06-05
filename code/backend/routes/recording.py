@@ -34,7 +34,7 @@ class Recorder:
 
     def start(self):
         self.start_time = time()
-        self.process = subprocess.Popen(["ffmpeg", "-i", "rtsp://localhost:8554/camera", "-c", "copy", "-map", "0", self.filename], stdin=subprocess.PIPE)
+        self.process = subprocess.Popen(["ffmpeg", "-hide_banner","-loglevel", "error", "-nostats", "-i", "rtsp://localhost:8554/camera", "-c", "copy", "-map", "0", self.filename], stdin=subprocess.PIPE)
 
     def stop(self):
         if self.process:

@@ -1,10 +1,11 @@
 from dronemaster import Drone
 
-import cv2
 import numpy as np
 import time
 import json
 import os
+
+from .debug_thread import Debug_Thread
 
 
 class PID:
@@ -51,19 +52,17 @@ class Ring_Follower:
         self.drone = drone
         self.state = "SEARCH"
 
-        #self.roll = PID(0.15, 0.01, 0.05)
-        #self.throttle = PID(0.20, 0.01, 0.06)
-        #self.pitch = PID(0.10, 0, 0.04)
-        #self.yaw = PID(0.12, 0, 0.03)
 
-        self.roll =     PID(0.05, 0.00, 0.00)
-        self.throttle = PID(0.05, 0.00, 0.00)
-        self.pitch =    PID(0.10, 0.00, 0.00)
+        self.roll =     PID(0.06, 0.00, 0.02)
+        self.throttle = PID(0.09, 0.00, 0.02)
+        self.pitch =    PID(0.02, 0.00, 0.00)
         self.yaw =      PID(0.12, 0.00, 0.00)
 
         self.last_seen_frame = None
         self.centre_hold_start = None
         self.fly_through_start = None
+
+        self.debug = Debug_Thread()
 
     async def enable(self):
         self.state = "SEARCH"
@@ -77,13 +76,18 @@ class Ring_Follower:
             throttle=0,
             yaw=0
         )
+
+        self.debug.start()
         await self.drone.flight.takeoff()
 
     async def disable(self):
         await self.drone.flight.stop()
         await self.drone.flight.land()
+
+        self.debug.stop()
     
-    async def on_new_pos(self, detections):
+    
+    async def on_new_pos(self, detections, drone_state: dict):
         if detections:
             self.last_seen_frame = time.time()
             if detections[0]["accuracy"] < 500:
@@ -133,22 +137,26 @@ class Ring_Follower:
                     tilt   = detections[0]["tilt"]
                     angle  = detections[0]["angle"]
                     target_r = TARGET_RADIUS_RATIO * min(720, 960)
+                    print(r, target_r)
 
                     err_x = cx - 960 / 2
-                    err_y = 720 / 2 - cy
+                    err_y = 720 / 3 - cy # oberes drittel
                     
                     err_size = target_r - r
 
                     yaw_cmd = 0.0
+                    yaw_error = 0
                     if tilt > 15:
                         yaw_error = (angle - 90.0)
                         yaw_cmd = self.yaw.compute(yaw_error * TILT_YAW_GAIN)
 
+                    self.debug.plot(err_x, err_y, err_size, yaw_error)
+
                     roll_cmd     = self.roll.compute(err_x)
                     throttle_cmd = self.throttle.compute(err_y)
-                    pitch_cmd    = self.pitch.compute(-err_size)
+                    pitch_cmd = self.pitch.compute(err_size)
 
-                    self.fly(roll=roll_cmd, pitch=pitch_cmd, throttle=throttle_cmd, yaw=yaw_cmd)
+                    self.fly(roll=roll_cmd, pitch=pitch_cmd, throttle=throttle_cmd, yaw=0)
 
                     centred = (abs(err_x) < CENTRE_THRESHOLD_PX
                                and abs(err_y) < CENTRE_THRESHOLD_PX)

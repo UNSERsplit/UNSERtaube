@@ -83,7 +83,13 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
 
   constructor() {
     effect(() => {
-      if(this.currentmode() == "PATH" || this.currentmode() == "AUTONOMOUS") return
+      if(this.currentmode() == "AUTONOMOUS") {
+        this.controllerApi.detect_rings(true);
+        return;
+      } else {
+        this.controllerApi.detect_rings(false);
+      }
+      if(this.currentmode() == "PATH") return
 
       if(this.gamepadService.gamepadConnected()) {
         this.currentmode.set("CONTROLLER")
@@ -135,19 +141,6 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
       })
     })
 
-
-    /*effect(() => {
-      this.controllerApi.send_debug_finetune({
-        show_processed_output: this.showProcessed(),
-        hue_lower: this.hue_lower(),
-        hue_upper: this.hue_upper(),
-        saturation_lower: this.saturation_lower(),
-        saturation_upper: this.saturation_upper(),
-        value_lower: this.value_lower(),
-        value_upper: this.value_upper()
-      })
-    })*/
-
     // @ts-ignore
     window.showDebugHud = this.showDebugHud;
   }
@@ -179,6 +172,17 @@ export class DesktopFlugComponent implements OnInit, OnDestroy{
 
   emergency(){
     this.controllerApi.emergency()
+  }
+
+  cancel() {
+    this.controllerApi.emergency();
+    if(this.currentmode() == "PATH") {
+      this.controllerApi.cancel_replay();
+      this.currentmode.set("KEYBOARD");
+    } else if(this.currentmode() == "AUTONOMOUS") {
+      this.controllerApi.detect_rings(false);
+      this.currentmode.set("KEYBOARD");
+    }
   }
 }
 
