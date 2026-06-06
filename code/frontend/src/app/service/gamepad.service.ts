@@ -1,10 +1,17 @@
-import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
+import { Injectable, Signal, WritableSignal, effect, inject, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { GamepadCalibrationComponent } from '../components/gamepad-calibration/gamepad-calibration.component';
 
 export interface GamepadMapping {
-  throttle_axis_id: number,
-  roll_axis_id: number,
-  pitch_axis_id: number,
-  yaw_axis_id: number
+  throttle: GamepadAxisButtonMapping,
+  roll: GamepadAxisButtonMapping,
+  pitch: GamepadAxisButtonMapping,
+  yaw: GamepadAxisButtonMapping
+}
+
+export interface GamepadAxisButtonMapping {
+  type: "axis" | "button",
+  index: number
 }
 
 export interface MappedData { // alles von -100 bis 100
@@ -18,15 +25,23 @@ export interface MappedData { // alles von -100 bis 100
   providedIn: 'root'
 })
 export class GamepadService {
-  private gamepad: Gamepad | null = null;
+  public gamepad: Gamepad | null = null;
 
   public gamepadConnected = signal(false);
   
   public mappedData: WritableSignal<MappedData> = signal({throttle: 0, roll: 0, pitch: 0, yaw: 0});
-  public unmappedAxisData = signal<number[]>([]);
-  public currentMapping: GamepadMapping = {throttle_axis_id: NaN, roll_axis_id: NaN, pitch_axis_id: NaN, yaw_axis_id: NaN};
+  public unmappedData = signal<{axes: ReadonlyArray<number>, buttons: ReadonlyArray<number>}>({axes: [], buttons: []});
+  public currentMapping: GamepadMapping | null = null;
+
+  private dialog = inject(MatDialog);
+  private knownMappings: {[index: string]: GamepadMapping} = {}
 
   constructor() {
+    const _raw = localStorage.getItem("knownMappings");
+    if (_raw != null) {
+      this.knownMappings = JSON.parse(_raw)
+    }
+
     window.addEventListener("gamepadconnected", (e) => {
       this.onConnect(e.gamepad);
       this.gamepadConnected.set(true)
@@ -36,67 +51,93 @@ export class GamepadService {
       this.onDisconnect(e.gamepad);
       this.gamepadConnected.set(false);
     });
+
+    setInterval(() => {
+      this.tick()
+    }, 10);
   }
 
-  public tick() {
+  private tick() {
     if (!this.gamepad) return;
     const gp = navigator.getGamepads()[this.gamepad.index]!;
     if(!gp) return;
 
-    //console.log(gp.mapping, gp.axes, gp.buttons.map(b => b.value))
+    this.unmappedData.update(origData => {
+      const btns = gp.buttons.map(btn => btn.touched ? btn.value : NaN);
 
-    this.unmappedAxisData.update(data => {
-      if(data.toString() != gp.axes.toString()) {
-        return [...gp.axes];
+      if(origData.axes.toString() == gp.axes.toString() && origData.buttons.toString() == btns.toString()) {
+        return origData;
       }
-      return data;
+
+      return {
+        axes: gp.axes,
+        buttons: btns
+      }
     })
 
-    this.mappedData.update(mappedData => {
-      const throttle = [
-        mappedData.throttle,
-        Math.floor(gp.axes[this.currentMapping.throttle_axis_id] * 100)
-      ]
-
-      const roll = [
-        mappedData.roll,
-        Math.floor(gp.axes[this.currentMapping.roll_axis_id] * 100)
-      ]
-
-      const pitch = [
-        mappedData.pitch,
-        Math.floor((gp.buttons[this.currentMapping.pitch_axis_id].value - 0.5) * 200)
-        //Math.floor(gp.axes[this.currentMapping.pitch_axis_id] * 100)
-      ]
-
-      if(!gp.buttons[this.currentMapping.pitch_axis_id].touched) {
-        pitch[1] = pitch[0]
+    this.mappedData.update(old => {
+      if (this.currentMapping == null) {
+        return old;
       }
 
-
-      const yaw = [
-        mappedData.yaw,
-        Math.floor(gp.axes[this.currentMapping.yaw_axis_id] * 100)
-      ]
-
-      if(throttle[0] != throttle[1] || roll[0] != roll[1] || pitch[0] != pitch[1] || yaw[0] != yaw[1]) {
-        return {
-          throttle: throttle[1],
-          roll: roll[1],
-          pitch: pitch[1],
-          yaw: yaw[1]
+      const map = (mapping: GamepadAxisButtonMapping) => {
+        if(mapping.type == "axis") {
+          return Math.floor(gp.axes[mapping.index] * 100)
+        } else if(mapping.type == "button") {
+          const btn = gp.buttons[mapping.index];
+          //console.log(btn.pressed, btn.touched, btn.value)
+          return btn.value != 0 ? Math.floor((btn.value - 0.5) * 200) : NaN
+        } else {
+          throw new Error("Nope");
         }
       }
-      return mappedData;
-    });
+
+      const newData = {
+        throttle: map(this.currentMapping.throttle),
+        roll: map(this.currentMapping.roll),
+        pitch: map(this.currentMapping.pitch),
+        yaw: map(this.currentMapping.yaw)
+      }
+
+      let name: keyof typeof newData;
+      for (name in newData) {
+        if(!Number.isNaN(newData[name]) && newData[name] != old[name]) {
+          return newData;
+        }
+      }
+
+      return old;
+    })
   }
 
   private onConnect(gamepad: Gamepad) {
     this.gamepad = gamepad;
+
+    if(this.knownMappings[gamepad.id] !== undefined) {
+      this.currentMapping = this.knownMappings[gamepad.id]
+    } else {
+      this.currentMapping = null;
+
+      this.dialog.open(GamepadCalibrationComponent,
+        {
+          width: 'auto',
+          height: 'auto',
+          minHeight: 'auto',
+          panelClass: [],
+          maxWidth: 'none',
+          maxHeight: 'none',
+          disableClose: true
+        });
+    }
   }
 
   private onDisconnect(gamepad: Gamepad) {
     if (gamepad != this.gamepad) return;
     this.gamepad = null;
+  }
+
+  public createKnownMapping(id: string, mapping: GamepadMapping) {
+    this.knownMappings[id] = mapping;
+    localStorage.setItem("knownMappings", JSON.stringify(this.knownMappings))
   }
 }

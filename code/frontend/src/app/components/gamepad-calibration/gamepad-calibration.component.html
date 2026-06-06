@@ -1,0 +1,22 @@
+<div class="header">
+    <h1>New controller detected</h1>
+    <p>{{ gp!.id }}</p>
+</div>
+
+<div class="actions">
+    <h3 class="action-index">Step {{ stepNumber() }}</h3>
+    <div class="action-text">{{ stepText() }}</div>
+    @if (stepNumber() == 10) {
+        <div class="calibration-result">
+            <p>Throttle: {{ service.mappedData().throttle }}</p>
+            <p>Roll: {{ service.mappedData().roll }}</p>
+            <p>Pitch: {{ service.mappedData().pitch }}</p>
+            <p>Yaw: {{ service.mappedData().yaw }}</p>
+        </div>
+
+        <div class="calibration-actions">
+            <app-button [variant]="ButtonVariants.red" text="Retry" (click)="retry()"></app-button>
+            <app-button [variant]="ButtonVariants.green" text="Accept" (click)="accept()"></app-button>
+        </div>
+    }
+</div>
