@@ -23,15 +23,15 @@ export class KeyboardInputComponent implements OnInit, OnDestroy{
     "d": false,
     "q": false,
     "e": false,
-    "ArrowUp": false,
-    "ArrowDown": false
+    "arrowup": false,
+    "arrowdown": false
   })
 
   private controllerApi = inject(ControllerApiService);
 
   constructor() {
     effect(() => {
-      const throttle = (this.keys()["ArrowUp"] ? 100 : 0) + (this.keys()["ArrowDown"] ? -100 : 0)
+      const throttle = (this.keys()["arrowup"] ? 100 : 0) + (this.keys()["arrowdown"] ? -100 : 0)
       const roll = (this.keys()["a"] ? -100 : 0) + (this.keys()["d"] ? 100 : 0)
       const pitch = (this.keys()["w"] ? 100 : 0) + (this.keys()["s"] ? -100 : 0)
       const yaw = (this.keys()["q"] ? -100 : 0) + (this.keys()["e"] ? 100 : 0)
@@ -44,6 +44,7 @@ export class KeyboardInputComponent implements OnInit, OnDestroy{
 
   @HostListener("window:keydown", ['$event'])
   onKeyDown(event: KeyboardEvent) {
+    console.log(event.key)
     if(!(event.key.toLowerCase() in this.keys())) return
     this.keys.update((v) => {
       v[event.key.toLowerCase()] = true;
