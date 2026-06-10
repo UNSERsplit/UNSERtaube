@@ -69,6 +69,9 @@ class Ring_Follower:
         self.centre_hold_start = None
         self.fly_through_start = None
 
+
+        self.p = False
+        self.d = []
         #self.debug = Debug_Thread(
         #    "Pid-Errors",
         #    keep_samples=300,
@@ -136,9 +139,11 @@ class Ring_Follower:
             if detections[0]["accuracy"] < 500:
                 detections = []
         
+        self.d = detections
+        
         TARGET_RADIUS_RATIO = 0.5
         TILT_YAW_GAIN       = 0.5
-        CENTRE_THRESHOLD_PX = 30
+        CENTRE_THRESHOLD_PX = 50
         CENTRE_HOLD_TIME    = 2.5
         FLY_THROUGH_TIME    = 5.0
         FLY_THROUGH_PITCH   = 40
@@ -209,6 +214,15 @@ class Ring_Follower:
                     throttle_cmd = self.throttle.compute(err_y)
                     pitch_cmd = self.pitch.compute(err_size)
 
+                    if(int(roll_cmd) == 0 and int(pitch_cmd) == 0 and int(throttle_cmd) == 0 and int(yaw_cmd) == 0):
+                        if not self.p:
+                            self.p = True
+                            await self.drone.rgb.pulse((255,255,255), 2.5)
+                    else:
+                        if self.p:
+                            self.p = False
+                            await self.drone.rgb.set((0,255,255))
+
                     self.fly(roll=roll_cmd, pitch=pitch_cmd, throttle=throttle_cmd, yaw=yaw_cmd)
 
                     centred = (abs(err_x) < CENTRE_THRESHOLD_PX
@@ -240,6 +254,6 @@ class Ring_Follower:
                     await self.drone.rgb.set((255,255,0))
     
     def fly(self, roll, pitch, throttle, yaw):
-        print(int(roll), int(pitch), int(throttle), int(yaw), end=" "*10 + "\r")
+        print(int(roll), int(pitch), int(throttle), int(yaw), self.state, len(self.d) > 0, end=" "*10 + "\r")
         for _ in range(3):
             self.drone.flight.rc(int(roll), int(pitch), int(throttle), int(yaw))
