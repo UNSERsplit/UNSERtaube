@@ -159,16 +159,49 @@
     background: rgba(88, 166, 255, 0.12);
     border: 1px solid rgba(88, 166, 255, 0.3);
     color: #58a6ff;
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     white-space: nowrap;
+}
+
+.polizei {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: rgb(255, 255, 255);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+    background-color: var(--green-button-color);
+    border: 1px solid rgba(3, 209, 3, 0.4);
+    box-shadow: 0 0 8px rgba(3, 209, 3, 0.3);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.polizei:hover,
+.polizei:active {
+    background-color: var(--green-button-color);
+    border-color: rgba(3, 209, 3, 0.7);
+    box-shadow: 0 0 14px rgba(3, 209, 3, 0.55);
+}
+
+.polizei mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
 }
 
 .clear-btn:hover,
@@ -224,8 +257,8 @@
     }
 
     .clear-btn {
-        font-size: 0.65rem;
-        padding: 5px 8px;
+        font-size: 0.75rem;
+        padding: 8px 12px;
     }
 }
 
@@ -246,5 +279,11 @@
         flex-wrap: wrap;
         justify-content: center;
         gap: 12px;
+    }
+
+    .clearButton{
+        padding: 0.5rem;
+        height: 0.5rem;
+        width: 5555rem;
     }
 }

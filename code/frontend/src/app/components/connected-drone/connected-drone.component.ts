@@ -1,6 +1,5 @@
 import {Component, computed, effect, inject, Input, WritableSignal} from '@angular/core';
 import {StatusComponent} from '../status/status.component';
-import {Drone} from '../../../objects/drone';
 import {ButtonComponent, } from '../button/button.component';
 import {ButtonVariants} from '../button/button.variants';
 import {CardComponent} from '../card/card.component';

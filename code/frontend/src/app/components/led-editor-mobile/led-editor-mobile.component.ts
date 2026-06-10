@@ -1,10 +1,12 @@
-import { Component, inject, Output, EventEmitter } from '@angular/core';
+import {Component, inject, Output, EventEmitter, OnInit} from '@angular/core';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { ControllerApiService } from '../../service/controller-api.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import {ButtonComponent} from '../button/button.component';
+import {ButtonVariants} from '../button/button.variants';
 
 interface Led {
     ledstatus: number;
@@ -25,13 +27,16 @@ enum LedStatus {
         MatDialogModule,
         MatIconModule,
         MatButtonModule,
+        ButtonComponent,
     ],
     templateUrl: './led-editor-mobile.component.html',
     styleUrl:    './led-editor-mobile.component.css'
 })
-export class LedEditorMobileComponent {
+export class LedEditorMobileComponent implements OnInit {
     /** Schließt das Popup — Parent kann (closePopup) binden */
     @Output() closePopup = new EventEmitter<void>();
+
+    protected  ButtonVariant2 = ButtonVariants.green;
 
     private controllerApi = inject(ControllerApiService);
 
@@ -67,6 +72,23 @@ export class LedEditorMobileComponent {
         this.pushToApi();
     }
 
+    ngOnInit(): void {
+        const MAPPING: {[index: string]: LedStatus} = {
+            "0": 0,
+            "b": 1,
+            "p": 2,
+            "r": 3
+        }
+
+        this.controllerApi.get_matrix().then((pattern: string) => {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    this.leds[i][j] = { ledstatus: MAPPING[pattern[i * 8 + j]] };
+                }
+            }
+        })
+    }
+
     // ── API-Sync ─────────────────────────────────────────────────────────
 
     private pushToApi(): void {
@@ -77,10 +99,12 @@ export class LedEditorMobileComponent {
 
     // ── Popup-Steuerung ──────────────────────────────────────────────────
 
-
-
     close(): void {
         this.dialogRef.close();  // ← so schließt sich ein MatDialog
+    }
+
+    blinkPolice() {
+        this.controllerApi.flash(255,0,0,0,0,255, 1)
     }
 
 }
