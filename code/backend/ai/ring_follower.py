@@ -5,7 +5,7 @@ import time
 import json
 import os
 
-from .debug_thread import Debug_Thread
+from .debug_thread import Debug_Thread, Plot
 
 
 class PID:
@@ -52,17 +52,35 @@ class Ring_Follower:
         self.drone = drone
         self.state = "SEARCH"
 
+        #self.roll =     PID(0.06, 0.00, 0.02)
+        #self.throttle = PID(0.09, 0.00, 0.02)
+        #self.pitch =    PID(0.02, 0.00, 0.00)
+        #self.yaw =      PID(0.12, 0.00, 0.00)
 
-        self.roll =     PID(0.06, 0.00, 0.02)
-        self.throttle = PID(0.09, 0.00, 0.02)
-        self.pitch =    PID(0.02, 0.00, 0.00)
-        self.yaw =      PID(0.12, 0.00, 0.00)
+
+        self.roll =     PID(0.00, 0.00, 0.00)
+        self.throttle = PID(0.00, 0.00, 0.00)
+        self.pitch =    PID(0.00, 0.00, 0.00)
+        self.yaw =      PID(0.00, 0.00, 0.00)
+
+        self.read_pids()
 
         self.last_seen_frame = None
         self.centre_hold_start = None
         self.fly_through_start = None
 
-        self.debug = Debug_Thread()
+        #self.debug = Debug_Thread(
+        #    "Pid-Errors",
+        #    keep_samples=300,
+        #    plots=[
+        #        Plot("Roll", ["roll", "state_yaw"]),
+        #        Plot("Throttle", ["throttle"]),
+        #        Plot("Pitch", ["pitch"]),
+        #        Plot("Yaw", ["yaw", "state_yaw"]),
+        #        Plot("Accuracy", ["accuracy"]),
+        #        Plot("Angle", ["angle"])
+        #    ]
+        #)
 
     async def enable(self):
         self.state = "SEARCH"
@@ -77,28 +95,53 @@ class Ring_Follower:
             yaw=0
         )
 
-        self.debug.start()
+        #self.debug.start()
         await self.drone.flight.takeoff()
+        await self.drone.rgb.set((255,255,0))
 
     async def disable(self):
         await self.drone.flight.stop()
+        #self.debug.stop()
         await self.drone.flight.land()
-
-        self.debug.stop()
     
+    def read_pids(self):
+        # Read from file
+        import os
+        import json
+
+        d = {
+            "throttle": [self.throttle.kp, self.throttle.kd, self.throttle.ki],
+            "roll": [self.roll.kp, self.roll.kd, self.roll.ki],
+            "pitch": [self.pitch.kp, self.pitch.kd, self.pitch.ki],
+            "yaw": [self.yaw.kp, self.yaw.kd, self.yaw.ki]
+        }
+
+        if not os.path.exists("pids.json"):
+            with open("pids.json", "w") as f:
+                f.write(json.dumps(d, indent=4))
+        else:
+            with open("pids.json", "r") as f:
+                d = json.loads(f.read())
+        
+        self.throttle.kp, self.throttle.kd, self.throttle.ki = d["throttle"]
+        self.roll.kp, self.roll.kd, self.roll.ki = d["roll"]
+        self.pitch.kp, self.pitch.kd, self.pitch.ki = d["pitch"]
+        self.yaw.kp, self.yaw.kd, self.yaw.ki = d["yaw"]
+
     
     async def on_new_pos(self, detections, drone_state: dict):
+        self.read_pids()
         if detections:
             self.last_seen_frame = time.time()
             if detections[0]["accuracy"] < 500:
                 detections = []
         
-        TARGET_RADIUS_RATIO = 0.35
+        TARGET_RADIUS_RATIO = 0.5
         TILT_YAW_GAIN       = 0.5
         CENTRE_THRESHOLD_PX = 30
-        CENTRE_HOLD_TIME    = 1.5
-        FLY_THROUGH_TIME    = 2.0
-        FLY_THROUGH_PITCH   = 50 
+        CENTRE_HOLD_TIME    = 2.5
+        FLY_THROUGH_TIME    = 5.0
+        FLY_THROUGH_PITCH   = 40
         
         match self.state:
             case "SEARCH":
@@ -111,6 +154,7 @@ class Ring_Follower:
                     )
                 else:
                     self.state = "ALIGN"
+                    await self.drone.rgb.set((0,255,255))
                     self.roll.reset()
                     self.throttle.reset()
                     self.pitch.reset()
@@ -123,8 +167,10 @@ class Ring_Follower:
                     )
             case "ALIGN":
                 if not detections:
+                    print("NO_DETECTION" + " " * 10, end="\r")
                     if self.last_seen_frame is not None and time.time() - self.last_seen_frame > 5:
                         self.state = "SEARCH"
+                        await self.drone.rgb.set((255,255,0))
                     self.fly(
                         roll=0,
                         pitch=0,
@@ -137,7 +183,6 @@ class Ring_Follower:
                     tilt   = detections[0]["tilt"]
                     angle  = detections[0]["angle"]
                     target_r = TARGET_RADIUS_RATIO * min(720, 960)
-                    print(r, target_r)
 
                     err_x = cx - 960 / 2
                     err_y = 720 / 3 - cy # oberes drittel
@@ -150,25 +195,34 @@ class Ring_Follower:
                         yaw_error = (angle - 90.0)
                         yaw_cmd = self.yaw.compute(yaw_error * TILT_YAW_GAIN)
 
-                    self.debug.plot(err_x, err_y, err_size, yaw_error)
+                    #self.debug.plot({
+                    #    "roll": err_x,
+                    #    "throttle": err_y,
+                    #    "pitch": err_size,
+                    #    "yaw": yaw_error,
+                    #    "state_yaw": drone_state["yaw"],
+                    #    "accuracy": detections[0]["accuracy"],
+                    #    "angle": angle
+                    #})
 
                     roll_cmd     = self.roll.compute(err_x)
                     throttle_cmd = self.throttle.compute(err_y)
                     pitch_cmd = self.pitch.compute(err_size)
 
-                    self.fly(roll=roll_cmd, pitch=pitch_cmd, throttle=throttle_cmd, yaw=0)
+                    self.fly(roll=roll_cmd, pitch=pitch_cmd, throttle=throttle_cmd, yaw=yaw_cmd)
 
                     centred = (abs(err_x) < CENTRE_THRESHOLD_PX
                                and abs(err_y) < CENTRE_THRESHOLD_PX)
 
-                    #if centred:
-                    #    if self.centre_hold_start is None:
-                    #        self.centre_hold_start = time.time()
-                    #    elif time.time() - self.centre_hold_start >= CENTRE_HOLD_TIME:
-                    #        self.fly_through_start = time.time()
-                    #        self.state = "FLY"
-                    #else:
-                    #    self.centre_hold_start = None
+                    if centred:
+                        if self.centre_hold_start is None:
+                            self.centre_hold_start = time.time()
+                        elif time.time() - self.centre_hold_start >= CENTRE_HOLD_TIME:
+                            self.fly_through_start = time.time()
+                            self.state = "FLY"
+                            await self.drone.rgb.set((0,255,0))
+                    else:
+                        self.centre_hold_start = None
             case "FLY":
                 assert self.fly_through_start is not None
                 elapsed = time.time() - self.fly_through_start
@@ -183,7 +237,9 @@ class Ring_Follower:
                     self.yaw.reset()
                     self.centre_hold_start = None
                     self.state = "SEARCH"
+                    await self.drone.rgb.set((255,255,0))
     
     def fly(self, roll, pitch, throttle, yaw):
+        print(int(roll), int(pitch), int(throttle), int(yaw), end=" "*10 + "\r")
         for _ in range(3):
-            self.drone.flight.rc(roll, pitch, throttle, yaw)
+            self.drone.flight.rc(int(roll), int(pitch), int(throttle), int(yaw))

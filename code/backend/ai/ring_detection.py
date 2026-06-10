@@ -31,13 +31,12 @@ class Ring_Module(Module):
         mask = (cv2.inRange(hsv, lower_red1, upper_red1)
                 | cv2.inRange(hsv, lower_red2, upper_red2)) # type: ignore
 
-        # Clean up noise
-        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-        #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  kernel, iterations=2)
-        #mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        kernel2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,
-                                    cv2.CHAIN_APPROX_SIMPLE)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  kernel, iterations=2)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel2, iterations=2)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if len(contours) < 1:
             return []
@@ -47,7 +46,7 @@ class Ring_Module(Module):
         if len(contour) < 2:
             return []
         
-        cv2.drawContours(frame, [contour], -1, (30, 30, 30), 3)
+        #cv2.drawContours(frame, [contour], -1, (30, 30, 30), 3)
 
         if len(contour) < 5:
             return []
@@ -64,7 +63,7 @@ class Ring_Module(Module):
         axis_ratio = min(minor_axis, major_axis) / max(major_axis, minor_axis, 1)
         tilt = np.degrees(np.arccos(np.clip(axis_ratio, 0, 1)))
 
-        radius = (minor_axis + major_axis)
+        radius = max(minor_axis, major_axis)
         
         return [{
                     "type":"ring",

@@ -26,7 +26,10 @@ async def get_drone() -> DroneDTO:
 async def disconnect() -> str:
     global drone, state_computation, db_drone, ai_module
     drone.reboot()
-    ai_module.on_disconnect()
+    try:
+        await ai_module.on_disconnect()
+    except TimeoutError:
+        pass
     ai_module = None # type: ignore
     state_computation = None # type: ignore
     drone.stop_recording_commands()
@@ -181,7 +184,7 @@ async def on_state(state: dict, compute: bool=True):
 
     if compute:
         state = state_computation.on_state(state) # type: ignore
-        state["detections"] = await ai_module.get_detections()
+        state["detections"] = await ai_module.get_detections(state)
 
     for ws in websockets:
         try:

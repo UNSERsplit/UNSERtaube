@@ -91,7 +91,7 @@ class Module(ABC):
 
                 t = time.time()
                 detections = frame_func(frame, *extra_args)
-                print(f"T:{time.time() - t}")
+                #print(f"T:{time.time() - t}")
 
                 if not pipe.closed:
                     try:
@@ -123,11 +123,12 @@ class AI_Module:
         self.ring = Ring_Module()
         self.follower = Ring_Follower(drone)
     
-    def on_disconnect(self):
-        if self.ring.enabled:
-            self.ring.disable()
+    async def on_disconnect(self):
         if self.people.enabled:
             self.people.disable()
+        if self.ring.enabled:
+            self.ring.disable()
+            await self.follower.disable()
 
     async def set_people_detection(self, on: bool):
         if on:

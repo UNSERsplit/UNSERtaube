@@ -187,7 +187,7 @@ class RobomasterProtocol(asyncio.DatagramProtocol):
             self.waiting_action = None
 
     def send_command_noanswer(self, command: str, target: str):
-        print("\t\t\t", command.encode())
+        #print("\t\t\t", command.encode())
         self.transport.sendto(command.encode(), (target, 8889))
 
 
