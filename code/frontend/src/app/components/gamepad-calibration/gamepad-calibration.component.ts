@@ -41,19 +41,23 @@ export class GamepadCalibrationComponent implements OnInit{
   private mapping: GamepadMapping = {
     throttle: {
       type: "axis",
-      index: -1
+      index: -1,
+        invert: false
     },
     roll: {
       type: "axis",
-      index: -1
+      index: -1,
+        invert: false
     },
     pitch: {
       type: "axis",
-      index: -1
+      index: -1,
+        invert: false
     },
     yaw: {
       type: "axis",
-      index: -1
+      index: -1,
+        invert: false
     },
   }
 
@@ -69,11 +73,13 @@ export class GamepadCalibrationComponent implements OnInit{
         let double = false;
         let axisId = -1;
         let btnId = -1;
+        let invert = false;
 
         d.axes.forEach((axis, index) => {
-          if(axis > 0.9) {
+          if(axis > 0.9 || axis < -0.9) {
             if(axisId == -1) {
               axisId = index;
+              invert = axis < 0;
             } else {
               double = true;
             }
@@ -81,9 +87,10 @@ export class GamepadCalibrationComponent implements OnInit{
         })
 
         d.buttons.forEach((btn, index) => {
-          if(btn > 0.8) {
+          if(btn > 0.8 || btn < 0.2) {
             if(btnId == -1) {
               btnId = index;
+              invert = btn < 0.5;
             } else {
               double = true;
             }
@@ -96,18 +103,18 @@ export class GamepadCalibrationComponent implements OnInit{
 
         if (double) {
           alert("Only move one stick to 100%")
-          return [null, -1];
+          return [null, -1, false];
         }
 
         if(axisId != -1) {
-          return ["axis", axisId];
+          return ["axis", axisId, invert];
         }
         
         if(btnId != -1) {
-          return ["button", btnId];
+          return ["button", btnId, invert];
         }
 
-        return [null, -1];
+        return [null, -1, false];
       }
 
       d.axes.forEach((axis, index) => {
@@ -158,11 +165,12 @@ export class GamepadCalibrationComponent implements OnInit{
       }
 
       if (this.stepNumber() == 2) {
-        const [type, index] = find100();
+        const [type, index, invert] = find100();
         if (type != null) {
           this.mapping.throttle = {
             type: type as "button" | "axis",
-            index: index as number
+            index: index as number,
+            invert: invert as boolean
           }
 
           this.stepNumber.set(3);
@@ -170,11 +178,12 @@ export class GamepadCalibrationComponent implements OnInit{
       }
 
       if (this.stepNumber() == 4) {
-        const [type, index] = find100();
+        const [type, index, invert] = find100();
         if (type != null) {
           this.mapping.roll = {
             type: type as "button" | "axis",
-            index: index as number
+            index: index as number,
+            invert: invert as boolean
           }
 
           this.stepNumber.set(5);
@@ -182,11 +191,12 @@ export class GamepadCalibrationComponent implements OnInit{
       }
 
       if (this.stepNumber() == 6) {
-        const [type, index] = find100();
+        const [type, index, invert] = find100();
         if (type != null) {
           this.mapping.pitch = {
             type: type as "button" | "axis",
-            index: index as number
+            index: index as number,
+            invert: invert as boolean
           }
 
           this.stepNumber.set(7);
@@ -194,11 +204,12 @@ export class GamepadCalibrationComponent implements OnInit{
       }
 
       if (this.stepNumber() == 8) {
-        const [type, index] = find100();
+        const [type, index, invert] = find100();
         if (type != null) {
           this.mapping.yaw = {
             type: type as "button" | "axis",
-            index: index as number
+            index: index as number,
+            invert: invert as boolean
           }
 
           this.stepNumber.set(9);
@@ -222,19 +233,23 @@ export class GamepadCalibrationComponent implements OnInit{
     this.mapping = {
       throttle: {
         type: "axis",
-        index: -1
+        index: -1,
+        invert: false
       },
       roll: {
         type: "axis",
-        index: -1
+        index: -1,
+        invert: false
       },
       pitch: {
         type: "axis",
-        index: -1
+        index: -1,
+        invert: false
       },
       yaw: {
         type: "axis",
-        index: -1
+        index: -1,
+        invert: false
       },
     }
     this.nonZeroAxis = []

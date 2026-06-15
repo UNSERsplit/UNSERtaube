@@ -11,7 +11,8 @@ export interface GamepadMapping {
 
 export interface GamepadAxisButtonMapping {
   type: "axis" | "button",
-  index: number
+  index: number,
+  invert: boolean
 }
 
 export interface MappedData { // alles von -100 bis 100
@@ -82,11 +83,11 @@ export class GamepadService {
 
       const map = (mapping: GamepadAxisButtonMapping) => {
         if(mapping.type == "axis") {
-          return Math.floor(gp.axes[mapping.index] * 100)
+          return Math.floor(gp.axes[mapping.index] * 100) * (mapping.invert ? -1 : 1)
         } else if(mapping.type == "button") {
           const btn = gp.buttons[mapping.index];
           //console.log(btn.pressed, btn.touched, btn.value)
-          return btn.value != 0 ? Math.floor((btn.value - 0.5) * 200) : NaN
+          return btn.value != 0 ? Math.floor((btn.value - 0.5) * 200) * (mapping.invert ? -1 : 1) : NaN
         } else {
           throw new Error("Nope");
         }
