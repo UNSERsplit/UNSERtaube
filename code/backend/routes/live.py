@@ -25,6 +25,7 @@ async def get_drone() -> DroneDTO:
 @live_router.post("/disconnect")
 async def disconnect() -> str:
     global drone, state_computation, db_drone, ai_module
+    state = drone.last_state
     drone.reboot()
     try:
         await ai_module.on_disconnect()
@@ -35,6 +36,8 @@ async def disconnect() -> str:
     drone.stop_recording_commands()
     drone = None # type: ignore
     db_drone = None # type: ignore
+    state["connected"] = False
+    await on_state(state, compute=False)
     return "OK"
 
 @live_router.post("/connect", responses={404: {"model": str}})

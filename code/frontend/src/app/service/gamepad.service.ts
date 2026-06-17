@@ -87,7 +87,7 @@ export class GamepadService {
         } else if(mapping.type == "button") {
           const btn = gp.buttons[mapping.index];
           //console.log(btn.pressed, btn.touched, btn.value)
-          return btn.value != 0 ? Math.floor((btn.value - 0.5) * 200) * (mapping.invert ? -1 : 1) : NaN
+          return btn.value != 0 ? Math.floor((btn.value - 0.5) * 200) * (mapping.invert ? -1 : 1) : 0
         } else {
           throw new Error("Nope");
         }

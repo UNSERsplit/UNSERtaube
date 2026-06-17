@@ -1,43 +1,47 @@
 @startuml
-
-
 package Drone {
     [Drone (RobomasterTT)]
 }
 
 package Backend {
-    package Sdk {
-        [ConnectionManager]
-        [VideoReceiver]
+    package SDK {
+        [Raw Udp Socket] <--> [ActionManager] : packets
     }
-    
-    [WebsocketConnection]
-    [VideoRecorder]
-    [WebRTCpeer]
-    
-    [ConnectionManager] --> [WebsocketConnection] : status
-    [ConnectionManager] <-- [WebsocketConnection] : commands
-    [PathCalculation] <-- [WebsocketConnection] : speed
-    
-    [VideoReceiver] --> [WebRTCpeer] : video
-    [VideoReceiver] --> [VideoRecorder] : video
+    [LiveRoutes] --> [ActionManager]
+    [Websocket] <--> [ActionManager] : status
+
+    package Video {
+        [FFmpeg] --> [MediaMTX] : video
+    }
+
+    package Ai {
+        [MediaMTX] --> [OpenCV Receiver] : video
+        [OpenCV Receiver] --> [YOLO]
+        [YOLO] --> [Ai] : people
+        [OpenCV Receiver] --> [Ring detection]
+        [Ring detection] --> [Ai] : rings
+        [Ring detection] --> [Ring follower]
+        [Ring follower] --> [ActionManager]
+        [Ai] --> [Websocket]
+    }
 }
 
+
+
 package Frontend {
-    [Video]
+    [VideoStream]
     [Telemetry]
     [Pathmap]
     [Flight-Control]
     [Led-Editor]
 }
 
-[Drone (RobomasterTT)] ..> [ConnectionManager] : status
-[Drone (RobomasterTT)] <.. [ConnectionManager] : commands
-[Drone (RobomasterTT)] ..> [VideoReceiver] : video
+[Drone (RobomasterTT)] <..> [Raw Udp Socket] : status & commands
+[Drone (RobomasterTT)] ..> [FFmpeg] : video
 
-[Video] <.. [WebRTCpeer] : video
-[Telemetry] <.. [WebsocketConnection] : telemetry
-[Flight-Control] ..> [WebsocketConnection] : flight-control
-[Led-Editor] ..> [WebsocketConnection] : led
-[Pathmap] <.. [PathCalculation] : path
+[VideoStream] <.. [MediaMTX] : video (WebRTC)
+[Telemetry] <.. [Websocket] : telemetry
+[Flight-Control] ..> [LiveRoutes] : flight-control
+[Led-Editor] ..> [LiveRoutes] : led
+[Pathmap] <.. [Telemetry] : path
 @enduml

@@ -307,7 +307,7 @@ export class ControllerApiService {
   }
 
   disconnect() {
-    //TODO
-    this.status.set("ws_connected");
+    this.action("POST","live/disconnect", undefined)
+    //this.status.set("ws_connected");
   }
 }
